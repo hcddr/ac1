@@ -1,0 +1,1668 @@
+ AS V1.42 Beta [Bld 116] - source file mon_v31_16-as.asm - page 1 - 8/24/2018 14:07:16
+
+
+       1/       0 :                     		page	0
+       2/       0 :                     		CPU	z80
+       3/       0 :                     
+       4/       0 :                     ;AC1-MONITOR 3.1, FA 84
+       5/       0 :                     ;Volker Pohlers, Neustadt i.H., 07.08.2018
+       6/       0 :                     ;letzte Änderung 08.08.2018
+       7/       0 :                     
+       8/       0 :                     ; Makros
+       9/       0 :                     hi              function x, (x>>8) & 0ffh	; High-Byte
+      10/       0 :                     lo              function x, x & 0ffh		; Low-Byte
+      11/       0 :                     
+      12/       0 :                     ; Speicheraufteilung
+      13/       0 : =0H                 ROM		equ	0000h
+      14/       0 : =800H               BASIC		equ	0800h
+      15/       0 : =1000H              BWS		equ	1000h
+      16/       0 : =1800H              RAM		equ	1800h
+      17/       0 :                     ; BWS
+      18/       0 : =40H                COLS		equ	64
+      19/       0 : =10H                LINES		equ	16
+      20/       0 :                     
+      21/       0 :                     ; I/O
+      22/       0 :                     ;CTC0		equ	0
+      23/       0 : =4H                 PIODA		equ	4
+      24/       0 : =5H                 PIODB		equ	5
+      25/       0 : =6H                 PIOCA		equ	6
+      26/       0 : =7H                 PIOCB		equ	7
+      27/       0 :                     
+      28/       0 :                     ;
+      29/       0 : =6H                 NAMELEN		equ	6		; max. Länge des Dateinamens bei LOAD/SAVE
+      30/       0 : =2000H              RAMEND		equ	RAM+800h	; Ende f. Kdo-Suche, auf RAM beschränkt
+      31/       0 :                     
+      32/       0 :                     ; Zeitkonstanten (bei 2 MHz-Takt)
+      33/       0 : =31H                ZK1    EQU  49        ;Laenge 1.Halbwelle
+      34/       0 : =2EH                ZK2    EQU  46        ;Laenge 2.Halbwelle
+      35/       0 :                     ;ZKR    EQU  63	      ;ca 2/3 * (ZK1+ZK2)
+      36/       0 : =3FH                ZKR    EQU  (ZK1+ZK2)*2/3
+      37/       0 :                     
+      38/       0 :                     ; f. mon_v31_32.bin
+      39/       0 :                     ;LINES		equ	32		; bei 2K BWS
+      40/       0 :                     ;NAMELEN	equ	16		; max. Länge des Dateinamens bei LOAD/SAVE
+      41/       0 :                     ;RAMEND		equ	0FFFDh		; Ende f. Kdo-Suche, auf RAM beschränkt
+      42/       0 :                     ;fkopatch	equ	1		; Korrektur in Find-Kommando
+      43/       0 :                     
+      44/       0 :                     ;------------------------------------------------------------------------------
+      45/       0 :                     ; Reset
+      46/       0 :                     ;------------------------------------------------------------------------------
+      47/       0 :                     
+      48/       0 :                     		org	ROM
+      49/       0 :                     
+      50/       0 : ED 73 77 18         init:		ld	(REGSP), sp	; Stackpointer sichern
+      51/       4 : 18 1D               		jr	init1
+      52/       6 : FF                  		db 0FFh
+      53/       7 : FF                  		db 0FFh
+      54/       8 :                     ;RST 8
+      55/       8 : C3 02 18            inch:		jp	jp_rst08	; Zeicheneingabe -> Sprungliste im RAM 1802
+      56/       B : E5                  rinch:		push	hl		; Standard-Routine Zeicheneingabe 
+      57/       C : C5                  		push	bc
+      58/       D : C3 CA 00            		jp	rinch1
+      59/      10 :                     ; RST 10
+      60/      10 : C3 05 18            outch:		jp	jp_rst10	; Zeichenausgabe -> Sprungliste im RAM 1805
+      61/      13 : F5                  routch:		push	af		; Standard-Routine Zeichenausgabe
+      62/      14 : E5                  		push	hl
+      63/      15 : D5                  		push	de
+      64/      16 : 18 51               		jr	routch1
+      65/      18 :                     ; RST 18
+      66/      18 : C3 08 18            prnst:		jp	jp_rst18	; Ausgabe Zeichenkette -> 1808
+      67/      1B : E3                  rprnst:		ex	(sp), hl	; Standard-Routine Zeichenkette
+      68/      1C : 7E                  rprnst1:	ld	a, (hl)		; Zeichen holen
+      69/      1D : 23                  		inc	hl		; nächste Adr.
+      70/      1E : 18 32               		jr	rprnst2
+      71/      20 :                     ;RST 20
+      72/      20 : C3 0B 18            		jp	jp_rst20	; Sprungliste im RAM 180B
+      73/      23 :                     ;
+      74/      23 : 31 56 18            init1:		ld	sp, SYSSK	; System-Stack
+      75/      26 : 18 03               		jr	init2
+      76/      28 :                     ; RST 28
+      77/      28 : C3 0E 18            		jp	jp_rst28	; Sprungliste im RAM 180E
+      78/      2B :                     ;
+      79/      2B : CD A5 01            init2:		call	REGA		; Register im Registerrettebereich ablegen
+      80/      2E : 18 03               		jr	init3
+      81/      30 :                     ; RST 30
+      82/      30 : C3 11 18            		jp	jp_rst30	; Sprungliste im RAM 1811
+      83/      33 :                     ;
+      84/      33 : C3 4C 02            init3:		jp	init4
+      85/      36 : FF                  		db 0FFh
+      86/      37 : FF                  		db 0FFh
+      87/      38 :                     ; RST 38
+      88/      38 : C3 14 18            		jp	jp_rst38	; Sprungliste im RAM 1814
+      89/      3B :                     
+      90/      3B :                     ; Standardroutine f. RST 38
+      91/      3B : 22 6F 18            rError:		ld	(REGHL), hl
+      92/      3E : E1                  		pop	hl
+      93/      3F : 22 56 18            		ld	(SYSSK), hl	; System-Stack
+      94/      42 : 2A 6F 18            		ld	hl, (REGHL)
+      95/      45 : ED 73 77 18         		ld	(REGSP), sp
+      96/      49 : 31 56 18            		ld	sp, SYSSK	; System-Stack
+      97/      4C : CD A5 01            		call	REGA		; Register im Registerrettebereich ablegen
+      98/      4F : C3 05 01            		jp	rError1
+      99/      52 :                     ;
+     100/      52 : D7                  rprnst2:	rst	10h		; Ausgabe Zeichen
+     101/      53 : CB 7F               		bit	7, a		; Ende (Bit7 gesetzt)?
+     102/      55 : 28 C5               		jr	z, rprnst1	; nein -> nächstes Zeichen
+     103/      57 : E3                  		ex	(sp), hl	; neue Return-Adr.
+     104/      58 : C9                  		ret
+     105/      59 :                     
+     106/      59 :                     ;------------------------------------------------------------------------------
+     107/      59 :                     ; testet den Tastaturstatus, kehrt bei gedrückter Taste nach 30 ms 
+     108/      59 :                     ; mit Wert zurück ( wartet nicht auf loslassen der Taste! )
+     109/      59 :                     ; wenn keine Taste gedrückt, sofortige Rückkehr mit gesetztem Zero-Flag
+     110/      59 :                     ;------------------------------------------------------------------------------
+     111/      59 :                     
+     112/      59 : DB 04               TASTE:		in	a, (PIODA)
+     113/      5B : CB 7F               		bit	7, a		; Taste gedrückt?
+     114/      5D : C8                  		ret	z		; nein
+     115/      5E : CD 1D 01            		call	MS30		; 30 ms	warten
+     116/      61 : DB 04               		in	a, (PIODA)	; Tastenwert 
+     117/      63 : CB 7F               		bit	7, a		; Taste noch gedrückt?
+     118/      65 : C9                  		ret
+     119/      66 :                     ; NMI
+     120/      66 : C3 17 18            		jp	nmi		; Sprungliste im RAM 1817
+     121/      69 :                     
+     122/      69 :                     ;------------------------------------------------------------------------------
+     123/      69 :                     ; RST 8: Zeichenausgabe Register A
+     124/      69 :                     ; der Anfang der Routine ist oben routch
+     125/      69 :                     ;------------------------------------------------------------------------------
+     126/      69 :                     
+     127/      69 :                     ; 013FFH Bildschirmanfang (links oben !!)
+     128/      69 :                     ; 01000H Bildschirmende (rechts unten !!)
+     129/      69 :                     ; 16 Zeilen a 64 Zeichen
+     130/      69 :                     
+     131/      69 :                     ; Der BWS arbeitet aufgrund der Hardware invers
+     132/      69 :                     ; d.h. inc geht ein Zeichen / eine Zeile zurück
+     133/      69 :                     ;      dec geht ein Zeichen / eine Zeile vor
+     134/      69 :                     
+     135/      69 : E6 7F               routch1:	and	7Fh
+     136/      6B : 2A 00 18            		ld	hl, (cupos)	; Cursorposition
+     137/      6E : FE 0D               		cp	0Dh
+     138/      70 : 28 37               		jr	z, ocr		; neue Zeile
+     139/      72 : FE 0C               		cp	0Ch
+     140/      74 : 28 3A               		jr	z, ocls		; Bildschirm löschen
+     141/      76 : FE 08               		cp	8
+     142/      78 : 28 4B               		jr	z, odel		; Backspace
+     143/      7A : FE 20               		cp	' '
+     144/      7C : 38 27               routch2:	jr	c, routch5	; sonstige Steuerzeichen übergehen
+     145/      7E :                     ; Zeichenausgabe
+     146/      7E : 77                  		ld	(hl), a		; Zeichen in BWS schreiben
+     147/      7F : 2B                  		dec	hl		; nächste Position
+     148/      80 : EB                  routch3:	ex	de, hl
+     149/      81 : 21 FF 0F            		ld	hl, BWS-1
+     150/      84 : A7                  		and	a		; Cy=0
+     151/      85 : ED 52               		sbc	hl, de		; Bildschirmende erreicht?
+     152/      87 : EB                  		ex	de, hl
+     153/      88 : 22 00 18            		ld	(cupos), hl	; Cursorposition
+     154/      8B : 38 18               		jr	c, routch5
+     155/      8D :                     ; 1 Zeile hochscrollen		
+     156/      8D : C5                  		push	bc
+     157/      8E : 21 BF 13            		ld	hl, BWS+(LINES-1)*COLS-1
+     158/      91 : 11 FF 13            		ld	de, BWS+LINES*COLS-1
+     159/      94 : 01 C0 03            		ld	bc, (LINES-1)*COLS
+     160/      97 : ED B8               		lddr
+     161/      99 : ED 53 00 18         		ld	(cupos), de	; Cursorposition
+     162/      9D : EB                  		ex	de, hl
+     163/      9E : 23                  		inc	hl
+     164/      9F : 2D                  routch4:	dec	l
+     165/      A0 : 36 20               		ld	(hl), ' '
+     166/      A2 : 20 FB               		jr	nz, routch4
+     167/      A4 : C1                  		pop	bc
+     168/      A5 : D1                  routch5:	pop	de
+     169/      A6 : E1                  		pop	hl
+     170/      A7 : F1                  		pop	af
+     171/      A8 : C9                  		ret
+     172/      A9 :                     ; neue Zeile
+     173/      A9 : 7D                  ocr:		ld	a, l
+     174/      AA : E6 C0               		and	0C0h 		; Cursorpos abrunden auf Zeilenende im BWS
+     175/      AC : 6F                  		ld	l, a
+     176/      AD : 2B                  		dec	hl		; nächstes Zeichen
+     177/      AE : 18 D0               		jr	routch3
+     178/      B0 :                     ; Bildschirm löschen
+     179/      B0 : 3E 20               ocls:		ld	a, ' '
+     180/      B2 : 21 00 10            		ld	hl, BWS
+     181/      B5 : 77                  		ld	(hl), a
+     182/      B6 : 54                  		ld	d, h
+     183/      B7 : 5D                  		ld	e, l
+     184/      B8 : 1C                  		inc	e
+     185/      B9 : C5                  		push	bc
+     186/      BA : 01 FF 03            		ld	bc, LINES*COLS-1
+     187/      BD : ED B0               		ldir
+     188/      BF : 22 00 18            		ld	(cupos), hl	; Cursorposition
+     189/      C2 : C1                  		pop	bc
+     190/      C3 : 18 E0               		jr	routch5
+     191/      C5 :                     ; Zeichen löschen		
+     192/      C5 : 23                  odel:		inc	hl		; eine Position zurück
+     193/      C6 : 36 20               		ld	(hl), ' '       ; Cursor löschen
+     194/      C8 : 18 B6               		jr	routch3
+     195/      CA :                     
+     196/      CA :                     ;------------------------------------------------------------------------------
+     197/      CA :                     ; RST 10 Zeicheneingabe
+     198/      CA :                     ; der Anfang der Routine ist oben rinch
+     199/      CA :                     ;------------------------------------------------------------------------------
+     200/      CA :                     
+     201/      CA : 2A 00 18            rinch1:		ld	hl, (cupos)	; Cursorposition
+     202/      CD : 36 5F               rinch2:		ld	(hl), '_'       ; Cursorzeichen
+     203/      CF : 06 00               rinch3:		ld	b, 0
+     204/      D1 : C5                  rinch4:		push	bc
+     205/      D2 : 06 00               		ld	b, 0
+     206/      D4 : 10 FE               rinch5:		djnz	rinch5		; kurz warten
+     207/      D6 : C1                  		pop	bc
+     208/      D7 : CD 59 00            		call	TASTE		; Taste gedrückt?
+     209/      DA : 20 0B               		jr	nz, rinch6	; ja
+     210/      DC : 10 F3               		djnz	rinch4		; sonst weiter versuchen
+     211/      DE :                     		; Cursor blinken lassen
+     212/      DE : 3E 5F               		ld	a, '_'		; dazu Cursorzeichen
+     213/      E0 : BE                  		cp	(hl)
+     214/      E1 : 20 EA               		jr	nz, rinch2
+     215/      E3 : 36 20               		ld	(hl), ' '	; und Leerzeichen toggeln
+     216/      E5 : 18 E8               		jr	rinch3
+     217/      E7 :                     ;
+     218/      E7 : 36 20               rinch6:		ld	(hl), ' '	; Cursor ausblenden
+     219/      E9 :                     		; Entprellung
+     220/      E9 : F5                  		push	af
+     221/      EA : DB 05               		in	a, (PIODB)
+     222/      EC : CB 87               		res	0, a
+     223/      EE : D3 05               		out	(PIODB), a
+     224/      F0 : CD 1D 01            		call	MS30		; 30 ms	warten
+     225/      F3 : DB 05               		in	a, (PIODB)
+     226/      F5 : CB C7               		set	0, a
+     227/      F7 : D3 05               		out	(PIODB), a
+     228/      F9 : DB 04               rinch7:		in	a, (PIODA)
+     229/      FB : CB 7F               		bit	7, a
+     230/      FD : 20 FA               		jr	nz, rinch7
+     231/      FF : F1                  		pop	af
+     232/     100 :                     		; Bit 7 rücksetzen (Kennung Taste gedrückt)
+     233/     100 : E6 7F               		and	7Fh
+     234/     102 : C1                  		pop	bc
+     235/     103 : E1                  		pop	hl
+     236/     104 : C9                  		ret
+     237/     105 :                     
+     238/     105 :                     ;------------------------------------------------------------------------------
+     239/     105 :                     ; zu Standardroutine f. RST 38
+     240/     105 :                     ;------------------------------------------------------------------------------
+     241/     105 :                     
+     242/     105 : CD 40 02            rError1:	call	initsv
+     243/     108 : DF                  		rst	18h
+     244/     109 : 0D 45 52 52 4F 52   		db 0Dh,"ERROR AT",' '+80h
+                    20 41 54 A0 
+     245/     113 : 2A 56 18            		ld	hl, (SYSSK)	; System-Stack
+     246/     116 : 2B                  		dec	hl
+     247/     117 : CD 9A 01            		call	OUTHL		; Ausgabe HL hexadezimal
+     248/     11A : C3 B0 02            		jp	GETCO1		; Monitoreingabeschleife
+     249/     11D :                     
+     250/     11D :                     ;------------------------------------------------------------------------------
+     251/     11D :                     ; ca. 30 ms warten
+     252/     11D :                     ;------------------------------------------------------------------------------
+     253/     11D :                     
+     254/     11D : C5                  MS30:		push	bc
+     255/     11E : 01 03 09            		ld	bc, 903h	; B = 9, C = 3
+     256/     121 : 0B                  ms301:		dec	bc
+     257/     122 : 78                  		ld	a, b
+     258/     123 : B1                  		or	c
+     259/     124 : 20 FB               		jr	nz, ms301
+     260/     126 : C1                  		pop	bc
+     261/     127 : C9                  		ret
+     262/     128 :                     
+     263/     128 :                     ;------------------------------------------------------------------------------
+     264/     128 :                     ; Zeile	eingeben
+     265/     128 :                     ; liest eine Zeile, die mit cr abgeschlossen wird, auf dem Schirm ein und 
+     266/     128 :                     ; legt den Anfang der Zeile in SOIL ab
+     267/     128 :                     ; kein Register wird zerstört
+     268/     128 :                     ;------------------------------------------------------------------------------
+     269/     128 :                     
+     270/     128 : F5                  INLINE:		push	af
+     271/     129 : DF                  		rst	18h
+     272/     12A : 20 23 A0            		db " #",' '+80h		;Prompt
+     273/     12D :                     ;		
+     274/     12D : CF                  inlin1:		rst	8		; inch
+     275/     12E : D7                  		rst	10h		; outch
+     276/     12F : FE 0D               		cp	0Dh		; Enter?
+     277/     131 : 20 FA               		jr	nz, inlin1	; nein --> weiter eingeben
+     278/     133 :                     ; Zeilenanfang ermitteln
+     279/     133 : E5                  		push	hl
+     280/     134 : 2A 00 18            		ld	hl, (cupos)	; Cursorposition (Anfang der nächsten Zeile)
+     281/     137 : 3E 23               		ld	a, '#'
+     282/     139 : ED A1               inlin2:		cpi			; Anfang der Zeile rückwärts suchen
+     283/     13B :                     					; aber da BWS invers arbeitet, inc HL!
+     284/     13B : 20 FC               		jr	nz, inlin2
+     285/     13D : 2B                  		dec	hl		; vor #
+     286/     13E : 2B                  		dec	hl		; #
+     287/     13F : 2B                  		dec	hl		; Leerzeichen nach #
+     288/     140 : 22 1A 18            		ld	(soil),	hl	; erstes Zeichen der Zeile
+     289/     143 : E1                  		pop	hl
+     290/     144 : F1                  		pop	af
+     291/     145 : C9                  		ret
+     292/     146 :                     
+     293/     146 :                     ;------------------------------------------------------------------------------
+     294/     146 :                     ; fuehrende Leerzeichen ueberlesen
+     295/     146 :                     ; letzen vier Zeichen als Hexzahl konvertieren
+     296/     146 :                     ; und in DATA ablegen
+     297/     146 :                     ;------------------------------------------------------------------------------
+     298/     146 :                     
+     299/     146 : 1A                  konvx:		ld	a, (de)
+     300/     147 : FE 20               		cp	' '		; Leerzeichen 
+     301/     149 : 1B                  		dec	de		
+     302/     14A : 28 FA               		jr	z, konvx	; überlesen
+     303/     14C :                     ;
+     304/     14C : 13                  		inc	de		; erstes Zeichen
+     305/     14D : AF                  		xor	a
+     306/     14E : 21 58 18            konvx1:		ld	hl, data
+     307/     151 : 77                  		ld	(hl), a
+     308/     152 : 23                  		inc	hl
+     309/     153 : 77                  		ld	(hl), a
+     310/     154 : 23                  		inc	hl
+     311/     155 : 77                  		ld	(hl), a		; data=0
+     312/     156 : 1A                  konvx2:		ld	a, (de)
+     313/     157 : 2B                  		dec	hl
+     314/     158 : 2B                  		dec	hl
+     315/     159 : D6 30               		sub	30h ; '0'       ; Zeichen<"0"?
+     316/     15B : F8                  		ret	m
+     317/     15C : FE 0A               		cp	0Ah		; Zeichen<="9"?
+     318/     15E : 38 08               		jr	c, konvx3
+     319/     160 : D6 07               		sub	7
+     320/     162 : FE 0A               		cp	0Ah		; Zeichen<"A"?
+     321/     164 : F8                  		ret	m
+     322/     165 : FE 10               		cp	10h		; Zeichen>"F"?
+     323/     167 : F0                  		ret	p
+     324/     168 : 1B                  konvx3:		dec	de
+     325/     169 : 34                  		inc	(hl)
+     326/     16A : 23                  		inc	hl
+     327/     16B : ED 6F               		rld			; Hexziffer eintragen
+     328/     16D : 23                  		inc	hl
+     329/     16E : ED 6F               		rld
+     330/     170 : 18 E4               		jr	konvx2		; nächste Ziffer
+     331/     172 :                     
+     332/     172 :                     ;------------------------------------------------------------------------------
+     333/     172 :                     ; wandelt eine maximal vierstellige in ASCII-Zeichen angegebene Zahl 
+     334/     172 :                     ; ab (DE) abwärts in deren hexadezimalen Wert um, der dann in HL steht. 
+     335/     172 :                     ; DE wird entsprechend dekrementiert, der Akku wird zerstört
+     336/     172 :                     ;------------------------------------------------------------------------------
+     337/     172 :                     
+     338/     172 : C5                  INHEX:		push	bc
+     339/     173 : F5                  		push	af
+     340/     174 : CD 46 01            		call	konvx		; Konvertierung
+     341/     177 : 23                  		inc	hl
+     342/     178 : 44                  		ld	b, h		; BC=HL=DATA+1
+     343/     179 : 4D                  		ld	c, l
+     344/     17A : 6E                  		ld	l, (hl)		; unteres Byte
+     345/     17B : 03                  		inc	bc
+     346/     17C : 0A                  		ld	a, (bc)
+     347/     17D : 67                  		ld	h, a		; oberes Byte
+     348/     17E : C1                  		pop	bc
+     349/     17F : B5                  		or	l		; Z-Flag setzen
+     350/     180 : 78                  		ld	a, b
+     351/     181 : C1                  		pop	bc
+     352/     182 : C9                  		ret
+     353/     183 :                     
+     354/     183 :                     ;------------------------------------------------------------------------------
+     355/     183 :                     ; Ausgabe (A) hexadezimal
+     356/     183 :                     ; gibt den Akku als zweistellige Hexzahl auf dem Schirm aus,
+     357/     183 :                     ; kein Register wird zerstört
+     358/     183 :                     ;------------------------------------------------------------------------------
+     359/     183 :                     
+     360/     183 : F5                  OUTHEX:		push	af
+     361/     184 : 1F                  		rra
+     362/     185 : 1F                  		rra
+     363/     186 : 1F                  		rra
+     364/     187 : 1F                  		rra
+     365/     188 : CD 8C 01            		call	OUTHEX1		; obere Tetrade ausgeben
+     366/     18B : F1                  		pop	af		; und die untere
+     367/     18C : F5                  OUTHEX1:	push	af
+     368/     18D : E6 0F               		and	0Fh
+     369/     18F : C6 30               		add	a, '0' 		; Konvertierung --> ASCII
+     370/     191 : FE 3A               		cp	':'		; Ziffer "A" ... "F"?
+     371/     193 : 38 02               		jr	c, OUTHEX2	; nein
+     372/     195 : C6 07               		add	a, 7		; sonst Korrektur
+     373/     197 : D7                  OUTHEX2:	rst	10h		; und Ausgabe
+     374/     198 : F1                  		pop	af
+     375/     199 : C9                  		ret
+     376/     19A :                     
+     377/     19A :                     ;------------------------------------------------------------------------------
+     378/     19A :                     ; Ausgabe HL hexadezimal
+     379/     19A :                     ; gibt das HL-Register als vierstellige Hexzahl auf dem Schirm aus,
+     380/     19A :                     ; kein Register wird zerstört
+     381/     19A :                     ;------------------------------------------------------------------------------
+     382/     19A :                     
+     383/     19A : F5                  OUTHL:		push	af
+     384/     19B : 7C                  		ld	a, h
+     385/     19C : CD 83 01            		call	OUTHEX
+     386/     19F : 7D                  		ld	a, l
+     387/     1A0 : CD 83 01            		call	OUTHEX
+     388/     1A3 : F1                  		pop	af
+     389/     1A4 : C9                  		ret
+     390/     1A5 :                     
+     391/     1A5 :                     ;------------------------------------------------------------------------------
+     392/     1A5 :                     ; Register im Registerrettebereich ablegen
+     393/     1A5 :                     ;------------------------------------------------------------------------------
+     394/     1A5 :                     
+     395/     1A5 : ED 73 58 18         REGA:		ld	(data),	sp
+     396/     1A9 : 31 75 18            		ld	sp, REGPC
+     397/     1AC : FD E5               		push	iy
+     398/     1AE : DD E5               		push	ix
+     399/     1B0 : E5                  		push	hl
+     400/     1B1 : D5                  		push	de
+     401/     1B2 : C5                  		push	bc
+     402/     1B3 : F5                  		push	af
+     403/     1B4 : D9                  		exx
+     404/     1B5 : 08                  		ex	af, af'		;'
+     405/     1B6 : E5                  		push	hl
+     406/     1B7 : D5                  		push	de
+     407/     1B8 : C5                  		push	bc
+     408/     1B9 : F5                  		push	af
+     409/     1BA : 18 15               		jr	REG1
+     410/     1BC :                     		
+     411/     1BC :                     ; Register aus Registerrettebereich holen		
+     412/     1BC : ED 73 58 18         REGH:		ld	(data),	sp	
+     413/     1C0 : 31 61 18            		ld	sp, RSA
+     414/     1C3 : F1                  		pop	af
+     415/     1C4 : C1                  		pop	bc
+     416/     1C5 : D1                  		pop	de
+     417/     1C6 : E1                  		pop	hl
+     418/     1C7 : D9                  		exx
+     419/     1C8 : 08                  		ex	af, af'		;'
+     420/     1C9 : F1                  		pop	af
+     421/     1CA : C1                  		pop	bc
+     422/     1CB : D1                  		pop	de
+     423/     1CC : E1                  		pop	hl
+     424/     1CD : DD E1               		pop	ix
+     425/     1CF : FD E1               		pop	iy
+     426/     1D1 : ED 7B 58 18         REG1:		ld	sp, (data)
+     427/     1D5 : C9                  		ret
+     428/     1D6 :                     
+     429/     1D6 :                     ;------------------------------------------------------------------------------
+     430/     1D6 :                     ; Kommandoschleife
+     431/     1D6 :                     ;
+     432/     1D6 :                     ; Suchen des Kommandos
+     433/     1D6 :                     ; wenn ':' folgt, dann alte Parameter nehmen
+     434/     1D6 :                     ; sonst 3 Parameter einlesen und in ARG1..ARG3 ablegen
+     435/     1D6 :                     ; bei Kdo-Start gilt
+     436/     1D6 :                     ; 	BC = Return-Adr
+     437/     1D6 :                     ; 	DE zeigt auf ':' oder auf Leezeichen hinter letzem Parameter
+     438/     1D6 :                     ; 	HL = Kdo-Adr
+     439/     1D6 :                     ;------------------------------------------------------------------------------
+     440/     1D6 :                     
+     441/     1D6 : DF                  kdoerr:		rst	18h
+     442/     1D7 : 57 48 41 54 3F 20   		db "WHAT? ",' '+80h
+                    A0 
+     443/     1DE :                     
+     444/     1DE :                     
+     445/     1DE :                     ;Eingang Kommandomodus
+     446/     1DE : CD 28 01            kdo1:		call	INLINE		; Zeile	eingeben
+     447/     1E1 :                     ;suche Kommandorahmen
+     448/     1E1 : 21 1D 02            		ld	hl, kdo4	; startpos.
+     449/     1E4 : 01 E3 1D            		ld	bc, RAMEND-kdo4	; Anzahl (RAM-Ende-Startpos.)
+     450/     1E7 : AF                  kdo2:		xor	a		; 00
+     451/     1E8 : 03                  		inc	bc
+     452/     1E9 : ED B1               		cpir
+     453/     1EB : 20 E9               		jr	nz, kdoerr
+     454/     1ED : 3E 09               		ld	a, 9		; 09
+     455/     1EF : BE                  		cp	(hl)
+     456/     1F0 : 20 F5               		jr	nz, kdo2
+     457/     1F2 : 23                  		inc	hl
+     458/     1F3 : ED 5B 1A 18         		ld	de, (soil)
+     459/     1F7 : 1A                  		ld	a, (de)		; KDO
+     460/     1F8 : BE                  		cp	(hl)
+     461/     1F9 : 20 EC               		jr	nz, kdo2	; falsches Kdo
+     462/     1FB : 23                  		inc	hl
+     463/     1FC : 7E                  		ld	a, (hl)
+     464/     1FD : FE 0D               		cp	0Dh		; 0D
+     465/     1FF : 20 E6               		jr	nz, kdo2
+     466/     201 : 23                  		inc	hl
+     467/     202 : E5                  		push	hl
+     468/     203 :                     ; Parameter
+     469/     203 : 1B                  		dec	de
+     470/     204 : CD 72 01            		call	INHEX		; 1. Argument
+     471/     207 : 20 05               		jr	nz, kdo3
+     472/     209 : 1A                  		ld	a, (de)
+     473/     20A : FE 3A               		cp	':'             ; die alten Werte nehmen ?
+     474/     20C : 28 0F               		jr	z, kdo4
+     475/     20E : 22 5B 18            kdo3:		ld	(ARG1),	hl
+     476/     211 : CD 72 01            		call	INHEX
+     477/     214 : 22 5D 18            		ld	(ARG2),	hl
+     478/     217 : CD 72 01            		call	INHEX
+     479/     21A : 22 5F 18            		ld	(ARG3),	hl
+     480/     21D :                     ; starten
+     481/     21D : E1                  kdo4:		pop	hl
+     482/     21E : 01 DE 01            		ld	bc, kdo1	; Returnadr. auf Stack
+     483/     221 : C5                  		push	bc
+     484/     222 : E9                  		jp	(hl)		; Kdo starten
+     485/     223 :                     
+     486/     223 :                     ;------------------------------------------------------------------------------
+     487/     223 :                     ;' ' aaaa	bbbb cccc	Eingabe	von Argumenten
+     488/     223 :                     ;------------------------------------------------------------------------------
+     489/     223 :                     		
+     490/     223 : 00 09 20 0D         		db    0, 9, ' ', 0Dh
+     491/     227 :                     ;
+     492/     227 : C9                  		ret
+     493/     228 :                     
+     494/     228 :                     ;------------------------------------------------------------------------------
+     495/     228 :                     ; init. Sprungverteiler für RST-Aufrufe
+     496/     228 :                     ; RST xx springt in den RAM. von dort geht es normalerweise zu den Monitor-
+     497/     228 :                     ; Routinen, aber man kann auch eigene Ein-/Ausgaberoutinen nehmen
+     498/     228 :                     ;------------------------------------------------------------------------------
+     499/     228 :                     
+     500/     228 : C3 0B 00            sv_rst:		jp	rinch			; RST 8
+     501/     22B : C3 13 00            		jp	routch			; RST 10
+     502/     22E : C3 1B 00            		jp	rprnst			; RST 18
+     503/     231 : C3 FF FF            		jp	0FFFFh			; RST 20
+     504/     234 : C3 FF FF            		jp	0FFFFh			; RST 28
+     505/     237 : C3 FF FF            		jp	0FFFFh			; RST 30
+     506/     23A : C3 3B 00            		jp	rError			; RST 38
+     507/     23D : C3 FF FF            		jp	0FFFFh			; NMI
+     508/     240 :                     
+     509/     240 :                     ; Sprungverteiler in RAM kopieren
+     510/     240 : 21 28 02            initsv:		ld	hl, sv_rst
+     511/     243 : 11 02 18            		ld	de, jp_rst08
+     512/     246 : 01 18 00            		ld	bc, 24			; Länge
+     513/     249 : ED B0               		ldir
+     514/     24B : C9                  		ret
+     515/     24C :                     
+     516/     24C :                     ;------------------------------------------------------------------------------
+     517/     24C :                     ; weiter nach Reset
+     518/     24C :                     ;------------------------------------------------------------------------------
+     519/     24C :                     
+     520/     24C : CD 40 02            init4:		call	initsv		; Sprungverteiler in RAM kopieren
+     521/     24F : DF                  		rst	18h
+     522/     250 : 0C 0D 20 20 20 20   		db 0Ch,0Dh,"      AC 1   U 880 - MONITOR  V 3.1",0Dh,0Dh+80h
+                    20 20 41 43 20 31 
+                    20 20 20 55 20 38 
+                    38 30 20 2D 20 4D 
+                    4F 4E 49 54 4F 52 
+                    20 20 56 20 33 2E 
+                    31 0D 8D 
+     523/     277 :                     		
+     524/     277 :                     		; init PIO
+     525/     277 : 3E 4F               		ld	a, 4Fh 		; Port A Mode 1 Byte-Eingabe 
+     526/     279 : D3 06               		out	(PIOCA), a
+     527/     27B : 3E CF               		ld	a, 0CFh		; Port B Mode 3 Bit-ein/Ausgabe
+     528/     27D : D3 07               		out	(PIOCB), a
+     529/     27F : 3E 80               		ld	a, 80h 		; Port B Bitmaske, Bit 7 = Eingabe
+     530/     281 : D3 07               		out	(PIOCB), a
+     531/     283 : 3E FF               		ld	a, 0FFh		; Port B Ausgabe alle Bits 1
+     532/     285 : D3 05               		out	(PIODB), a
+     533/     287 : 18 27               		jr	GETCO1		; Monitoreingabeschleife
+     534/     289 :                     
+     535/     289 :                     ;------------------------------------------------------------------------------
+     536/     289 :                     ; I	lnitialize	RSA löschen, SP	initialisieren
+     537/     289 :                     ;------------------------------------------------------------------------------
+     538/     289 :                     
+     539/     289 : 00 09 49 0D         		db    0, 9, 'I', 0Dh
+     540/     28D :                     ;
+     541/     28D : 21 58 18            		ld	hl, data
+     542/     290 : 06 26               		ld	b, sysramend-data	; Bereich data..BPOPC+3
+     543/     292 : 36 00               iko1:		ld	(hl), 0		; mit 0 füllen	
+     544/     294 : 23                  		inc	hl
+     545/     295 : 10 FB               		djnz	iko1
+     546/     297 :                     ;
+     547/     297 : 21 FF 1F            		ld	hl, RAM+7FFh	; 2K-RAM?
+     548/     29A : 3E 55               		ld	a, 55h
+     549/     29C : 77                  		ld	(hl), a
+     550/     29D : BE                  		cp	(hl)		; Test auf RAM
+     551/     29E : 3E 20               		ld	a, hi(RAM+800h)	; hi(ramende 2K)
+     552/     2A0 : 28 02               		jr	z, iko2
+     553/     2A2 : 3E 1C               		ld	a, hi(RAM+400h)	; hi(ramende 1K)
+     554/     2A4 : 32 78 18            iko2:		ld	(REGSP+1), a	; RAM-Ende in SP schreiben (2000 bzw. 1C00) 
+     555/     2A7 :                     ;
+     556/     2A7 : DF                  		rst	18h		; Ausgabe Meldung
+     557/     2A8 : 43 4C 52 2F 52 53   		db "CLR/RSA",0Dh+80h
+                    41 8D 
+     558/     2B0 :                     
+     559/     2B0 :                     ;------------------------------------------------------------------------------
+     560/     2B0 :                     ; Monitoreingabeschleife
+     561/     2B0 :                     ;------------------------------------------------------------------------------
+     562/     2B0 :                     
+     563/     2B0 : 31 56 18            GETCO1:		ld	sp, SYSSK	; SP auf System-Stack setzen
+     564/     2B3 : C3 DE 01            getco2:		jp	kdo1		; Kommandoschleife
+     565/     2B6 :                     
+     566/     2B6 :                     ;------------------------------------------------------------------------------
+     567/     2B6 :                     ;S aadr	eadr sadr name	Save	Datei auf Kassette ausgeben
+     568/     2B6 :                     ;s. ac1_berlin/kassettenformate_ac1_mode.htm
+     569/     2B6 :                     ;------------------------------------------------------------------------------
+     570/     2B6 :                     
+     571/     2B6 : 00 09 53 0D         		db    0, 9, 'S', 0Dh
+     572/     2BA :                     ;
+     573/     2BA : 1B                  csave:		dec	de		; de = bws-pos. nach 3. Parameter
+     574/     2BB : 1A                  		ld	a, (de)
+     575/     2BC : FE 20               		cp	' '		; Leerzeichen vor Filename
+     576/     2BE : 28 FA               		jr	z, csave	; übergehen
+     577/     2C0 :                     ;Vorton 2x256	00-Bytes ausgeben
+     578/     2C0 : 06 00               		ld	b, 0
+     579/     2C2 : AF                  sav1:		xor	a
+     580/     2C3 : CD 30 03            		call	sav10		; Ausgabe 1 Byte A
+     581/     2C6 : AF                  		xor	a
+     582/     2C7 : CD 30 03            		call	sav10		; Ausgabe 1 Byte A
+     583/     2CA : 10 F6               		djnz	sav1
+     584/     2CC :                     ;Synchronisationsmuster E6h
+     585/     2CC : 3E E6               		ld	a, 0E6h	  	; Synchronisationsmuster
+     586/     2CE : CD 30 03            		call	sav10		; Ausgabe 1 Byte A
+     587/     2D1 :                     ;name ausgeben 'U' + 6 Zeichen
+     588/     2D1 : 3E 55               		ld	a, 55h ; 'U'    ; Kennbyte fuer Namen
+     589/     2D3 : CD 30 03            		call	sav10		; Ausgabe 1 Byte A
+     590/     2D6 : 06 06               		ld	b, NAMELEN
+     591/     2D8 : 1A                  sav2:		ld	a, (de)
+     592/     2D9 : CD 30 03            		call	sav10		; Ausgabe 1 Byte A
+     593/     2DC : 1B                  		dec	de
+     594/     2DD : 10 F9               		djnz	sav2
+     595/     2DF :                     ;256 Nullbytes,	Zeit für Namensdarstellung beim	Einlesen
+     596/     2DF : 06 00               		ld	b, 0
+     597/     2E1 : AF                  sav3:		xor	a
+     598/     2E2 : CD 30 03            		call	sav10		; Ausgabe 1 Byte A
+     599/     2E5 : 10 FA               		djnz	sav3
+     600/     2E7 :                     ;
+     601/     2E7 : 2A 5B 18            		ld	hl, (ARG1)	; aadr
+     602/     2EA : ED 5B 5D 18         		ld	de, (ARG2)	; eadr
+     603/     2EE : D5                  sav4:		push	de
+     604/     2EF : EB                  		ex	de, hl
+     605/     2F0 : A7                  		and	a
+     606/     2F1 : ED 52               		sbc	hl, de
+     607/     2F3 : 38 2B               		jr	c, sav8		; wenn Ende erreicht
+     608/     2F5 :                     ;
+     609/     2F5 :                     ; Block ausgeben: '<' + Blocklänge + max. 256 Byte Daten + Prüfsumme
+     610/     2F5 : 3E 3C               		ld	a, 3Ch ; '<'    ; Kennung Datenblock
+     611/     2F7 : 23                  		inc	hl		; HL=restl. Programmlänge
+     612/     2F8 : CD 30 03            		call	sav10		; Ausgabe 1 Byte A
+     613/     2FB : 7C                  		ld	a, h
+     614/     2FC : A7                  		and	a		; H = 0?
+     615/     2FD : 28 04               		jr	z, sav5		; wenn HL < 256
+     616/     2FF : 06 00               		ld	b, 0		; sonst 256 Zeichen
+     617/     301 : 18 01               		jr	sav6
+     618/     303 : 45                  sav5:		ld	b, l
+     619/     304 : EB                  sav6:		ex	de, hl
+     620/     305 : D1                  		pop	de
+     621/     306 : 78                  		ld	a, b		; Blocklänge
+     622/     307 : CD 30 03            		call	sav10		; Ausgabe 1 Byte A
+     623/     30A : 7D                  		ld	a, l		; Prüfsumme = 0, Blockadr.
+     624/     30B : 84                  		add	a, h		; zur Prüfsumme addieren
+     625/     30C : 4F                  		ld	c, a		; Prüfsumme merken
+     626/     30D :                     ;Blockstartadr
+     627/     30D : CD 29 03            		call	sav9		; Ausgabe 2 Byte L,H
+     628/     310 : 79                  sav7:		ld	a, c		; Prüfsumme erhöhen
+     629/     311 : 86                  		add	a, (hl)
+     630/     312 : 4F                  		ld	c, a
+     631/     313 : 7E                  		ld	a, (hl)
+     632/     314 : CD 30 03            		call	sav10		; Ausgabe 1 Byte A
+     633/     317 : 23                  		inc	hl
+     634/     318 : 10 F6               		djnz	sav7		; Prüfsumme erhöhen
+     635/     31A : 79                  		ld	a, c		; Prüfsumme ausgeben
+     636/     31B : CD 30 03            		call	sav10		; Ausgabe 1 Byte A
+     637/     31E : 18 CE               		jr	sav4
+     638/     320 :                     ; Programmende 'x' + sadr
+     639/     320 : D1                  sav8:		pop	de
+     640/     321 : 3E 78               		ld	a, 78h ; 'x'    ; Kennung Ende
+     641/     323 : CD 30 03            		call	sav10		; Ausgabe 1 Byte A
+     642/     326 : 2A 5F 18            		ld	hl, (ARG3)	; SADR
+     643/     329 :                     ; Ausgabe 2 Byte L,H
+     644/     329 : 7D                  sav9:		ld	a, l
+     645/     32A : CD 30 03            		call	sav10		; Ausgabe 1 Byte A
+     646/     32D : 7C                  		ld	a, h
+     647/     32E : 18 00               		jr	sav10
+     648/     330 :                     ;
+     649/     330 :                     ; Ausgabe 1 Byte A
+     650/     330 : C5                  sav10:		push	bc
+     651/     331 : 4F                  		ld	c, a		; Datenbyte nach C
+     652/     332 :                     		; C enthaelt die Daten und ist gleichzeitig Bitzaehler
+     653/     332 : 37                  		scf
+     654/     333 : CB 11               sav11:		rl	c		; Carry nach Bit 0
+     655/     335 :                     		; hoechstwertigstes (Daten)Bit nach Carry
+     656/     335 :                                     ; und Test ob das Byte 0 ist
+     657/     335 : 28 19               		jr	z, sav15	; wenn 0 dann fertig
+     658/     337 :                     		; sonst Bit ausgeben, dazu
+     659/     337 : DB 05               		in	a, (PIODB)	; PIO-Daten lesen
+     660/     339 : CB F7               		set	6, a		; Bit 6 auf high
+     661/     33B : 30 02               		jr	nc, sav12	; war Datenbit 1?
+     662/     33D : CB B7               		res	6, a		; nein, Bit 6 low
+     663/     33F : D3 05               sav12:		out	(PIODB), a	; Ausgabe 1.Halbw.
+     664/     341 : 06 31               		ld	b, ZK1		; Zeitkontante 1
+     665/     343 : 10 FE               sav13:		djnz	sav13
+     666/     345 : C6 40               		add	a, 40h		; Flankenwechsel
+     667/     347 : D3 05               		out	(PIODB), a	; Ausgabe 2.Halbw.
+     668/     349 : 06 2E               		ld	b, ZK2		; Zeitkonstante 2
+     669/     34B : 10 FE               sav14:		djnz	sav14
+     670/     34D : A7                  		and	a		; Carry auf 0 f. Bitzähler
+     671/     34E : 18 E3               		jr	sav11		; dann weitere Datenbit ausgeben
+     672/     350 :                     ;
+     673/     350 : C1                  sav15:		pop	bc
+     674/     351 : CD 51 04            		call	loa20		; Test auf Ctrl-C und ggf. Abbruch
+     675/     354 : C9                  		ret
+     676/     355 :                     
+     677/     355 :                     ;------------------------------------------------------------------------------
+     678/     355 :                     ;V	Verify	Datei von Kassette mit Speicher	vergleichen
+     679/     355 :                     ;------------------------------------------------------------------------------
+     680/     355 :                     
+     681/     355 : 00 09 56 0D         		db    0, 9, 'V', 0Dh
+     682/     359 :                     ;
+     683/     359 : 06 FF               		ld	b, 0FFh		; LOMOD = FFh
+     684/     35B : 21 00 00            		ld	hl, 0		; Ladeadr.
+     685/     35E : 18 14               		jr	loa1
+     686/     360 :                     
+     687/     360 :                     ;------------------------------------------------------------------------------
+     688/     360 :                     ;L offset[-]	Load	Laden einer Datei von Kassette
+     689/     360 :                     ;------------------------------------------------------------------------------
+     690/     360 :                     
+     691/     360 : 00 09 4C 0D         		db    0, 9, 'L', 0Dh
+     692/     364 :                     ;
+     693/     364 : 1A                  cload:		ld	a, (de)
+     694/     365 : ED 5B 5B 18         		ld	de, (ARG1)
+     695/     369 : 06 00               		ld	b, 0		; LOMOD = 0
+     696/     36B : FE 2D               		cp	'-'		; folgt '-' ?
+     697/     36D : 20 08               		jr	nz, loa2	; nein
+     698/     36F : 21 00 00            		ld	hl, 0
+     699/     372 : ED 52               		sbc	hl, de		; sonst offset negieren
+     700/     374 : 22 5B 18            loa1:		ld	(ARG1),	hl	; Ladeadr.
+     701/     377 :                     ;
+     702/     377 : DD 21 25 18         loa2:		ld	ix, LOMOD	; load/verify
+     703/     37B : DD 70 00            		ld	(ix+0),	b
+     704/     37E :                     ;Phasenkorrektur ermitteln
+     705/     37E : AF                  		xor	a
+     706/     37F : 32 24 18            		ld	(phako), a	; Phasenkorrektur
+     707/     382 : CD 35 04            loa3:		call	loa17		; Bitweise lesen
+     708/     385 : FE E6               		cp	0E6h ; 'µ'      ; Synchronisationsmuster
+     709/     387 : 28 09               		jr	z, loa4
+     710/     389 : FE 19               		cp	19h		; Synchronisationsmuster negiert
+     711/     38B : 20 F5               		jr	nz, loa3	; Vorton überlesen
+     712/     38D : 3E FF               		ld	a, 0FFh
+     713/     38F : 32 24 18            		ld	(phako), a	; Phasenkorrektur
+     714/     392 : CD 26 04            loa4:		call	loa15		; Lesen	ein Byte A
+     715/     395 : FE 55               		cp	55h ; 'U'       ; Kennbyte fuer Namen
+     716/     397 : 20 F9               		jr	nz, loa4
+     717/     399 :                     ;Name laden und	anzeigen
+     718/     399 : 06 06               		ld	b, NAMELEN
+     719/     39B : 2A 00 18            		ld	hl, (cupos)	; Cursorposition
+     720/     39E : CD 26 04            loa5:		call	loa15		; Lesen	ein Byte A
+     721/     3A1 : 77                  		ld	(hl), a
+     722/     3A2 : 2B                  		dec	hl
+     723/     3A3 : 10 F9               		djnz	loa5
+     724/     3A5 : 2B                  		dec	hl
+     725/     3A6 : 22 00 18            		ld	(cupos), hl	; Cursorposition
+     726/     3A9 : EB                  		ex	de, hl
+     727/     3AA :                     ;
+     728/     3AA : CD 26 04            loa6:		call	loa15		; Lesen	ein Byte A
+     729/     3AD : FE 78               		cp	78h ; 'x'       ; Kennung Ende
+     730/     3AF : 28 51               		jr	z, loa10	; Programmende
+     731/     3B1 : FE 3C               		cp	3Ch ; '<'       ; Kennung Datenblock
+     732/     3B3 : 20 F5               		jr	nz, loa6
+     733/     3B5 : CD 26 04            		call	loa15		; Lesen	ein Byte A
+     734/     3B8 : 47                  		ld	b, a		; Anzahl der Bytes im Block
+     735/     3B9 : CD 10 04            		call	loa12		; Lesen	2 Byte L,H (adr)
+     736/     3BC : 85                  		add	a, l		; Prüfsumme
+     737/     3BD : 4F                  		ld	c, a
+     738/     3BE : D5                  		push	de
+     739/     3BF : ED 5B 5B 18         		ld	de, (ARG1)	; Ladeadr
+     740/     3C3 : 19                  		add	hl, de
+     741/     3C4 : D1                  		pop	de
+     742/     3C5 : CD 26 04            loa7:		call	loa15		; Lesen	ein Byte A
+     743/     3C8 : DD CB 00 46         		bit	0, (ix+0)	; Load oder Verify?
+     744/     3CC : 20 01               		jr	nz, loa8	; bei Verify:
+     745/     3CE : 77                  		ld	(hl), a		; kein Speichern
+     746/     3CF : BE                  loa8:		cp	(hl)
+     747/     3D0 : 28 1A               		jr	z, loa9		; kein Fehler
+     748/     3D2 :                     ; Anz. Fehlerstelle Adr Soll-Wert Ist-Wert
+     749/     3D2 : F5                  		push	af
+     750/     3D3 : 3E 20               		ld	a, ' '
+     751/     3D5 : D7                  		rst	10h
+     752/     3D6 : CD 9A 01            		call	OUTHL		; Ausgabe HL hexadezimal
+     753/     3D9 : 3E 20               		ld	a, ' '
+     754/     3DB : D7                  		rst	10h
+     755/     3DC : F1                  		pop	af
+     756/     3DD : CD 83 01            		call	OUTHEX		; Ausgabe Soll-Byte
+     757/     3E0 : 3E 20               		ld	a, ' '
+     758/     3E2 : D7                  		rst	10h
+     759/     3E3 : 7E                  		ld	a, (hl)
+     760/     3E4 : CD 83 01            		call	OUTHEX		; Ausgabe Ist-Byte
+     761/     3E7 : 3E 20               		ld	a, ' '
+     762/     3E9 : D7                  		rst	10h
+     763/     3EA : 18 6A               		jr	loa21		; Abbruch
+     764/     3EC :                     ; wenn kein RAM-Fehler
+     765/     3EC : 23                  loa9:		inc	hl
+     766/     3ED : 81                  		add	a, c		; Prüfsumme erhöhen
+     767/     3EE : 4F                  		ld	c, a		
+     768/     3EF : 10 D4               		djnz	loa7
+     769/     3F1 : CD 26 04            		call	loa15		; Lesen	ein Byte A
+     770/     3F4 : B9                  		cp	c		; Prüfsumme vergleichen
+     771/     3F5 : 28 B3               		jr	z, loa6		; kein Fehler
+     772/     3F7 : DF                  		rst	18h		; Fehlerausgabe
+     773/     3F8 : 43 48 45 43 4B 53   		db "CHECKSU",'M'+80h	; wg. Prüfsummendifferenz
+                    55 CD 
+     774/     400 : 18 54               		jr	loa21		; Abbruch
+     775/     402 :                     ; Programmende
+     776/     402 : CD 10 04            loa10:		call	loa12		; Startadr. lesen
+     777/     405 : 22 5B 18            		ld	(ARG1),	hl	; als Parameter ablegen
+     778/     408 : CD 9A 01            loa11:		call	OUTHL		; und Anzeige
+     779/     40B : 3E 20               		ld	a, ' '		; Ausgabe Leerzeichen
+     780/     40D : C3 10 00            		jp	outch		; 
+     781/     410 :                     ;		
+     782/     410 :                     ; Lesen	2 Byte L,H
+     783/     410 : CD 26 04            loa12:		call	loa15		; Lesen	ein Byte A
+     784/     413 : 6F                  		ld	l, a
+     785/     414 : CD 26 04            		call	loa15		; Lesen	ein Byte A
+     786/     417 : 67                  		ld	h, a
+     787/     418 :                     ; Cursor toggeln		
+     788/     418 : EB                  		ex	de, hl
+     789/     419 : CB 4E               		bit	1, (hl)
+     790/     41B : 28 04               		jr	z, loa13
+     791/     41D : 36 20               		ld	(hl), ' '
+     792/     41F : 18 02               		jr	loa14
+     793/     421 : 36 2A               loa13:		ld	(hl), '*'
+     794/     423 : EB                  loa14:		ex	de, hl
+     795/     424 : 7C                  		ld	a, h
+     796/     425 : C9                  		ret
+     797/     426 :                     ;
+     798/     426 :                     ; Lesen	ein Byte A
+     799/     426 : C5                  loa15:		push	bc
+     800/     427 : 06 08               		ld	b, 8		; 8 bit
+     801/     429 : CD 35 04            loa16:		call	loa17		; Lesen
+     802/     42C : 10 FB               		djnz	loa16
+     803/     42E : 4F                  		ld	c, a
+     804/     42F : 3A 24 18            		ld	a, (phako)	; Phasenkorrektur
+     805/     432 : A9                  		xor	c		; ggf. Bits negieren
+     806/     433 : C1                  		pop	bc
+     807/     434 : C9                  		ret
+     808/     435 :                     ; Lesen ein Bit
+     809/     435 : C5                  loa17:		push	bc
+     810/     436 : F5                  		push	af
+     811/     437 : DB 05               		in	a, (5)		; Bit 7 lesen
+     812/     439 : E6 80               		and	80h
+     813/     43B : 4F                  		ld	c, a
+     814/     43C : DB 05               loa18:		in	a, (5)
+     815/     43E : E6 80               		and	80h
+     816/     440 : B9                  		cp	c		; Flankenwechsel?
+     817/     441 : 28 F9               		jr	z, loa18	; nein
+     818/     443 : 4F                  		ld	c, a		; Bit sichern
+     819/     444 : 06 3F               		ld	b, ZKR		; Zeitkonstante, ca 2/3 Vollwelle
+     820/     446 : 10 FE               loa19:		djnz	loa19		; Warten
+     821/     448 : CD 51 04            		call	loa20		; Test auf Ctrl-C und ggf. Abbruch
+     822/     44B : F1                  		pop	af
+     823/     44C : CB 11               		rl	c		; Carry <- Bit 7
+     824/     44E : 17                  		rla			; A <- Carry
+     825/     44F : C1                  		pop	bc
+     826/     450 : C9                  		ret
+     827/     451 :                     
+     828/     451 :                     ; Test auf Ctrl-C und ggf. Abbruch
+     829/     451 : DB 04               loa20:		in	a, (PIODA)	; Tastatur einlesen
+     830/     453 : FE 83               		cp	83h 		; CTRL-C gedrueckt?
+     831/     455 : C0                  		ret	nz		; nein
+     832/     456 :                     ;sonst Abbruch
+     833/     456 : DF                  loa21:		rst	18h
+     834/     457 : 42 52 45 41 CB      aBrea:		db "BREA",'K'+80h
+     835/     45C : C3 B0 02            		jp	GETCO1
+     836/     45F :                     
+     837/     45F :                     ;------------------------------------------------------------------------------
+     838/     45F :                     ;D aadr	eadr	Dump	Hexdump
+     839/     45F :                     ;------------------------------------------------------------------------------
+     840/     45F :                     
+     841/     45F :                     
+     842/     45F : 00 09 44 0D         		db    0, 9, 'D', 0Dh
+     843/     463 :                     ;
+     844/     463 : 2A 5B 18            		ld	hl, (ARG1)
+     845/     466 : ED 5B 5D 18         dko1:		ld	de, (ARG2)
+     846/     46A : E5                  		push	hl
+     847/     46B : ED 52               		sbc	hl, de
+     848/     46D : E1                  		pop	hl
+     849/     46E : D0                  		ret	nc		; wenn EADR<AADR
+     850/     46F : CD 9A 01            		call	OUTHL		; Ausgabe HL hexadezimal
+     851/     472 : 06 10               		ld	b, 10h		; 16 Byte pro Zeile
+     852/     474 : DF                  d_ko2:		rst	18h
+     853/     475 : A0                  		db ' '+80h
+     854/     476 : 7E                  		ld	a, (hl)
+     855/     477 : CD 83 01            		call	OUTHEX		; ausgeben
+     856/     47A : 23                  		inc	hl
+     857/     47B : 10 F7               		djnz	d_ko2		; nächstes Byte
+     858/     47D :                     ;		
+     859/     47D : DF                  		rst	18h
+     860/     47E : 8D                  		db 0Dh+80h		; neu Zeile
+     861/     47F : 18 E5               		jr	dko1
+     862/     481 :                     
+     863/     481 :                     ;------------------------------------------------------------------------------
+     864/     481 :                     ;M adr		Modify Memory	Speicher modifizieren
+     865/     481 :                     ;------------------------------------------------------------------------------
+     866/     481 :                     
+     867/     481 : 00 09 4D 0D         		db    0, 9, 'M', 0Dh
+     868/     485 :                     ;
+     869/     485 : 2A 5B 18            mem:		ld	hl, (ARG1)
+     870/     488 : CD 9A 01            mem1:		call	OUTHL		; Ausgabe Adresse
+     871/     48B : DF                  		rst	18h
+     872/     48C : 20 A0               		db ' ',' '+80h
+     873/     48E : 7E                  		ld	a, (hl)
+     874/     48F : CD 83 01            		call	OUTHEX		; Ausgabe Byte
+     875/     492 : CD 28 01            		call	INLINE		; Zeile	eingeben
+     876/     495 : ED 5B 1A 18         		ld	de, (soil)
+     877/     499 : 2B                  		dec	hl
+     878/     49A : 23                  mem2:		inc	hl
+     879/     49B : E5                  		push	hl
+     880/     49C : CD 72 01            		call	INHEX
+     881/     49F : 28 10               		jr	z, mem5		; Trennzeichen
+     882/     4A1 : 7D                  mem3:		ld	a, l
+     883/     4A2 : E1                  		pop	hl
+     884/     4A3 : 77                  		ld	(hl), a
+     885/     4A4 : BE                  		cp	(hl)		; RAM-Test
+     886/     4A5 : 28 F3               		jr	z, mem2		; i.O.
+     887/     4A7 : DF                  		rst	18h		; sonst 
+     888/     4A8 : 45 52 52 4F 52 20   		db "ERROR ",' '+80h	; Fehlrt
+                    A0 
+     889/     4AF : 18 D7               mem4:		jr	mem1
+     890/     4B1 :                     ;
+     891/     4B1 : 1A                  mem5:		ld	a, (de)		; Test Datenbyte=0
+     892/     4B2 : FE 20               		cp	' '		; wenn ja --> Z=1
+     893/     4B4 : 28 EB               		jr	z, mem3
+     894/     4B6 : E1                  		pop	hl
+     895/     4B7 : 23                  		inc	hl
+     896/     4B8 : 22 5D 18            		ld	(ARG2),	hl	; 1. nichtbearb. Adr.
+     897/     4BB : FE 2E               		cp	'.'
+     898/     4BD : C8                  		ret	z		; Return, wenn "." gegeben
+     899/     4BE :                     ;		
+     900/     4BE : ED 5B 1A 18         		ld	de, (soil)
+     901/     4C2 : 1A                  		ld	a, (de)		; wurde überhaupt was eingegeben?
+     902/     4C3 : FE 20               		cp	' '
+     903/     4C5 : 28 E8               		jr	z, mem4		; Z=1 keine Eingabe
+     904/     4C7 : 2B                  		dec	hl		; sonst eine Adresse
+     905/     4C8 : 18 E5               		jr	mem4		; zurück
+     906/     4CA :                     
+     907/     4CA :                     ;------------------------------------------------------------------------------
+     908/     4CA :                     ; Argumente uebergeben
+     909/     4CA :                     ;------------------------------------------------------------------------------
+     910/     4CA :                     
+     911/     4CA : 2A 5B 18            para:		ld	hl, (ARG1)
+     912/     4CD : ED 5B 5D 18         		ld	de, (ARG2)
+     913/     4D1 : ED 4B 5F 18         		ld	bc, (ARG3)
+     914/     4D5 : C9                  		ret
+     915/     4D6 :                     
+     916/     4D6 :                     ;------------------------------------------------------------------------------
+     917/     4D6 :                     ;P aadr	eadr cc		Pattern		Speicherbereich	mit Muster füllen
+     918/     4D6 :                     ;------------------------------------------------------------------------------
+     919/     4D6 :                     
+     920/     4D6 : 00 09 50 0D         		db    0, 9, 'P', 0Dh
+     921/     4DA :                     ;
+     922/     4DA : CD CA 04            		call	para		; Argumente uebergeben
+     923/     4DD : 71                  		ld	(hl), c
+     924/     4DE : E5                  		push	hl
+     925/     4DF : AF                  		xor	a		; Cy = 0
+     926/     4E0 : EB                  		ex	de, hl
+     927/     4E1 : ED 52               		sbc	hl, de
+     928/     4E3 : 44                  		ld	b, h		; BC = Länge
+     929/     4E4 : 4D                  		ld	c, l
+     930/     4E5 : E1                  		pop	hl
+     931/     4E6 : 54                  		ld	d, h
+     932/     4E7 : 5D                  		ld	e, l
+     933/     4E8 : 13                  		inc	de		; DE = HL + 1
+     934/     4E9 : ED B0               pko1:		ldir			; füllen
+     935/     4EB : C9                  		ret
+     936/     4EC :                     
+     937/     4EC :                     ;------------------------------------------------------------------------------
+     938/     4EC :                     ;T aadr	zadr anz	Transfer	Speicherbereich	kopieren
+     939/     4EC :                     ;------------------------------------------------------------------------------
+     940/     4EC :                     
+     941/     4EC : 00 09 54 0D         		db    0, 9, 'T', 0Dh
+     942/     4F0 :                     ;
+     943/     4F0 : CD CA 04            		call	para		; Argumente uebergeben
+     944/     4F3 : AF                  		xor	a		; cy = 0
+     945/     4F4 : E5                  		push	hl
+     946/     4F5 : ED 52               		sbc	hl, de
+     947/     4F7 : E1                  		pop	hl
+     948/     4F8 : 30 EF               		jr	nc, pko1	; wenn Zieladr. größer
+     949/     4FA : 09                  		add	hl, bc		; sonst Werte anpassen
+     950/     4FB : EB                  		ex	de, hl
+     951/     4FC : 09                  		add	hl, bc
+     952/     4FD : EB                  		ex	de, hl
+     953/     4FE : 2B                  		dec	hl
+     954/     4FF : 1B                  		dec	de
+     955/     500 : ED B8               		lddr			; Rueckwaertstransfer
+     956/     502 : C9                  		ret
+     957/     503 :                     
+     958/     503 :                     ;------------------------------------------------------------------------------
+     959/     503 :                     ; A aaaa bbbb c		Arithmetik	Summe, Differenz, Displ., Dezimalwert
+     960/     503 :                     ; c ist Länge des Sprungbefehls (für relative Sprungbefehle ist c gleich zwei)
+     961/     503 :                     ;------------------------------------------------------------------------------
+     962/     503 :                     
+     963/     503 : 00 09 41 0D         		db    0, 9, 'A', 0Dh
+     964/     507 :                     ;
+     965/     507 : CD CA 04            		call	para		; Argumente uebergeben
+     966/     50A : E5                  		push	hl
+     967/     50B : D5                  		push	de
+     968/     50C : 09                  		add	hl, bc
+     969/     50D : EB                  		ex	de, hl
+     970/     50E : ED 52               		sbc	hl, de
+     971/     510 : 3E 00               		ld	a, 0
+     972/     512 : 38 09               		jr	c, ako1
+     973/     514 : BC                  		cp	h
+     974/     515 : 20 18               		jr	nz, ako3
+     975/     517 : CB 7D               		bit	7, l
+     976/     519 : 20 14               		jr	nz, ako3
+     977/     51B : 18 08               		jr	ako2
+     978/     51D :                     ;		
+     979/     51D : 2F                  ako1:		cpl
+     980/     51E : BC                  		cp	h
+     981/     51F : 20 0E               		jr	nz, ako3
+     982/     521 : CB 7D               		bit	7, l
+     983/     523 : 28 0A               		jr	z, ako3
+     984/     525 :                     ;		
+     985/     525 : DF                  ako2:		rst	18h
+     986/     526 : 44 53 50 4C BA      		db "DSPL",':'+80h
+     987/     52B : 7D                  		ld	a, l
+     988/     52C : CD 83 01            		call	OUTHEX
+     989/     52F :                     ;		
+     990/     52F : D1                  ako3:		pop	de
+     991/     530 : E1                  		pop	hl
+     992/     531 : E5                  		push	hl
+     993/     532 : E5                  		push	hl
+     994/     533 : 19                  		add	hl, de		; Summe
+     995/     534 : DF                  		rst	18h
+     996/     535 : 20 20 20 53 55 4D   		db "   SUM",':'+80h
+                    BA 
+     997/     53C : CD 9A 01            		call	OUTHL		; Ausgabe HL hexadezimal
+     998/     53F : E1                  		pop	hl
+     999/     540 : ED 52               		sbc	hl, de		; Differenz
+    1000/     542 : DF                  		rst	18h
+    1001/     543 : 20 20 20 44 49 46   		db "   DIF",':'+80h
+                    BA 
+    1002/     54A : CD 9A 01            		call	OUTHL		; Ausgabe HL hexadezimal
+    1003/     54D : C1                  		pop	bc
+    1004/     54E :                     ; Hezimalwandlung BC -> AHL
+    1005/     54E : 21 00 00            		ld	hl, 0
+    1006/     551 : 5D                  		ld	e, l
+    1007/     552 : 78                  ako4:		ld	a, b
+    1008/     553 : B1                  		or	c
+    1009/     554 : 28 0F               		jr	z, ako5
+    1010/     556 : 0B                  		dec	bc
+    1011/     557 : 7D                  		ld	a, l
+    1012/     558 : 3C                  		inc	a
+    1013/     559 : 27                  		daa
+    1014/     55A : 6F                  		ld	l, a
+    1015/     55B : 7C                  		ld	a, h
+    1016/     55C : CE 00               		adc	a, 0
+    1017/     55E : 27                  		daa
+    1018/     55F : 67                  		ld	h, a
+    1019/     560 : 30 F0               		jr	nc, ako4
+    1020/     562 : 1C                  		inc	e
+    1021/     563 : 18 ED               		jr	ako4
+    1022/     565 :                     ;		
+    1023/     565 : DF                  ako5:		rst	18h
+    1024/     566 : 20 20 20 44 45 43   		db "   DEC",':'+80h
+                    BA 
+    1025/     56D : 7B                  		ld	a, e
+    1026/     56E : E6 0F               		and	0Fh
+    1027/     570 : F6 30               		or	30h ; '0'	; 5. Stelle (max 6)
+    1028/     572 : D7                  		rst	10h
+    1029/     573 : CD 9A 01            		call	OUTHL		; Ausgabe HL 
+    1030/     576 :                     
+    1031/     576 :                     ;------------------------------------------------------------------------------
+    1032/     576 :                     ; Ausgabe Zeilenvorschub
+    1033/     576 :                     ;------------------------------------------------------------------------------
+    1034/     576 :                     
+    1035/     576 : DF                  outcr:		rst	18h
+    1036/     577 : 8D                  		db 0Dh+80h
+    1037/     578 : C9                  		ret
+    1038/     579 :                     		
+    1039/     579 :                     ;------------------------------------------------------------------------------
+    1040/     579 :                     ; Ausgabe der Registernamen
+    1041/     579 :                     ;------------------------------------------------------------------------------
+    1042/     579 :                     
+    1043/     579 : DF                  anzsp:		rst	18h
+    1044/     57A : 53 50 BA            		db "SP",':'+80h
+    1045/     57D : 18 28               		jr	OUTHL3
+    1046/     57F : DF                  anzpc:		rst	18h
+    1047/     580 : 50 43 BA            		db "PC",':'+80h
+    1048/     583 : 18 22               		jr	OUTHL3
+    1049/     585 : DF                  anziy:		rst	11000b
+    1050/     586 : 49 59 BA            		db "IY",':'+80h
+    1051/     589 : 18 1C               		jr	OUTHL3
+    1052/     58B : DF                  anzix:		rst	18h
+    1053/     58C : 49 58 BA            		db "IX",':'+80h
+    1054/     58F : 18 16               		jr	OUTHL3
+    1055/     591 : DF                  anzhl:		rst	18h
+    1056/     592 : 48 4C BA            		db "HL",':'+80h
+    1057/     595 : 18 10               		jr	OUTHL3
+    1058/     597 : DF                  anzde:		rst	18h
+    1059/     598 : 44 45 BA            		db "DE",':'+80h
+    1060/     59B : 18 0A               		jr	OUTHL3
+    1061/     59D : DF                  anzbc:		rst	18h
+    1062/     59E : 42 43 BA            		db "BC",':'+80h
+    1063/     5A1 : 18 04               		jr	OUTHL3
+    1064/     5A3 : DF                  anzaf:		rst	18h
+    1065/     5A4 : 41 46 BA            		db "AF",':'+80h
+    1066/     5A7 :                     ;
+    1067/     5A7 : CD 9A 01            OUTHL3:		call	OUTHL		; Ausgabe HL hexadezimal
+    1068/     5AA : DF                  out3sp:		rst	18h		; Ausgabe 3 Leerzeichen
+    1069/     5AB : 20 20 20 A0         		db "   ",' '+80h
+    1070/     5AF : C9                  		ret
+    1071/     5B0 :                     
+    1072/     5B0 :                     ;------------------------------------------------------------------------------
+    1073/     5B0 :                     ;RXX	Register	Registerinhalt verändern
+    1074/     5B0 :                     ;R:	Registerinhalte anzeigen
+    1075/     5B0 :                     ;------------------------------------------------------------------------------
+    1076/     5B0 :                     
+    1077/     5B0 : 00 09 52 0D         		db    0, 9, 'R', 0Dh
+    1078/     5B4 :                     ;
+    1079/     5B4 : FE 3A               		cp	':'
+    1080/     5B6 : C2 77 06            		jp	nz, rko1	; wenn Modifizierung
+    1081/     5B9 :                     ; Anzeige aller Register
+    1082/     5B9 :                     ; BP:0000	   BS:000000
+    1083/     5B9 :                     ; SP:1C00	   PC:0000    IY:0000	 IX:0000
+    1084/     5B9 :                     ; MAIN  HL:0000	   DE:0000    BC:0000    AF:0000
+    1085/     5B9 :                     ; EXXR  HL:0000	   DE:0000    BC:0000    AF:0000
+    1086/     5B9 :                     ; FLAGS:   ()
+    1087/     5B9 : DF                  		rst	18h		; Anzeige Breakpointadresse
+    1088/     5BA : 42 50 BA            		db "BP",':'+80h
+    1089/     5BD : 2A 79 18            		ld	hl, (BPADR)
+    1090/     5C0 : CD A7 05            		call	OUTHL3
+    1091/     5C3 : DF                  		rst	18h		; Ausgabe Operandenfolge
+    1092/     5C4 : 42 53 BA            		db "BS",':'+80h
+    1093/     5C7 : 21 7B 18            		ld	hl, BPOPC	; 3 Byte
+    1094/     5CA : 7E                  		ld	a, (hl)
+    1095/     5CB : CD 83 01            		call	OUTHEX
+    1096/     5CE : 23                  		inc	hl
+    1097/     5CF : 7E                  		ld	a, (hl)
+    1098/     5D0 : CD 83 01            		call	OUTHEX
+    1099/     5D3 : 23                  		inc	hl
+    1100/     5D4 : 7E                  		ld	a, (hl)
+    1101/     5D5 : CD 83 01            		call	OUTHEX
+    1102/     5D8 : CD 76 05            		call	outcr
+    1103/     5DB :                     ;Sonderregister-Anzeige
+    1104/     5DB : 2A 77 18            		ld	hl, (REGSP)
+    1105/     5DE : CD 79 05            		call	anzsp
+    1106/     5E1 : 2A 75 18            		ld	hl, (REGPC)
+    1107/     5E4 : CD 7F 05            		call	anzpc
+    1108/     5E7 : 2A 73 18            		ld	hl, (REGIY)
+    1109/     5EA : CD 85 05            		call	anziy
+    1110/     5ED : 2A 71 18            		ld	hl, (REGIX)
+    1111/     5F0 : CD 8B 05            		call	anzix
+    1112/     5F3 :                     ;1. Registersatz
+    1113/     5F3 : DF                  		rst	18h
+    1114/     5F4 : 0D 4D 41 49 4E 20   		db 0Dh,"MAIN ",' '+80h
+                    A0 
+    1115/     5FB : 2A 6F 18            		ld	hl, (REGHL)
+    1116/     5FE : CD 91 05            		call	anzhl
+    1117/     601 : 2A 6D 18            		ld	hl, (REGDE)
+    1118/     604 : CD 97 05            		call	anzde
+    1119/     607 : 2A 6B 18            		ld	hl, (REGBC)
+    1120/     60A : CD 9D 05            		call	anzbc
+    1121/     60D : 2A 69 18            		ld	hl, (REGAF)
+    1122/     610 : CD A3 05            		call	anzaf
+    1123/     613 :                     ;2. Registersatz
+    1124/     613 : DF                  		rst	18h
+    1125/     614 : 0D                  		db  0Dh
+    1126/     615 : 45 58 58 52 20 A0   		db "EXXR ",' '+80h
+    1127/     61B : 2A 67 18            		ld	hl, (REGHLX)
+    1128/     61E : CD 91 05            		call	anzhl
+    1129/     621 : 2A 65 18            		ld	hl, (REGDEX)
+    1130/     624 : CD 97 05            		call	anzde
+    1131/     627 : 2A 63 18            		ld	hl, (REGBCX)
+    1132/     62A : CD 9D 05            		call	anzbc
+    1133/     62D : 2A 61 18            		ld	hl, (REGAFX)
+    1134/     630 : CD A3 05            		call	anzaf
+    1135/     633 :                     ; Flags
+    1136/     633 : DF                  		rst	18h
+    1137/     634 : 0D 46 4C 41 47 53   		db 0Dh,"FLAGS: ",' '+80h
+                    3A 20 A0 
+    1138/     63D : 3A 69 18            		ld	a, (REGAF)
+    1139/     640 : CD 51 06            		call	flags
+    1140/     643 : DF                  		rst	18h
+    1141/     644 : 20 20 A8            		db "  ",'('+80h
+    1142/     647 : 3A 61 18            		ld	a, (REGAFX)
+    1143/     64A : CD 51 06            		call	flags
+    1144/     64D : DF                  		rst	18h
+    1145/     64E : 29 8D               		db ')',0Dh+80h
+    1146/     650 : C9                  		ret
+    1147/     651 :                     ;
+    1148/     651 : 6F                  flags:		ld	l, a
+    1149/     652 : CB 7D               		bit	7, l
+    1150/     654 : 28 02               		jr	z, flg1
+    1151/     656 : DF                  		rst	18h
+    1152/     657 : D3                  		db 'S'+80h
+    1153/     658 : CB 75               flg1:		bit	6, l
+    1154/     65A : 28 02               		jr	z, flg2
+    1155/     65C : DF                  		rst	18h
+    1156/     65D : DA                  		db 'Z'+80h
+    1157/     65E : CB 65               flg2:		bit	4, l
+    1158/     660 : 28 02               		jr	z, flg3
+    1159/     662 : DF                  		rst	18h
+    1160/     663 : C8                  		db 'H'+80h
+    1161/     664 : CB 55               flg3:		bit	2, l
+    1162/     666 : 28 02               		jr	z, flg4
+    1163/     668 : DF                  		rst	18h
+    1164/     669 : D0                  		db 'P'+80h
+    1165/     66A : CB 4D               flg4:		bit	1, l
+    1166/     66C : 28 02               		jr	z, flg5
+    1167/     66E : DF                  		rst	18h
+    1168/     66F : CE                  		db 'N'+80h
+    1169/     670 : CB 45               flg5:		bit	0, l
+    1170/     672 : 28 02               		jr	z, flg6
+    1171/     674 : DF                  		rst	18h
+    1172/     675 : C3                  		db 'C'+80h
+    1173/     676 : C9                  flg6:		ret
+    1174/     677 :                     
+    1175/     677 :                     ; RXX' Register ändern
+    1176/     677 : 2A 1A 18            rko1:		ld	hl, (soil)
+    1177/     67A : 2B                  		dec	hl
+    1178/     67B : 2B                  		dec	hl
+    1179/     67C : 7E                  		ld	a, (hl)
+    1180/     67D : 11 69 18            		ld	de, REGAF
+    1181/     680 : FE 41               		cp	'A'
+    1182/     682 : 28 12               		jr	z, rko2		; wenn AF
+    1183/     684 : 13                  		inc	de
+    1184/     685 : 13                  		inc	de		; DE = REGBC
+    1185/     686 : FE 42               		cp	'B'		
+    1186/     688 : 28 0C               		jr	z, rko2		; wenn BC
+    1187/     68A : 13                  		inc	de
+    1188/     68B : 13                  		inc	de		; DE = REGDE
+    1189/     68C : FE 44               		cp	'D'
+    1190/     68E : 28 06               		jr	z, rko2		; wenn DE
+    1191/     690 : 13                  		inc	de
+    1192/     691 : 13                  		inc	de		; DE = REGHL
+    1193/     692 : FE 48               		cp	'H'
+    1194/     694 : 20 2B               		jr	nz, rko4	; wenn <> HL
+    1195/     696 : 2B                  rko2:		dec	hl		; 2 Zeichen vor
+    1196/     697 : 2B                  		dec	hl
+    1197/     698 : 7E                  		ld	a, (hl)
+    1198/     699 : FE 27               		cp	27h ; '''	; folgt '?
+    1199/     69B : EB                  		ex	de, hl
+    1200/     69C : 20 05               		jr	nz, rko3	; nein
+    1201/     69E : 11 08 00            		ld	de, 8		; sonst 2. Registersatz
+    1202/     6A1 : ED 52               		sbc	hl, de
+    1203/     6A3 :                     ;		
+    1204/     6A3 : 5E                  rko3:		ld	e, (hl)		; Wert aus Speicher holen
+    1205/     6A4 : 23                  		inc	hl
+    1206/     6A5 : 56                  		ld	d, (hl)
+    1207/     6A6 : EB                  		ex	de, hl
+    1208/     6A7 : CD 9A 01            		call	OUTHL		; Ausgabe
+    1209/     6AA :                     ;Eingabe neuer Wert	
+    1210/     6AA : CD 28 01            		call	INLINE		; Zeile	eingeben
+    1211/     6AD : 2A 1A 18            		ld	hl, (soil)
+    1212/     6B0 : EB                  		ex	de, hl
+    1213/     6B1 : E5                  		push	hl
+    1214/     6B2 : D5                  		push	de
+    1215/     6B3 : CD 72 01            		call	INHEX		; HL=neuer Wert
+    1216/     6B6 : EB                  		ex	de, hl
+    1217/     6B7 : E1                  		pop	hl
+    1218/     6B8 : 7E                  		ld	a, (hl)
+    1219/     6B9 : FE 20               		cp	' '		; wurde was eingegeben?
+    1220/     6BB : E1                  		pop	hl		; HL=Adr. im RSA
+    1221/     6BC : C8                  		ret	z		; wenn keine Eingabe
+    1222/     6BD : 72                  		ld	(hl), d		; sonst Wert
+    1223/     6BE : 2B                  		dec	hl
+    1224/     6BF : 73                  		ld	(hl), e		; übernehmen
+    1225/     6C0 : C9                  		ret
+    1226/     6C1 :                     ;		
+    1227/     6C1 : 13                  rko4:		inc	de
+    1228/     6C2 : 13                  		inc	de		; DE = REGIX
+    1229/     6C3 : 2B                  		dec	hl
+    1230/     6C4 : 7E                  		ld	a, (hl)
+    1231/     6C5 : FE 58               		cp	'X'		
+    1232/     6C7 : 28 13               		jr	z, rko5		; wenn IX
+    1233/     6C9 : 13                  		inc	de
+    1234/     6CA : 13                  		inc	de		; DE = REGIY
+    1235/     6CB : FE 59               		cp	'Y'
+    1236/     6CD : 28 0D               		jr	z, rko5		; wenn IY
+    1237/     6CF : 13                  		inc	de
+    1238/     6D0 : 13                  		inc	de		; DE = REGPC
+    1239/     6D1 : FE 43               		cp	'C'
+    1240/     6D3 : 28 07               		jr	z, rko5		; wenn PC
+    1241/     6D5 : 13                  		inc	de
+    1242/     6D6 : 13                  		inc	de		; DE = REGSP
+    1243/     6D7 : FE 50               		cp	'P'
+    1244/     6D9 : C2 D6 01            		jp	nz, kdoerr	; wenn <> SP
+    1245/     6DC : EB                  rko5:		ex	de, hl
+    1246/     6DD : 18 C4               		jr	rko3
+    1247/     6DF :                     
+    1248/     6DF :                     ;------------------------------------------------------------------------------
+    1249/     6DF :                     ; Einsprung bei Breakpoint
+    1250/     6DF :                     ;------------------------------------------------------------------------------
+    1251/     6DF :                     
+    1252/     6DF : CD A5 01            break:		call	REGA		; Register in RSA ablegen
+    1253/     6E2 : E1                  		pop	hl		; HL=Breakadr.+3
+    1254/     6E3 : ED 73 77 18         		ld	(REGSP), sp	; SP sichern
+    1255/     6E7 : 31 56 18            		ld	sp, SYSSK	; System-Stack
+    1256/     6EA : DF                  		rst	18h
+    1257/     6EB : 42 52 45 41 4B 20   		db "BREAK AT",0BAh
+                    41 54 BA 
+    1258/     6F4 : 2B                  		dec	hl
+    1259/     6F5 : 2B                  		dec	hl
+    1260/     6F6 : 2B                  		dec	hl
+    1261/     6F7 : 22 75 18            		ld	(REGPC), hl	; Breakadresse
+    1262/     6FA : CD A7 05            		call	OUTHL3		; anzeigen
+    1263/     6FD :                     ;		
+    1264/     6FD : 2A 79 18            		ld	hl, (BPADR)	; Adr.
+    1265/     700 : 11 7B 18            		ld	de, BPOPC	; die originalen 3 Byte
+    1266/     703 : 01 03 00            		ld	bc, 3
+    1267/     706 : EB                  		ex	de, hl
+    1268/     707 : ED B0               		ldir			; zurueckbringen
+    1269/     709 : 31 56 18            		ld	sp, SYSSK	; System-Stack
+    1270/     70C : C3 DE 01            		jp	kdo1
+    1271/     70F :                     
+    1272/     70F :                     ;------------------------------------------------------------------------------
+    1273/     70F :                     ;B adr		Breakpoint	Unterbrechung setzen, nur RAM
+    1274/     70F :                     ;------------------------------------------------------------------------------
+    1275/     70F :                     
+    1276/     70F : 00 09 42 0D         		db    0, 9, 'B', 0Dh
+    1277/     713 :                     ;
+    1278/     713 : 2A 5B 18            		ld	hl, (ARG1)
+    1279/     716 : 22 79 18            		ld	(BPADR), hl
+    1280/     719 : 11 7B 18            		ld	de, BPOPC	; 3 Byte Operanden
+    1281/     71C : 01 03 00            		ld	bc, 3
+    1282/     71F : ED B0               		ldir			; sichern
+    1283/     721 : C9                  		ret
+    1284/     722 :                     
+    1285/     722 :                     ;------------------------------------------------------------------------------
+    1286/     722 :                     ; E adr		Execute		Programm läuft unter Breakpointkontrolle
+    1287/     722 :                     ;------------------------------------------------------------------------------
+    1288/     722 :                     
+    1289/     722 : 00 09 45 0D         		db    0, 9, 'E', 0Dh
+    1290/     726 :                     ;
+    1291/     726 : 2A 79 18            e_kdo:		ld	hl, (BPADR)
+    1292/     729 : 36 CD               		ld	(hl), 0CDh 	; call break
+    1293/     72B : 23                  		inc	hl
+    1294/     72C : 36 DF               		ld	(hl), lo(break)	; an Breakpoint
+    1295/     72E : 23                  		inc	hl
+    1296/     72F : 36 06               		ld	(hl), hi(break)	; eintragen
+    1297/     731 :                     
+    1298/     731 :                     ;------------------------------------------------------------------------------
+    1299/     731 :                     ; J aaaa 	Jump
+    1300/     731 :                     ;------------------------------------------------------------------------------
+    1301/     731 :                     
+    1302/     731 : 00 09 4A 0D         		db    0, 9, 'J', 0Dh
+    1303/     735 :                     ;		
+    1304/     735 : 06 0A               j_kdo:		ld	b, 10
+    1305/     737 : 2A 77 18            		ld	hl, (REGSP)
+    1306/     73A : 2B                  jko1:		dec	hl
+    1307/     73B : 7E                  		ld	a, (hl)		; Test auf RAM
+    1308/     73C : 2F                  		cpl
+    1309/     73D : 77                  		ld	(hl), a
+    1310/     73E : BE                  		cp	(hl)
+    1311/     73F : 20 27               		jr	nz, jkoerr
+    1312/     741 : 2F                  		cpl
+    1313/     742 : 77                  		ld	(hl), a
+    1314/     743 : 10 F5               		djnz	jko1
+    1315/     745 :                     ;		
+    1316/     745 : 2A 5B 18            		ld	hl, (ARG1)	; Startadresse
+    1317/     748 : 22 75 18            		ld	(REGPC), hl	; zwischenspeichern
+    1318/     74B : ED 7B 77 18         		ld	sp, (REGSP)	; Stack generieren
+    1319/     74F : E5                  		push	hl		; Startadresse in Stack
+    1320/     750 : C3 BC 01            		jp	REGH		; Register aus RSA holen
+    1321/     753 :                     					; und Pgm. durch RET starten
+    1322/     753 :                     
+    1323/     753 :                     ;------------------------------------------------------------------------------
+    1324/     753 :                     ;G		Go	Sprung in Programm ab Adresse in PC
+    1325/     753 :                     ;------------------------------------------------------------------------------
+    1326/     753 :                     
+    1327/     753 : 00 09 47 0D         		db    0, 9, 'G', 0Dh
+    1328/     757 :                     ;
+    1329/     757 : 2A 75 18            		ld	hl, (REGPC)
+    1330/     75A : 22 5B 18            		ld	(ARG1),	hl
+    1331/     75D : ED 5B 79 18         		ld	de, (BPADR)
+    1332/     761 : AF                  		xor	a		; cy=0
+    1333/     762 : ED 52               		sbc	hl, de
+    1334/     764 : 20 C0               		jr	nz, e_kdo	; wenn nicht Breakpoint
+    1335/     766 : 18 CD               		jr	j_kdo		; starten
+    1336/     768 :                     ;		
+    1337/     768 : DF                  jkoerr:		rst	18h
+    1338/     769 : 49 4E 49 54 20 53   		db "INIT S",0D0h
+                    D0 
+    1339/     770 : C9                  		ret
+    1340/     771 :                     
+    1341/     771 :                     ;------------------------------------------------------------------------------
+    1342/     771 :                     ;C adr1	adr2 anz	Compare		Vergleich von 2	Speicherbereichen
+    1343/     771 :                     ;------------------------------------------------------------------------------
+    1344/     771 :                     
+    1345/     771 : 00 09 43 0D         		db    0, 9, 'C', 0Dh
+    1346/     775 :                     ;
+    1347/     775 : CD CA 04            		call	para		; Argumente uebergeben
+    1348/     778 : 1A                  cko1:		ld	a, (de)
+    1349/     779 : BE                  		cp	(hl)		; Vergleich
+    1350/     77A : 20 08               		jr	nz, cko3	; wenn ungleich
+    1351/     77C : 0B                  cko2:		dec	bc
+    1352/     77D : 23                  		inc	hl
+    1353/     77E : 13                  		inc	de
+    1354/     77F : 78                  		ld	a, b
+    1355/     780 : B1                  		or	c
+    1356/     781 : C8                  		ret	z		; wenn alles geprueft
+    1357/     782 : 18 F4               		jr	cko1		; sonst weitertesten
+    1358/     784 :                     ;		
+    1359/     784 : CD A7 05            cko3:		call	OUTHL3		; 1. Adresse
+    1360/     787 : 7E                  		ld	a, (hl)
+    1361/     788 : CD 83 01            		call	OUTHEX		; 1. Byte
+    1362/     78B : CD AA 05            		call	out3sp
+    1363/     78E : CD AA 05            		call	out3sp
+    1364/     791 : EB                  		ex	de, hl
+    1365/     792 : CD A7 05            		call	OUTHL3		; 2. Adresse
+    1366/     795 : EB                  		ex	de, hl
+    1367/     796 : 1A                  		ld	a, (de)
+    1368/     797 : CD 83 01            		call	OUTHEX		; 2. Byte
+    1369/     79A : CD 76 05            		call	outcr
+    1370/     79D : CF                  		rst	8		; warten auf Tastendruck
+    1371/     79E : FE 0D               		cp	0Dh
+    1372/     7A0 : C0                  		ret	nz		; Abbruch wenn <> ENTER
+    1373/     7A1 : 18 D9               		jr	cko2		; sonst weitertesten
+    1374/     7A3 :                     
+    1375/     7A3 :                     ;------------------------------------------------------------------------------
+    1376/     7A3 :                     ;F aa bb ce dd ... nn	Find	Suchen nach Bytes oder Zeichenkette
+    1377/     7A3 :                     ;------------------------------------------------------------------------------
+    1378/     7A3 :                     
+    1379/     7A3 : 00 09 46 0D         		db    0, 9, 'F', 0Dh
+    1380/     7A7 :                     ;
+    1381/     7A7 : ED 4B 5B 18         		ld	bc, (ARG1)	; Suchadresse
+    1382/     7AB : ED 5B 1A 18         fko1:		ld	de, (soil)
+    1383/     7AF : 1B                  		dec	de
+    1384/     7B0 : 1B                  		dec	de
+    1385/     7B1 : 03                  		inc	bc
+    1386/     7B2 : CD 72 01            		call	INHEX		; L = 1. Suchbyte
+    1387/     7B5 :                     ;		
+    1388/     7B5 : 0A                  fko2:		ld	a, (bc)
+    1389/     7B6 : BD                  		cp	l		; L = Suchbyte
+    1390/     7B7 : 28 07               		jr	z, fko3		; wenn Bytes gleich
+    1391/     7B9 : =>UNDEFINED         	ifndef fkopatch
+    1392/     7B9 : 03                  		inc	bc		; sonst naechste Suchadresse
+    1393/     7BA : 78                  		ld	a, b
+    1394/     7BB : B1                  		or	c
+    1395/     7BC : =>FALSE             	else
+    1396/     7BC :                     		ld	a, b
+    1397/     7BC :                     		or	c
+    1398/     7BC :                     		inc	bc		; sonst naechste Suchadresse
+    1399/     7BC : [1391]              	endif	
+    1400/     7BC : 28 18               		jr	z, fko5		; wenn Speicherende erreicht
+    1401/     7BE : 18 F5               		jr	fko2		; weitersuchen
+    1402/     7C0 :                     ;		
+    1403/     7C0 : C5                  fko3:		push	bc
+    1404/     7C1 : CD 72 01            fko4:		call	INHEX		; naechstes Suchbyte holen
+    1405/     7C4 : 03                  		inc	bc
+    1406/     7C5 : 0A                  		ld	a, (bc)
+    1407/     7C6 : BD                  		cp	l
+    1408/     7C7 : 28 F8               		jr	z, fko4		; solange gleich
+    1409/     7C9 : 1A                  		ld	a, (de)
+    1410/     7CA : FE 20               		cp	' '		; letztes Suchbyte verglichen?
+    1411/     7CC : C1                  		pop	bc
+    1412/     7CD : 28 DC               		jr	z, fko1		; nein -> weitersuchen
+    1413/     7CF :                     ; Bytefolge gefunden
+    1414/     7CF : ED 43 5B 18         		ld	(ARG1),	bc
+    1415/     7D3 : C3 85 04            		jp	mem		; Speicher modifizieren
+    1416/     7D6 :                     ; Bytefolge nirgends gefunden
+    1417/     7D6 : DF                  fko5:		rst	18h
+    1418/     7D7 : 20                  		db  20h
+    1419/     7D8 : 4E 4F 54 20 46 4F   		db "NOT FOUND",8Dh
+                    55 4E 44 8D 
+    1420/     7E2 : C9                  		ret
+    1421/     7E3 :                     
+    1422/     7E3 :                     ;------------------------------------------------------------------------------
+    1423/     7E3 :                     ;Z		 Kaltstart des Mini-BASIC-Interpreters
+    1424/     7E3 :                     ;------------------------------------------------------------------------------
+    1425/     7E3 :                     
+    1426/     7E3 : 00 09 5A 0D         		db    0, 9, 'Z', 0Dh
+    1427/     7E7 :                     ;
+    1428/     7E7 : 18 17               		jr	BASIC
+    1429/     7E9 :                     
+    1430/     7E9 : FF                  		db 0FFh
+    1431/     7EA : FF                  		db 0FFh
+    1432/     7EB :                     
+    1433/     7EB :                     ;------------------------------------------------------------------------------
+    1434/     7EB :                     ; Sprungverteiler
+    1435/     7EB :                     ;------------------------------------------------------------------------------
+    1436/     7EB :                     
+    1437/     7EB : C3 1D 01            		jp	MS30		; 30 ms	warten
+    1438/     7EE : C3 83 01            		jp	OUTHEX
+    1439/     7F1 : C3 9A 01            		jp	OUTHL		; Ausgabe HL hexadezimal
+    1440/     7F4 : C3 28 01            		jp	INLINE		; Zeile	eingeben
+    1441/     7F7 : C3 72 01            		jp	INHEX
+    1442/     7FA : C3 59 00            		jp	TASTE
+    1443/     7FD : C3 B0 02            		jp	GETCO1
+    1444/     800 :                     
+    1445/     800 :                     ; end of "ROM"
+    1446/     800 :                     
+    1447/     800 :                     
+    1448/     800 :                     
+    1449/    1800 :                     		org	RAM
+    1450/    1800 :                     
+    1451/    1800 :                     ;------------------------------------------------------------------------------
+    1452/    1800 :                     ; Arbeitsspeicherzellen
+    1453/    1800 :                     ;------------------------------------------------------------------------------
+    1454/    1800 :                     
+    1455/    1800 :                     cupos:		ds 2			; Cursorposition
+    1456/    1802 :                     ; Sprungverteiler f. RST-Aufrufe und NMI
+    1457/    1802 :                     jp_rst08:	ds 3			; jp	rinch
+    1458/    1805 :                     jp_rst10:	ds 3                    ; jp	routch       
+    1459/    1808 :                     jp_rst18:	ds 3                    ; jp	rprnst       
+    1460/    180B :                     jp_rst20:	ds 3                    ; jp	0FFFFh       
+    1461/    180E :                     jp_rst28:	ds 3                    ; jp	0FFFFh       
+    1462/    1811 :                     jp_rst30:	ds 3                    ; jp	0FFFFh       
+    1463/    1814 :                     jp_rst38:	ds 3                    ; jp	rError       
+    1464/    1817 :                     nmi:		ds 3                    ; jp	0FFFFh       
+    1465/    181A :                     ;
+    1466/    181A :                     soil:		ds 2			; Beginn Eingabezeile
+    1467/    181C :                     		ds 8
+    1468/    1824 :                     ;load
+    1469/    1824 :                     phako:		ds 1			; Phasenkorrektur Load
+    1470/    1825 :                     LOMOD:		ds 1			; Load-Mode: Load=0, Verify=FFh
+    1471/    1826 :                     ;Stack
+    1472/    1826 :                     		ds 30h			; Stackbereich
+    1473/    1856 :                     SYSSK:		ds 2			; System-Stack 
+    1474/    1858 :                     data:		ds 2			; interner Speicher f. Monitor
+    1475/    185A :                     		ds 1
+    1476/    185B :                     ;Kdo-Argumente		
+    1477/    185B :                     ARG1:		ds 2
+    1478/    185D :                     ARG2:		ds 2
+    1479/    185F :                     ARG3:		ds 2
+    1480/    1861 :                     ;Registerrettebereich (register save area)
+    1481/    1861 :                     ;Reihenfolge REGAFX..REGSP ist wichtig! Nicht verändern!
+    1482/    1861 : =1861H              RSA		equ	$
+    1483/    1861 :                     REGAFX:		ds 2
+    1484/    1863 :                     REGBCX:		ds 2
+    1485/    1865 :                     REGDEX:		ds 2
+    1486/    1867 :                     REGHLX:		ds 2
+    1487/    1869 :                     REGAF:		ds 2
+    1488/    186B :                     REGBC:		ds 2
+    1489/    186D :                     REGDE:		ds 2
+    1490/    186F :                     REGHL:		ds 2
+    1491/    1871 :                     REGIX:		ds 2
+    1492/    1873 :                     REGIY:		ds 2
+    1493/    1875 :                     REGPC:		ds 2
+    1494/    1877 :                     REGSP:		ds 2
+    1495/    1879 :                     ;
+    1496/    1879 :                     BPADR:		ds 2
+    1497/    187B :                     BPOPC:		ds 3
+    1498/    187E : =187EH              sysramend:	equ $
+    1499/    187E :                     
+    1500/    187E :                     		end
+ AS V1.42 Beta [Bld 116] - source file mon_v31_16-as.asm - page 2 - 8/24/2018 14:07:16
+
+
+  symbol table (* = unused):
+  ------------------------
+
+*ABREA :                        457 C |  AKO1 :                         51D C |
+ AKO2 :                         525 C |  AKO3 :                         52F C |
+ AKO4 :                         552 C |  AKO5 :                         565 C |
+ ANZAF :                        5A3 C |  ANZBC :                        59D C |
+ ANZDE :                        597 C |  ANZHL :                        591 C |
+ ANZIX :                        58B C |  ANZIY :                        585 C |
+ ANZPC :                        57F C |  ANZSP :                        579 C |
+*ARCHITECTURE :  i386-unknown-win32 - |  ARG1 :                        185B C |
+ ARG2 :                        185D C |  ARG3 :                        185F C |
+ BASIC :                        800 - | *BIGENDIAN :                      0 - |
+ BPADR :                       1879 C |  BPOPC :                       187B C |
+*BRANCHEXT :                      0 - |  BREAK :                        6DF C |
+ BWS :                         1000 - | *CASESENSITIVE :                  0 - |
+ CKO1 :                         778 C |  CKO2 :                         77C C |
+ CKO3 :                         784 C | *CLOAD :                        364 C |
+ COLS :                          40 - | *CONSTPI :        3.141592653589793 - |
+ CSAVE :                        2BA C |  CUPOS :                       1800 C |
+ DATA :                        1858 C | *DATE :                   8/24/2018 - |
+ DKO1 :                         466 C |  D_KO2 :                        474 C |
+ E_KDO :                        726 C | *FALSE :                          0 - |
+ FKO1 :                         7AB C |  FKO2 :                         7B5 C |
+ FKO3 :                         7C0 C |  FKO4 :                         7C1 C |
+ FKO5 :                         7D6 C |  FLAGS :                        651 C |
+ FLG1 :                         658 C |  FLG2 :                         65E C |
+ FLG3 :                         664 C |  FLG4 :                         66A C |
+ FLG5 :                         670 C |  FLG6 :                         676 C |
+*FULLPMMU :                       1 - |  GETCO1 :                       2B0 C |
+*GETCO2 :                       2B3 C | *HAS64 :                          1 - |
+*HASDSP :                         0 - | *HASFPU :                         0 - |
+*HASPMMU :                        0 - |  IKO1 :                         292 C |
+ IKO2 :                         2A4 C | *INCH :                           8 C |
+*INEXTMODE :                      0 - |  INHEX :                        172 C |
+*INIT :                           0 C |  INIT1 :                         23 C |
+ INIT2 :                         2B C |  INIT3 :                         33 C |
+ INIT4 :                        24C C |  INITSV :                       240 C |
+ INLIN1 :                       12D C |  INLIN2 :                       139 C |
+ INLINE :                       128 C | *INLWORDMODE :                    0 - |
+*INMAXMODE :                      0 - | *INSRCMODE :                      0 - |
+*INSUPMODE :                      0 - |  JKO1 :                         73A C |
+ JKOERR :                       768 C |  JP_RST08 :                    1802 C |
+ JP_RST10 :                    1805 C |  JP_RST18 :                    1808 C |
+ JP_RST20 :                    180B C |  JP_RST28 :                    180E C |
+ JP_RST30 :                    1811 C |  JP_RST38 :                    1814 C |
+ J_KDO :                        735 C |  KDO1 :                         1DE C |
+ KDO2 :                         1E7 C |  KDO3 :                         20E C |
+ KDO4 :                         21D C |  KDOERR :                       1D6 C |
+ KONVX :                        146 C | *KONVX1 :                       14E C |
+ KONVX2 :                       156 C |  KONVX3 :                       168 C |
+ LINES :                         10 - | *LISTON :                         1 - |
+ LOA1 :                         374 C |  LOA10 :                        402 C |
+*LOA11 :                        408 C |  LOA12 :                        410 C |
+ LOA13 :                        421 C |  LOA14 :                        423 C |
+ LOA15 :                        426 C |  LOA16 :                        429 C |
+ LOA17 :                        435 C |  LOA18 :                        43C C |
+ LOA19 :                        446 C |  LOA2 :                         377 C |
+ LOA20 :                        451 C |  LOA21 :                        456 C |
+ LOA3 :                         382 C |  LOA4 :                         392 C |
+ LOA5 :                         39E C |  LOA6 :                         3AA C |
+ LOA7 :                         3C5 C |  LOA8 :                         3CF C |
+ LOA9 :                         3EC C |  LOMOD :                       1825 C |
+*MACEXP :                         7 - |  MEM :                          485 C |
+ MEM1 :                         488 C |  MEM2 :                         49A C |
+ MEM3 :                         4A1 C |  MEM4 :                         4AF C |
+ MEM5 :                         4B1 C | *MOMCPU :                        80 - |
+*MOMCPUNAME :                   Z80 - |  MS30 :                         11D C |
+ MS301 :                        121 C |  NAMELEN :                        6 - |
+*NESTMAX :                      100 - |  NMI :                         1817 C |
+ OCLS :                          B0 C |  OCR :                           A9 C |
+ ODEL :                          C5 C |  OUT3SP :                       5AA C |
+ OUTCH :                         10 C |  OUTCR :                        576 C |
+ OUTHEX :                       183 C |  OUTHEX1 :                      18C C |
+ OUTHEX2 :                      197 C |  OUTHL :                        19A C |
+ OUTHL3 :                       5A7 C | *PACKING :                        0 - |
+*PADDING :                        1 - |  PARA :                         4CA C |
+ PHAKO :                       1824 C |  PIOCA :                          6 - |
+ PIOCB :                          7 - |  PIODA :                          4 - |
+ PIODB :                          5 - |  PKO1 :                         4E9 C |
+*PRNST :                         18 C |  RAM :                         1800 - |
+ RAMEND :                      2000 - |  REG1 :                         1D1 C |
+ REGA :                         1A5 C |  REGAF :                       1869 C |
+ REGAFX :                      1861 C |  REGBC :                       186B C |
+ REGBCX :                      1863 C |  REGDE :                       186D C |
+ REGDEX :                      1865 C |  REGH :                         1BC C |
+ REGHL :                       186F C |  REGHLX :                      1867 C |
+ REGIX :                       1871 C |  REGIY :                       1873 C |
+ REGPC :                       1875 C |  REGSP :                       1877 C |
+*RELAXED :                        0 - |  RERROR :                        3B C |
+ RERROR1 :                      105 C |  RINCH :                          B C |
+ RINCH1 :                        CA C |  RINCH2 :                        CD C |
+ RINCH3 :                        CF C |  RINCH4 :                        D1 C |
+ RINCH5 :                        D4 C |  RINCH6 :                        E7 C |
+ RINCH7 :                        F9 C |  RKO1 :                         677 C |
+ RKO2 :                         696 C |  RKO3 :                         6A3 C |
+ RKO4 :                         6C1 C |  RKO5 :                         6DC C |
+ ROM :                            0 - |  ROUTCH :                        13 C |
+ ROUTCH1 :                       69 C | *ROUTCH2 :                       7C C |
+ ROUTCH3 :                       80 C |  ROUTCH4 :                       9F C |
+ ROUTCH5 :                       A5 C |  RPRNST :                        1B C |
+ RPRNST1 :                       1C C |  RPRNST2 :                       52 C |
+ RSA :                         1861 - |  SAV1 :                         2C2 C |
+ SAV10 :                        330 C |  SAV11 :                        333 C |
+ SAV12 :                        33F C |  SAV13 :                        343 C |
+ SAV14 :                        34B C |  SAV15 :                        350 C |
+ SAV2 :                         2D8 C |  SAV3 :                         2E1 C |
+ SAV4 :                         2EE C |  SAV5 :                         303 C |
+ SAV6 :                         304 C |  SAV7 :                         310 C |
+ SAV8 :                         320 C |  SAV9 :                         329 C |
+ SOIL :                        181A C |  SV_RST :                       228 C |
+ SYSRAMEND :                   187E - |  SYSSK :                       1856 C |
+ TASTE :                         59 C | *TIME :                    14:07:16 - |
+*TRUE :                           1 - | *VERSION :                     142F - |
+ ZK1 :                           31 - |  ZK2 :                           2E - |
+ ZKR :                           3F - |
+
+    225 symbols
+     37 unused symbols
+
+ AS V1.42 Beta [Bld 116] - source file mon_v31_16-as.asm - page 3 - 8/24/2018 14:07:16
+
+
+  defined functions:
+  ------------------
+
+LO                                    | HI                                   
+
+ AS V1.42 Beta [Bld 116] - source file mon_v31_16-as.asm - page 4 - 8/24/2018 14:07:16
+
+
+  codepages:
+  ----------
+
+STANDARD (0 changed characters)
+
+
+0.02 seconds assembly time
+
+   1501 lines source file
+      2 passes
+      0 errors
+      0 warnings
