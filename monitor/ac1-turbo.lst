@@ -1,0 +1,1119 @@
+ AS V1.42 Beta [Bld 157] - Source File AC1-TURBO.asm - Page 1 - 1/25/2023 11:3:40
+
+
+       1/       0 :                     ; File Name   :	d:\hobby3\ac1\turbo\AC1-TURBO-LOAD-C_2000_284F_2000.bin
+       2/       0 :                     ; Base Address:	0000h Range: 2000h - 2850h Loaded length: 0850h
+       3/       0 :                     
+       4/       0 :                     		cpu	z80undoc
+       5/       0 :                     
+       6/       0 :                     		include	ac1-2010.asm
+(1)    1/       0 :                     ;------------------------------------------------------------------------------
+(1)    2/       0 :                     ;AC1-2010 include-Datei
+(1)    3/       0 :                     ;Volker Pohlers, Neustadt i.H., 09.01.2023
+(1)    4/       0 :                     ;------------------------------------------------------------------------------
+(1)    5/       0 :                     
+(1)    6/       0 :                     
+(1)    7/       0 :                     ;------------------------------------------------------------------------------
+(1)    8/       0 :                     ; Makros
+(1)    9/       0 :                     ;------------------------------------------------------------------------------
+(1)   10/       0 :                     
+(1)   11/       0 :                     hi              function x, (x>>8) & 0ffh	; High-Byte
+(1)   12/       0 :                     lo              function x, x & 0ffh		; Low-Byte
+(1)   13/       0 :                     ; bws(zeile 0..31, spalte 0..63) analog print_at
+(1)   14/       0 :                     bws		function z, s, 1800h-z*64-s
+(1)   15/       0 :                     
+(1)   16/       0 :                     ;------------------------------------------------------------------------------
+(1)   17/       0 :                     ; Speicheradressen
+(1)   18/       0 :                     ;------------------------------------------------------------------------------
+(1)   19/       0 :                     
+(1)   20/       0 : =0H                 ROM		equ	0000h
+(1)   21/       0 : =800H               BASIC		equ	0800h
+(1)   22/       0 : =1000H              BWS		equ	1000h
+(1)   23/       0 : =1800H              RAM		equ	1800h
+(1)   24/       0 :                     ; BWS
+(1)   25/       0 : =40H                COLS		equ	64
+(1)   26/       0 : =20H                LINES		equ	32
+(1)   27/       0 :                     ; 01000H Bildschirmende (rechts unten !!)
+(1)   28/       0 :                     ; 017FFH Bildschirmanfang (links oben !!)
+(1)   29/       0 :                     
+(1)   30/       0 : =1800H              cupos:		equ	1800h		; Cursorposition (Adr im RAM)
+(1)   31/       0 : =1802H              jp_rst08:	equ	1802h		; jp	rinch
+(1)   32/       0 : =1805H              jp_rst10:	equ	1805h		; jp	routch
+(1)   33/       0 : =1808H              jp_rst18:	equ	1808h		; jp	rprnst
+(1)   34/       0 : =180BH              jp_rst20:	equ	180Bh		; jp	0FFFFh
+(1)   35/       0 : =180EH              jp_rst28:	equ	180Eh		; jp	0FFFFh
+(1)   36/       0 : =1811H              jp_rst30:	equ	1811h		; jp	0FFFFh
+(1)   37/       0 : =1814H              jp_rst38:	equ	1814h		; jp	rError
+(1)   38/       0 : =1817H              jp_nmi:		equ	1817h		; jp NMI-Routine
+(1)   39/       0 : =181AH              soil:		equ	181Ah		; Beginn Eingabezeile
+(1)   40/       0 : =1856H              SYSSK:		equ	1856h		; System-Stack 
+(1)   41/       0 : =1858H              data:		equ	1858h		; interner Speicher f. Monitor
+(1)   42/       0 : =185BH              ARG1:		equ	185Bh		; Kdo-Argument 1
+(1)   43/       0 : =185DH              ARG2:		equ	185Dh		; Kdo-Argument 2
+(1)   44/       0 : =185FH              ARG3:		equ	185Fh		; Kdo-Argument 3
+(1)   45/       0 :                     
+(1)   46/       0 :                     ;------------------------------------------------------------------------------
+(1)   47/       0 :                     ; I/O-Adressen
+(1)   48/       0 :                     ;------------------------------------------------------------------------------
+(1)   49/       0 :                     
+(1)   50/       0 : =0H                 CTC0		equ	0
+(1)   51/       0 : =1H                 CTC1		equ	1
+(1)   52/       0 : =2H                 CTC2		equ	2
+(1)   53/       0 : =3H                 CTC3		equ	3
+(1)   54/       0 :                     
+ AS V1.42 Beta [Bld 157] - Source File AC1-TURBO.asm(ac1-2010.asm) - Page 2 - 1/25/2023 11:3:40
+
+
+(1)   55/       0 : =4H                 PIODA		equ	4		; Tastatur
+(1)   56/       0 : =5H                 PIODB		equ	5		; Grafik/Ton
+(1)   57/       0 : =6H                 PIOCA		equ	6
+(1)   58/       0 : =7H                 PIOCB		equ	7
+(1)   59/       0 :                     
+(1)   60/       0 : =8H                 PIO2DA		equ	8
+(1)   61/       0 : =9H                 PIO2DB		equ	9
+(1)   62/       0 : =0AH                PIO2CA		equ	0Ah
+(1)   63/       0 : =0BH                PIO2CB		equ	0Bh
+(1)   64/       0 :                     
+(1)   65/       0 : =14H                modul1		equ	14h		; Konfiguationsbyte für Modul 1
+(1)   66/       0 :                     
+(1)   67/       0 :                     ;------------------------------------------------------------------------------
+(1)   68/       0 :                     ; Monitor-Funktionen
+(1)   69/       0 :                     ;------------------------------------------------------------------------------
+(1)   70/       0 :                     ;
+(1)   71/       0 :                     
+(1)   72/       0 :                     ; allg. AC1
+(1)   73/       0 : =8H                 inch		equ	0008h
+(1)   74/       0 : =10H                outch		equ	0010h
+(1)   75/       0 : =18H                prnst		equ	0018h
+(1)   76/       0 :                     
+(1)   77/       0 : =7EBH               MS30	    	equ	07EBh		; 30 ms	warten
+(1)   78/       0 : =7EEH               OUTHEX      	equ	07EEh		; Ausgabe A  hexadezimal
+(1)   79/       0 : =7F1H               OUTHL	    	equ	07F1h		; Ausgabe HL hexadezimal
+(1)   80/       0 : =7F4H               INLINE	    	equ	07F4h		; Zeile	eingeben, Adr steht in soil
+(1)   81/       0 : =7F7H               INHEX       	equ	07F7h		; konv. ASCII-Hex ab (DE) abwärts nach HL
+(1)   82/       0 : =7FAH               TASTE       	equ	07FAh		; testet den Tastaturstatus, ret Z=1 keine Taste, sonst A=Code
+(1)   83/       0 : =7FDH               GETCO1      	equ	07FDh		; Sprung zur Monitoreingabeschleife
+(1)   84/       0 :                     
+(1)   85/       0 :                     ;------------------------------------------------------------------------------
+(1)   86/       0 :                     ; Zeichen
+(1)   87/       0 :                     ;------------------------------------------------------------------------------
+(1)   88/       0 :                     
+(1)   89/       0 :                     ; ac1
+(1)   90/       0 : =8H                 BS		equ	08h		; backspace
+(1)   91/       0 : =0CH                CLS		equ	0Ch		; Bildschirm löschen
+(1)   92/       0 : =0DH                CR		equ	0Dh		; neue Zeile
+(1)   93/       0 : =20H                SPC		EQU	20H		; Leerzeichen
+(1)   94/       0 :                     
+(1)   95/       0 :                     ; ac12010
+(1)   96/       0 :                     ; Steuercodes Bildschirm
+(1)   97/       0 : =1H                 HOME:		equ 	01h		; Home, Kursor oben links
+(1)   98/       0 : =2H                 CLSC:		equ 	02h		; Bildschirm ab Kursorposition löschen
+(1)   99/       0 : =3H                 CLLN:		equ 	03h		; Zeile ab Kursorposition löschen
+(1)  100/       0 : =4H                 DEL:		equ 	04h		; Delete; Zeichen löschen, Zeile rückt nach links
+(1)  101/       0 : =5H                 INS:		equ 	05h		; Insert; Space einfügen, Zeile rückt nach rechts
+(1)  102/       0 : =6H                 SOL:		equ 	06h		; Kursor an den Anfang der Zeile
+(1)  103/       0 : =7H                 BELL:		equ 	07h		; BEL, akustisches Signal
+(1)  104/       0 : =8H                 LEFT:		equ 	08h		; Kursor nach links
+(1)  105/       0 : =9H                 RIGHT:		equ 	09h		; Kursor nach rechts
+(1)  106/       0 : =0AH                DOWN:		equ 	0Ah		; Kursor nach unten
+(1)  107/       0 : =0BH                UP:		equ 	0Bh		; Kursor nach oben
+(1)  108/       0 :                     ;CLS:		equ 	0Ch		; Bildschirm löschen
+(1)  109/       0 :                     ;CR:		equ 	0Dh		; CR, Kursor an Anfang nächster Zeile; Enter
+(1)  110/       0 : =0EH                SETC:		equ 	0Eh		; Kursor direkt positionieren
+(1)  111/       0 : =0FH                TAB:		equ 	0Fh		; Tabulator 8 Spalten
+(1)  112/       0 :                     
+(1)  113/       0 : =10H                norm:		equ	10H 		; Einzelzeichen-normal
+(1)  114/       0 : =11H                inv:		equ	11H 		; Einzelzeichen-Invers
+ AS V1.42 Beta [Bld 157] - Source File AC1-TURBO.asm(ac1-2010.asm) - Page 3 - 1/25/2023 11:3:40
+
+
+(1)  115/       0 : =18H                printon:	equ	18H 		; Drucker ein (V 24 – Schnittstelle)
+(1)  116/       0 : =19H                printoff:	equ	19H 		; Ein-/Ausgabe normal Drucker aus
+(1)  117/       0 :                     ;		equ	1AH 		; Umschaltung Zeichensatz SCCH/ACC
+(1)  118/       0 : =5FH                rubout:		equ	5FH 		; Kursor nach links und Zeichen löschen
+(1)  119/       0 :                     
+       7/       0 :                     
+       8/       0 :                     ;------------------------------------------------------------------------------
+       9/       0 :                     ; genutzte interne Systemroutinen und Adressen aus Monitor V8
+      10/       0 :                     ;------------------------------------------------------------------------------
+      11/       0 :                     
+      12/       0 : =6EH                INIT8		equ 006Eh	; Systemstart
+      13/       0 : =243H               BREAK		equ 0243h
+      14/       0 : =287H               UPTON		equ 0287h
+      15/       0 : =297H               UPTAST		equ 0297h
+      16/       0 : =404H               crc		equ 0404h
+      17/       0 : =0A31H              q_ko20		equ 0A31h	; Start/Stop-Schaltung stop
+      18/       0 : =0A37H              q_ko21		equ 0A37h	; Start/Stop-Schaltung start
+      19/       0 : =0BF7H              tbsave		equ 0BF7h	; Kassette Save Turbo
+      20/       0 : =0C33H              tbsav8		equ 0C33h	; Kassette Save Turbo ab Kopfinhalt ausgeben
+      21/       0 : =0C7AH              tbsav21		equ 0C7Ah	; Save: Flanke wechseln
+      22/       0 : =0C81H              tbload		equ 0C81h	; Kassette Load Turbo
+      23/       0 : =0CBDH              tb_loa3		equ 0CBDh	; Block laden
+      24/       0 : =0D06H              tb_loa12	equ 0D06h	; Rest Block lesen
+      25/       0 : =0D5AH              tb_loa24	equ 0D5Ah	; Load: Bit einlesen,Z=0 --> Flanke
+      26/       0 : =0D52H              tb_loa25	equ 0D52h	; Warten auf Flankenwechsel
+      27/       0 : =0D64H              tb_loa19	equ 0D64h	; lesen DE
+      28/       0 : =0D89H              sub_D89:	equ 0D89h	; Anzeige Dateiname, aadr, eadr
+      29/       0 : =0DE1H              loc_DE1		equ 0DE1h	; Rest Fehleranzeige zu Kassette Load Turbo
+      30/       0 : =1817H              nmi		equ 1817h	; CALL aktuelle NMI-Routine
+      31/       0 : =1823H              phako		equ 1823h	; Hilfsregister (AC1-Format Einlesen, Phasenkorrektur)
+      32/       0 : =187EH              tbb_eadr:	equ 187Eh	; Endadr. Block
+      33/       0 : =1880H              tbb_aadr:	equ 1880h	; AAdr. Block
+      34/       0 : =1882H              tb_errarr:	equ 1882h	; Speicher für 10 Adressen Blockfehler
+      35/       0 : =1896H              tb_kopfbuf:	equ 1896h	; 32 Byte Buffer für Turbo Namenskopf
+      36/       0 : =18B6H              tb_blkbuf:	equ 18B6h	; 32 Byte Kopfblockbuffer beim Lesen
+      37/       0 : =18D5H              tbl_special:	equ 18D5h	; tb_blkbuf+31		; Kennung
+      38/       0 :                     
+      39/       0 :                     ;------------------------------------------------------------------------------
+      40/       0 :                     ; Kommando 'l'
+      41/       0 :                     ;------------------------------------------------------------------------------
+      42/    2000 :                     		org 2000h
+      43/    2000 :                     
+      44/    2000 : 00 09 6C 0D         		db 0,9,'l',0Dh
+      45/    2004 :                     
+      46/    2004 : DF                  		rst	prnst; Ausgabe String
+      47/    2005 : 8C                  		db 8Ch
+      48/    2006 :                     ;
+      49/    2006 : DB 05               		in	a, (PIODB)	; Grafik/Ton
+      50/    2008 : CB DF               		set	3, a
+      51/    200A : D3 05               		out	(PIODB), a	; Grafik/Ton
+      52/    200C :                     ;
+      53/    200C : AF                  		xor	a
+      54/    200D : D3 14               		out	(modul1), a	; Modul 1 aus
+      55/    200F :                     ;
+      56/    200F : 21 00 10            		ld	hl, 1000h	; BWSEND
+      57/    2012 : CD 39 26            loc_2012:	call	sub_2639	; window
+      58/    2015 : 20 02               		jr	nz, loc_2019
+      59/    2017 : 36 C7               		ld	(hl), 0C7h 	; Bildschirm mit Zeichen füllen
+      60/    2019 : 23                  loc_2019:	inc	hl
+      61/    201A : 7C                  		ld	a, h
+ AS V1.42 Beta [Bld 157] - Source File AC1-TURBO.asm - Page 4 - 1/25/2023 11:3:40
+
+
+      62/    201B : FE 18               		cp	hi(1800h)	; BWSANF erreicht?
+      63/    201D : 20 F3               		jr	nz, loc_2012
+      64/    201F :                     ;		
+      65/    201F : DF                  		rst	prnst; Ausgabe String
+      66/    2020 :                     		; 11h invers an, 10h invers aus, 0Eh setcursor
+      67/    2020 : 0E 30 35 31 32 11   		db 0Eh,"0512",11h
+      68/    2026 : 0E 30 35 35 32 10   		db 0Eh,"0552",10h
+      69/    202C : 0E 30 36 31 32 11   		db 0Eh,"0612",11h," * AC 1 * T U R B O  LOAD/COPY * V.1 * ",10h
+                    20 2A 20 41 43 20 
+                    31 20 2A 20 54 20 
+                    55 20 52 20 42 20 
+                    4F 20 20 4C 4F 41 
+                    44 2F 43 4F 50 59 
+                    20 2A 20 56 2E 31 
+                    20 2A 20 10       
+      70/    205A : 0E 30 37 31 32 11   		db 0Eh,"0712",11h
+      71/    2060 : 0E 30 37 35 32 10   		db 0Eh,"0752",10h
+      72/    2066 : 0E 32 39 32 30 11   		db 0Eh,"2920",11h,"(C)1988 E.Ludwig, Tel.Halle 41082 "
+                    28 43 29 31 39 38 
+                    38 20 45 2E 4C 75 
+                    64 77 69 67 2C 20 
+                    54 65 6C 2E 48 61 
+                    6C 6C 65 20 34 31 
+                    30 38 32 20       
+      73/    208E : 0E 30 39 31 32 44   		db 0Eh,"0912Das Ladeprogramm erm|glicht eine Fehler-"
+                    61 73 20 4C 61 64 
+                    65 70 72 6F 67 72 
+                    61 6D 6D 20 65 72 
+                    6D 7C 67 6C 69 63 
+                    68 74 20 65 69 6E 
+                    65 20 46 65 68 6C 
+                    65 72 2D          
+      74/    20BB : 0E 31 30 31 32 6B   		db 0Eh,"1012korrektur  beim  Laden von  TURBO TAPE -"
+                    6F 72 72 65 6B 74 
+                    75 72 20 20 62 65 
+                    69 6D 20 20 4C 61 
+                    64 65 6E 20 76 6F 
+                    6E 20 20 54 55 52 
+                    42 4F 20 54 41 50 
+                    45 20 2D          
+      75/    20E8 : 0E 31 31 31 32 41   		db 0Eh,"1112Aufzeichnungen sowie ein verschiebliches"
+                    75 66 7A 65 69 63 
+                    68 6E 75 6E 67 65 
+                    6E 20 73 6F 77 69 
+                    65 20 65 69 6E 20 
+                    76 65 72 73 63 68 
+                    69 65 62 6C 69 63 
+                    68 65 73          
+      76/    2115 : 0E 31 32 31 32 4C   		db 0Eh,"1212Laden in beliebige Adressbereiche."
+                    61 64 65 6E 20 69 
+                    6E 20 62 65 6C 69 
+                    65 62 69 67 65 20 
+                    41 64 72 65 73 73 
+                    62 65 72 65 69 63 
+                    68 65 2E          
+      77/    213C : 0E 31 33 31 32 44   		db 0Eh,"1312Damit eine universelle Anwendbarkeit ge-"
+                    61 6D 69 74 20 65 
+                    69 6E 65 20 75 6E 
+                    69 76 65 72 73 65 
+                    6C 6C 65 20 41 6E 
+ AS V1.42 Beta [Bld 157] - Source File AC1-TURBO.asm - Page 5 - 1/25/2023 11:3:40
+
+
+                    77 65 6E 64 62 61 
+                    72 6B 65 69 74 20 
+                    67 65 2D          
+      78/    2169 : 0E 31 34 31 32 77   		db 0Eh,"1412w{hrleistet ist, sind Filetypen P, D u.B"
+                    7B 68 72 6C 65 69 
+                    73 74 65 74 20 69 
+                    73 74 2C 20 73 69 
+                    6E 64 20 46 69 6C 
+                    65 74 79 70 65 6E 
+                    20 50 2C 20 44 20 
+                    75 2E 42          
+      79/    2196 : 0E 31 35 31 32 6C   		db 0Eh,"1512ladbar."
+                    61 64 62 61 72 2E 
+      80/    21A2 : 0E 31 36 31 32 44   		db 0Eh,"1612Die Fehlerkorrektur ist nur m|glich  bei"
+                    69 65 20 46 65 68 
+                    6C 65 72 6B 6F 72 
+                    72 65 6B 74 75 72 
+                    20 69 73 74 20 6E 
+                    75 72 20 6D 7C 67 
+                    6C 69 63 68 20 20 
+                    62 65 69          
+      81/    21CF : 0E 31 37 31 32 41   		db 0Eh,"1712Aufzeichnungen des MONITOR V.8 (AC1) V.9"
+                    75 66 7A 65 69 63 
+                    68 6E 75 6E 67 65 
+                    6E 20 64 65 73 20 
+                    4D 4F 4E 49 54 4F 
+                    52 20 56 2E 38 20 
+                    28 41 43 31 29 20 
+                    56 2E 39          
+      82/    21FC : 0E 31 38 31 32 28   		db 0Eh,"1812(LLC2) der }berarbeiteten Version 01/88!"
+                    4C 4C 43 32 29 20 
+                    64 65 72 20 7D 62 
+                    65 72 61 72 62 65 
+                    69 74 65 74 65 6E 
+                    20 56 65 72 73 69 
+                    6F 6E 20 30 31 2F 
+                    38 38 21          
+      83/    2229 : 0E 31 39 31 32 54   		db 0Eh,"1912Tritt ein Ladefehler auf, wird  gestoppt"
+                    72 69 74 74 20 65 
+                    69 6E 20 4C 61 64 
+                    65 66 65 68 6C 65 
+                    72 20 61 75 66 2C 
+                    20 77 69 72 64 20 
+                    20 67 65 73 74 6F 
+                    70 70 74          
+      84/    2256 : 0E 32 30 31 32 75   		db 0Eh,"2012und der Computer fragt REPEAT J/N ? ."
+                    6E 64 20 64 65 72 
+                    20 43 6F 6D 70 75 
+                    74 65 72 20 66 72 
+                    61 67 74 20 52 45 
+                    50 45 41 54 20 4A 
+                    2F 4E 20 3F 20 2E 
+      85/    2280 : 0E 32 31 31 32 4D   		db 0Eh,"2112Mit \"J\" kann das Laden wiederholt werden"
+                    69 74 20 22 4A 22 
+                    20 6B 61 6E 6E 20 
+                    64 61 73 20 4C 61 
+                    64 65 6E 20 77 69 
+                    65 64 65 72 68 6F 
+                    6C 74 20 77 65 72 
+                    64 65 6E          
+ AS V1.42 Beta [Bld 157] - Source File AC1-TURBO.asm - Page 6 - 1/25/2023 11:3:40
+
+
+      86/    22AD : 0E 32 32 31 32 28   		db 0Eh,"2212(Band St}ck zur}ck).  Mit  Erreichen des"
+                    42 61 6E 64 20 53 
+                    74 7D 63 6B 20 7A 
+                    75 72 7D 63 6B 29 
+                    2E 20 20 4D 69 74 
+                    20 20 45 72 72 65 
+                    69 63 68 65 6E 20 
+                    64 65 73          
+      87/    22DA : 0E 32 33 31 32 66   		db 0Eh,"2312fehlerhaften Block wird das Laden  fort-"
+                    65 68 6C 65 72 68 
+                    61 66 74 65 6E 20 
+                    42 6C 6F 63 6B 20 
+                    77 69 72 64 20 64 
+                    61 73 20 4C 61 64 
+                    65 6E 20 20 66 6F 
+                    72 74 2D          
+      88/    2307 : 0E 32 34 31 32 67   		db 0Eh,"2412gesetzt. Mit \"N\" wird der Block  fehler-"
+                    65 73 65 74 7A 74 
+                    2E 20 4D 69 74 20 
+                    22 4E 22 20 77 69 
+                    72 64 20 64 65 72 
+                    20 42 6C 6F 63 6B 
+                    20 20 66 65 68 6C 
+                    65 72 2D          
+      89/    2334 : 0E 32 35 31 32 68   		db 0Eh,"2512haft geladen! Nach Load entsprechend dem"
+                    61 66 74 20 67 65 
+                    6C 61 64 65 6E 21 
+                    20 4E 61 63 68 20 
+                    4C 6F 61 64 20 65 
+                    6E 74 73 70 72 65 
+                    63 68 65 6E 64 20 
+                    64 65 6D          
+      90/    2361 : 0E 32 36 31 32 4D   		db 0Eh,"2612Men} weiter !      ",11h
+                    65 6E 7D 20 77 65 
+                    69 74 65 72 20 21 
+                    20 20 20 20 20 20 
+                    11                
+      91/    237A : 0E 32 36 34 34 90   		db 0Eh,"2644",90h
+      92/    2380 :                     
+      93/    2380 :                     		 ; kurze Wartezeit oder Enter drücken
+      94/    2380 : 06 A0               loc_2380:	ld	b, 0A0h
+      95/    2382 : CD 97 02            loc_2382:	call	UPTAST
+      96/    2385 : FE 0D               		cp	0Dh		; CR
+      97/    2387 : 28 29               		jr	z, loc_23B2
+      98/    2389 : 10 F7               		djnz	loc_2382
+      99/    238B :                     		;
+     100/    238B : 0C                  		inc	c
+     101/    238C : CB 49               		bit	1, c
+     102/    238E : DF                  		rst	prnst; Ausgabe String
+     103/    238F : 0E 32 36 33 B3      		db 0Eh,"263",0B3h
+     104/    2394 : 20 0E               		jr	nz, loc_23A4
+     105/    2396 :                     ;		
+     106/    2396 : DF                  		rst	prnst; Ausgabe String
+     107/    2397 : 53 54 41 52 54 20   		db "START (CR)",0A0h
+                    28 43 52 29 A0    
+     108/    23A2 : 18 DC               		jr	loc_2380
+     109/    23A4 :                     ;		
+     110/    23A4 : DF                  loc_23A4:	rst	prnst; Ausgabe String
+     111/    23A5 : 20 20 20 20 20 20   		db "          ",0A0h
+                    20 20 20 20 A0    
+ AS V1.42 Beta [Bld 157] - Source File AC1-TURBO.asm - Page 7 - 1/25/2023 11:3:40
+
+
+     112/    23B0 : 18 CE               		jr	loc_2380
+     113/    23B2 :                     ; Load next
+     114/    23B2 : 01 40 E0            loc_23B2:	ld	bc, 0E040h
+     115/    23B5 : CD 87 02            		call	UPTON
+     116/    23B8 : 21 00 16            		ld	hl, 1600h
+     117/    23BB : CD 39 26            loc_23BB:	call	sub_2639	; window
+     118/    23BE : 28 02               		jr	z, loc_23C2
+     119/    23C0 : 36 20               		ld	(hl), ' '
+     120/    23C2 : 2B                  loc_23C2:	dec	hl
+     121/    23C3 : 7C                  		ld	a, h
+     122/    23C4 : FE 10               		cp	hi(1000h)	; BWSEND
+     123/    23C6 : 20 F3               loc_23C6:	jr	nz, loc_23BB
+     124/    23C8 : DF                  		rst	prnst; Ausgabe String
+     125/    23C9 : 0E 30 39 31 32 4C   		db 0Eh,"0912Load Adresse (nur CR Original):"
+                    6F 61 64 20 41 64 
+                    72 65 73 73 65 20 
+                    28 6E 75 72 20 43 
+                    52 20 4F 72 69 67 
+                    69 6E 61 6C 29 3A 
+     126/    23ED : 0E 31 30 31 B1      		db 0Eh,"101",0B1h
+     127/    23F2 :                     		;
+     128/    23F2 : CD F4 07            		call	INLINE		; Zeile eingeben, Adr steht in soil
+     129/    23F5 : 2A 1A 18            		ld	hl, (soil)	; Beginn Eingabezeile
+     130/    23F8 : EB                  		ex	de, hl
+     131/    23F9 : CD F7 07            		call	INHEX		; konv. ASCII-Hex ab (DE) abwärts nach HL
+     132/    23FC : 22 5F 18            		ld	(ARG3), hl	; Kdo-Argument 3
+     133/    23FF : DF                  		rst	prnst		; Ausgabe String
+     134/    2400 : 0E 31 32 31 32 50   		db 0Eh,"1212Programmname eingeben :",0A0h
+                    72 6F 67 72 61 6D 
+                    6D 6E 61 6D 65 20 
+                    65 69 6E 67 65 62 
+                    65 6E 20 3A A0    
+     135/    241D : 21 96 18            		ld	hl, tb_kopfbuf	; 32 Byte Buffer für Turbo Namenskopf
+     136/    2420 : 06 08               		ld	b, 8
+     137/    2422 : 36 4E               loc_2422:	ld	(hl), 'N'	; 8x'N' schreiben
+     138/    2424 : 23                  		inc	hl
+     139/    2425 : 10 FB               		djnz	loc_2422
+     140/    2427 : 06 10               		ld	b, 10h		; 16 Zeichen Name
+     141/    2429 : CF                  loc_2429:	rst	inch		; Zeicheneingabe
+     142/    242A : FE 0B               		cp	0Bh		; UP
+     143/    242C : 28 84               		jr	z, loc_23B2	; Load next
+     144/    242E : FE 0D               		cp	0Dh		; CR
+     145/    2430 : 28 22               		jr	z, loc_2454
+     146/    2432 : FE 08               		cp	8		; LEFT
+     147/    2434 : 28 13               		jr	z, loc_2449
+     148/    2436 : FE 20               		cp	' '
+     149/    2438 : 38 EF               		jr	c, loc_2429
+     150/    243A : FE 5F               		cp	5Fh 		; rubout
+     151/    243C : 28 0B               		jr	z, loc_2449
+     152/    243E : FE 7F               		cp	7Fh 		; rubout
+     153/    2440 : 28 07               		jr	z, loc_2449
+     154/    2442 : D7                  		rst	outch		; Zeichenausgabe
+     155/    2443 : 77                  		ld	(hl), a
+     156/    2444 : 23                  		inc	hl
+     157/    2445 : 10 E2               		djnz	loc_2429
+     158/    2447 : 18 10               		jr	loc_2459
+     159/    2449 :                     ;		
+     160/    2449 : 78                  loc_2449:	ld	a, b
+     161/    244A : FE 10               		cp	10h
+     162/    244C : 28 DB               		jr	z, loc_2429
+ AS V1.42 Beta [Bld 157] - Source File AC1-TURBO.asm - Page 8 - 1/25/2023 11:3:40
+
+
+     163/    244E : 04                  		inc	b
+     164/    244F : 2B                  		dec	hl
+     165/    2450 : DF                  		rst	prnst; Ausgabe String
+     166/    2451 : DF                  		db 0DFh
+     167/    2452 : 18 D5               		jr	loc_2429
+     168/    2454 : 36 20               loc_2454:	ld	(hl), ' '	; Rest des Namens mit Leerzeichen auffüllen
+     169/    2456 : 23                  		inc	hl
+     170/    2457 : 10 FB               		djnz	loc_2454
+     171/    2459 :                     		;
+     172/    2459 : CD 97 02            loc_2459:	call	UPTAST
+     173/    245C : 20 FB               		jr	nz, loc_2459
+     174/    245E : DF                  		rst	prnst; Ausgabe String
+     175/    245F : 0E 31 34 32 35 10   		db 0Eh,"1425",10h
+     176/    2465 : 0E 31 34 31 32 91   		db 0Eh,"1412",91h
+     177/    246B : 06 A0               loc_246B:	ld	b, 0A0h	; ' '
+     178/    246D : CD 97 02            loc_246D:	call	UPTAST
+     179/    2470 : FE 0B               		cp	0Bh		; UP
+     180/    2472 : CA B2 23            		jp	z, loc_23B2	; Load next
+     181/    2475 : FE 0D               		cp	0Dh		; CR
+     182/    2477 : 28 29               loc_2477:	jr	z, loc_24A2
+     183/    2479 : 10 F2               		djnz	loc_246D
+     184/    247B : 0C                  		inc	c
+     185/    247C : CB 49               		bit	1, c
+     186/    247E : DF                  		rst	prnst; Ausgabe String
+     187/    247F : 0E 31 34 31 B4      		db 0Eh,"141",0B4h
+     188/    2484 : 28 0E               		jr	z, loc_2494
+     189/    2486 : DF                  		rst	prnst; Ausgabe String
+     190/    2487 : 53 54 41 52 54 20   		db "START (CR)",0A0h
+                    28 43 52 29 A0    
+     191/    2492 : 18 D7               		jr	loc_246B
+     192/    2494 : DF                  loc_2494:	rst	prnst; Ausgabe String
+     193/    2495 : 20 20 20 20 20 20   		db "          ",0A0h
+                    20 20 20 20 A0    
+     194/    24A0 : 18 C9               		jr	loc_246B
+     195/    24A2 :                     ; Turbo-Load		
+     196/    24A2 : A7                  loc_24A2:	and	a
+     197/    24A3 : 08                  		ex	af, af'		; '
+     198/    24A4 : CD 37 0A            		call	q_ko21		; Start/Stop-Schaltung start
+     199/    24A7 : 21 3D 28            		ld	hl, loc_283D
+     200/    24AA : 22 18 18            		ld	(nmi+1), hl	; aktuelle NMI-Routine
+     201/    24AD : 21 B6 18            		ld	hl, tb_blkbuf	; 32 Byte Kopfblockbuffer beim Lesen
+     202/    24B0 : 22 80 18            		ld	(tbb_aadr), hl	; AAdr. Block
+     203/    24B3 : 2E D5               		ld	l, lo(tbl_special)
+     204/    24B5 : 22 7E 18            loc_24B5:	ld	(tbb_eadr), hl	; Endadr. Block
+     205/    24B8 : DF                  		rst	prnst; Ausgabe String
+     206/    24B9 : 0E 31 34 31 32 53   		db 0Eh,"1412Searching for",0A0h
+                    65 61 72 63 68 69 
+                    6E 67 20 66 6F 72 
+                    A0                
+     207/    24CC : 06 10               		ld	b, 10h
+     208/    24CE : 2E 9E               		ld	l, lo(tb_kopfbuf+8)	; tbh_filename, Dateiname
+     209/    24D0 : 7E                  loc_24D0:	ld	a, (hl)
+     210/    24D1 : D7                  		rst	outch; Zeichenausgabe
+     211/    24D2 : 23                  		inc	hl
+     212/    24D3 : 10 FB               		djnz	loc_24D0
+     213/    24D5 :                     		;
+     214/    24D5 : CD 81 0C            loc_24D5:	call	tbload		; Kassette Load Turbo
+     215/    24D8 : 2E B6               		ld	l, lo(tb_blkbuf)	; 32 Byte Kopfblockbuffer beim Lesen
+     216/    24DA : 11 96 18            		ld	de, tb_kopfbuf	; 32 Byte Buffer für Turbo Namenskopf
+     217/    24DD : 06 08               		ld	b, 8		; 8 x 'N' vergleichen
+ AS V1.42 Beta [Bld 157] - Source File AC1-TURBO.asm - Page 9 - 1/25/2023 11:3:40
+
+
+     218/    24DF : 1A                  loc_24DF:	ld	a, (de)
+     219/    24E0 : BE                  		cp	(hl)
+     220/    24E1 : 20 F2               		jr	nz, loc_24D5
+     221/    24E3 : 23                  		inc	hl
+     222/    24E4 : 13                  		inc	de
+     223/    24E5 : 10 F8               		djnz	loc_24DF
+     224/    24E7 :                     		;		
+     225/    24E7 : 06 10               		ld	b, 10h		; 16 Zeichen Name vergleichen
+     226/    24E9 : 1A                  loc_24E9:	ld	a, (de)
+     227/    24EA : BE                  		cp	(hl)
+     228/    24EB : 28 04               		jr	z, loc_24F1
+     229/    24ED : FE 20               		cp	' '
+     230/    24EF : 20 59               		jr	nz, loc_254A
+     231/    24F1 : 23                  loc_24F1:	inc	hl
+     232/    24F2 : 13                  		inc	de
+     233/    24F3 : 10 F4               		djnz	loc_24E9
+     234/    24F5 :                     		;
+     235/    24F5 : 2E D0               		ld	l, lo(tb_blkbuf+26)	; tbl_filetyp
+     236/    24F7 : 7E                  		ld	a, (hl)
+     237/    24F8 : FE 46               		cp	'F'
+     238/    24FA : 28 4E               		jr	z, loc_254A
+     239/    24FC : 23                  		inc	hl
+     240/    24FD : 1E 7E               		ld	e, lo(tbb_eadr)	; Endadr.
+     241/    24FF : 01 04 00            		ld	bc, 4
+     242/    2502 : ED B0               		ldir
+     243/    2504 : 01 33 A0            		ld	bc, 0A033h
+     244/    2507 : CD 87 02            		call	UPTON
+     245/    250A : DF                  		rst	prnst; Ausgabe String
+     246/    250B : 0E 31 36 31 32 4C   		db 0Eh,"1612Loading",0A0h
+                    6F 61 64 69 6E 67 
+                    A0                
+     247/    2518 : CD 89 0D            		call	sub_D89		; Anzeige Dateiname, aadr, eadr
+     248/    251B : 3A D5 18            		ld	a, (tbl_special)
+     249/    251E : FE 4C               		cp	'L'		; Kennung 'L' ?
+     250/    2520 : 28 20               		jr	z, loc_2542
+     251/    2522 : DF                  		rst	prnst; Ausgabe String
+     252/    2523 : 0E 31 37 31 32 46   		db 0Eh,"1712File nicht korrekturf{hig",0A1h
+                    69 6C 65 20 6E 69 
+                    63 68 74 20 6B 6F 
+                    72 72 65 6B 74 75 
+                    72 66 7B 68 69 67 
+                    A1                
+     253/    2542 : CD 53 26            loc_2542:	call	loc_2653
+     254/    2545 : CD 7C 27            		call	sub_277C	; Fehler anzeigen
+     255/    2548 : 18 1F               		jr	loc_2569
+     256/    254A :                     ;
+     257/    254A : 01 40 A0            loc_254A:	ld	bc, 0A040h
+     258/    254D : CD 87 02            		call	UPTON
+     259/    2550 : CD 7C 27            		call	sub_277C	; Fehler anzeigen
+     260/    2553 : 20 80               		jr	nz, loc_24D5
+     261/    2555 : DF                  		rst	prnst; Ausgabe String
+     262/    2556 : 0E 31 36 31 32 46   		db 0Eh,"1612Found  ",0A0h
+                    6F 75 6E 64 20 20 
+                    A0                
+     263/    2563 : CD 89 0D            		call	sub_D89		; Anzeige Dateiname, aadr, eadr
+     264/    2566 : C3 D5 24            		jp	loc_24D5
+     265/    2569 :                     ;		
+     266/    2569 : 3E 07               loc_2569:	ld	a, 7
+     267/    256B : 91                  		sub	c
+     268/    256C : 28 09               		jr	z, loc_2577
+ AS V1.42 Beta [Bld 157] - Source File AC1-TURBO.asm - Page 10 - 1/25/2023 11:3:40
+
+
+     269/    256E : 47                  		ld	b, a
+     270/    256F : DF                  loc_256F:	rst	prnst; Ausgabe String
+     271/    2570 : 20 20 20 20 A0      		db "    ",0A0h
+     272/    2575 : 10 F8               		djnz	loc_256F
+     273/    2577 :                     ; hier auch Einsprung bei NMI
+     274/    2577 : CD 31 0A            loc_2577:	call	q_ko20		; Start/Stop-Schaltung stop
+     275/    257A : DF                  		rst	prnst; Ausgabe String
+     276/    257B : 0E 32 35 31 32 43   		db 0Eh,"2512C.CRC  K.Save File  L.Load next  Q.Quit"
+                    2E 43 52 43 20 20 
+                    4B 2E 53 61 76 65 
+                    20 46 69 6C 65 20 
+                    20 4C 2E 4C 6F 61 
+                    64 20 6E 65 78 74 
+                    20 20 51 2E 51 75 
+                    69 74             
+     277/    25A7 : 0E 32 36 31 B2      		db 0Eh,"261",0B2h
+     278/    25AC : CF                  loc_25AC:	rst	inch; Zeicheneingabe
+     279/    25AD : FE 4C               		cp	'L'
+     280/    25AF : CA B2 23            		jp	z, loc_23B2	; Load next
+     281/    25B2 : FE 51               		cp	'Q'
+     282/    25B4 : 28 61               		jr	z, loc_2617	; Quit
+     283/    25B6 : FE 43               		cp	'C'
+     284/    25B8 : 28 45               		jr	z, loc_25FF	; CRC
+     285/    25BA : FE 4B               		cp	'K'
+     286/    25BC : 20 EE               		jr	nz, loc_25AC	
+     287/    25BE :                     
+     288/    25BE :                     ; Save File
+     289/    25BE : CD 37 0A            		call	q_ko21		; Start/Stop-Schaltung start
+     290/    25C1 : 21 B6 18            		ld	hl, tb_blkbuf	; 32 Byte Kopfblockbuffer beim Lesen
+     291/    25C4 : 22 80 18            		ld	(tbb_aadr), hl	;  AAdr. Block
+     292/    25C7 : 2E D5               		ld	l, lo(tbl_special)
+     293/    25C9 : 22 7E 18            		ld	(tbb_eadr), hl	; Endadr. Block
+     294/    25CC : 3E 4C               		ld	a, 'L'		; Kennung
+     295/    25CE : 77                  		ld	(hl), a
+     296/    25CF : DF                  		rst	prnst; Ausgabe String
+     297/    25D0 : 0E 32 36 31 32 53   		db 0Eh,"2612Saving ",0A0h
+                    61 76 69 6E 67 20 
+                    A0                
+     298/    25DD : 2A 5B 18            		ld	hl, (ARG1); Kdo-Argument 1
+     299/    25E0 : E5                  		push	hl
+     300/    25E1 : 2A 5D 18            		ld	hl, (ARG2); Kdo-Argument 2
+     301/    25E4 : E5                  		push	hl
+     302/    25E5 : CD 89 0D            		call	sub_D89		; Anzeige Dateiname, aadr, eadr
+     303/    25E8 : CD F7 0B            		call	tbsave		; Kassette Save Turbo
+     304/    25EB : E1                  		pop	hl
+     305/    25EC : 22 5D 18            		ld	(ARG2), hl; Kdo-Argument 2
+     306/    25EF : 22 7E 18            		ld	(tbb_eadr), hl	; Endadr. Block
+     307/    25F2 : E1                  		pop	hl
+     308/    25F3 : 22 5B 18            		ld	(ARG1), hl; Kdo-Argument 1
+     309/    25F6 : 22 80 18            		ld	(tbb_aadr), hl	; AAdr. Block
+     310/    25F9 : CD 36 27            		call	sub_2736	; Kassette Save Turbo (lokales tbsave)
+     311/    25FC : CD 31 0A            		call	q_ko20		; Start/Stop-Schaltung stop
+     312/    25FF :                     
+     313/    25FF :                     ; CRC
+     314/    25FF : DF                  loc_25FF:	rst	prnst; Ausgabe String
+     315/    2600 : 0E 32 37 31 32 43   		db 0Eh,"2712Checksum",0A0h
+                    68 65 63 6B 73 75 
+                    6D A0             
+     316/    260E : CD 04 04            		call	crc
+     317/    2611 : DF                  		rst	prnst; Ausgabe String
+ AS V1.42 Beta [Bld 157] - Source File AC1-TURBO.asm - Page 11 - 1/25/2023 11:3:40
+
+
+     318/    2612 : 20 20 A0            		db "  ",0A0h
+     319/    2615 : 18 95               		jr	loc_25AC	; Save File
+     320/    2617 :                     
+     321/    2617 :                     ; Quit
+     322/    2617 : DF                  loc_2617:	rst	prnst; Ausgabe String
+     323/    2618 : 0C 0E 31 36 32 37   		db 0Ch,0Eh,"1627Tsch}ss...",87h
+                    54 73 63 68 7D 73 
+                    73 2E 2E 2E 87    
+     324/    2629 : 21 43 02            		ld	hl, BREAK	; orig. NMI-Routine
+     325/    262C : 22 18 18            		ld	(nmi+1), hl	; restaurieren
+     326/    262F : 06 50               		ld	b, 50h
+     327/    2631 : CD EB 07            loc_2631:	call	MS30; 50x30 ms warten
+     328/    2634 : 10 FB               		djnz	loc_2631
+     329/    2636 : C3 6E 00            		jp	INIT8		; Systemstart
+     330/    2639 :                     
+     331/    2639 :                     ;------------------------------------------------------------------------------
+     332/    2639 :                     ; window
+     333/    2639 :                     ;------------------------------------------------------------------------------
+     334/    2639 :                     
+     335/    2639 : 7C                  sub_2639:	ld	a, h
+     336/    263A : FE 11               		cp	11h
+     337/    263C : 38 13               		jr	c, loc_2651
+     338/    263E : FE 17               		cp	17h
+     339/    2640 : 30 0F               		jr	nc, loc_2651
+     340/    2642 : 7D                  		ld	a, l
+     341/    2643 : E6 C0               		and	0C0h ; 'À'
+     342/    2645 : C6 07               		add	a, 7
+     343/    2647 : BD                  		cp	l
+     344/    2648 : 30 07               		jr	nc, loc_2651
+     345/    264A : C6 30               		add	a, 30h ; '0'
+     346/    264C : BD                  		cp	l
+     347/    264D : 38 02               		jr	c, loc_2651
+     348/    264F : A7                  		and	a
+     349/    2650 : C9                  		ret
+     350/    2651 :                     		;
+     351/    2651 : AF                  loc_2651:	xor	a
+     352/    2652 : C9                  		ret
+     353/    2653 :                     
+     354/    2653 :                     ;------------------------------------------------------------------------------
+     355/    2653 :                     ; 
+     356/    2653 :                     ;------------------------------------------------------------------------------
+     357/    2653 :                     
+     358/    2653 : FD 21 82 18         loc_2653:	ld	iy, tb_errarr	; Speicher für 10 Adressen Blockfehler
+     359/    2657 : ED 5B 5F 18         		ld	de, (ARG3)	; Kdo-Argument 3
+     360/    265B : 7B                  		ld	a, e
+     361/    265C : B2                  		or	d
+     362/    265D : 28 1F               		jr	z, loc_267E
+     363/    265F : 2A 80 18            		ld	hl, (tbb_aadr)	; AAdr. Block
+     364/    2662 : EB                  		ex	de, hl
+     365/    2663 : E5                  		push	hl
+     366/    2664 : ED 52               		sbc	hl, de
+     367/    2666 : 22 5F 18            		ld	(ARG3), hl	; Kdo-Argument 3
+     368/    2669 : 2A 7E 18            		ld	hl, (tbb_eadr)	; Endadr. Block
+     369/    266C : AF                  		xor	a
+     370/    266D : ED 52               		sbc	hl, de
+     371/    266F : D1                  		pop	de
+     372/    2670 : 19                  		add	hl, de
+     373/    2671 : 22 7E 18            		ld	(tbb_eadr), hl	; Endadr. Block
+     374/    2674 : 22 5D 18            		ld	(ARG2), hl	; Kdo-Argument 2
+     375/    2677 : EB                  		ex	de, hl
+ AS V1.42 Beta [Bld 157] - Source File AC1-TURBO.asm - Page 12 - 1/25/2023 11:3:40
+
+
+     376/    2678 : 22 5B 18            		ld	(ARG1), hl	; Kdo-Argument 1
+     377/    267B : 22 80 18            		ld	(tbb_aadr), hl	; AAdr. Block
+     378/    267E : 3A D5 18            loc_267E:	ld	a, (tbl_special)	; tb_blkbuf+31		; Kennung
+     379/    2681 : FE 4C               		cp	'L'
+     380/    2683 : 2A 80 18            		ld	hl, (tbb_aadr)	; AAdr. Block
+     381/    2686 : DF                  		rst	prnst		; Ausgabe String
+     382/    2687 : 0E 32 30 31 B2      		db 0Eh,"201",0B2h
+     383/    268C : C2 13 27            		jp	nz, loc_2713
+     384/    268F : 22 80 18            loc_268F:	ld	(tbb_aadr), hl	; AAdr. Block
+     385/    2692 : CD A6 27            		call	sub_27A6
+     386/    2695 : 28 58               		jr	z, loc_26EF
+     387/    2697 : 3E 3F               		ld	a, '?'
+     388/    2699 : CD 08 28            		call	sub_2808	; Scrollen, Zeichenausgabe
+     389/    269C : 97                  loc_269C:	sub	a
+     390/    269D : 32 23 18            		ld	(phako), a	; Hilfsregister
+     391/    26A0 : 2A 00 18            		ld	hl, (cupos)
+     392/    26A3 : E5                  		push	hl
+     393/    26A4 : CD 31 0A            		call	q_ko20		; Start/Stop-Schaltung stop
+     394/    26A7 : DF                  		rst	prnst		; Ausgabe String
+     395/    26A8 : 0E 31 38 31 32 4C   		db 0Eh,"1812Load Error",0A0h
+                    6F 61 64 20 45 72 
+                    72 6F 72 A0       
+     396/    26B8 : 2A 80 18            		ld	hl, (tbb_aadr)	; AAdr. Block
+     397/    26BB : CD F1 07            		call	OUTHL		; Ausgabe HL hexadezimal
+     398/    26BE : DF                  		rst	prnst		; Ausgabe String
+     399/    26BF : 20 20 52 65 70 65   		db "  Repeat J/N ?",0A0h
+                    61 74 20 4A 2F 4E 
+                    20 3F A0          
+     400/    26CE : CF                  loc_26CE:	rst	inch		; Zeicheneingabe
+     401/    26CF : FE 4A               		cp	'J'
+     402/    26D1 : 28 12               		jr	z, loc_26E5
+     403/    26D3 : FE 0D               		cp	0Dh
+     404/    26D5 : 28 0E               		jr	z, loc_26E5
+     405/    26D7 : FE 4E               		cp	'N'
+     406/    26D9 : 20 F3               		jr	nz, loc_26CE
+     407/    26DB :                     ; kein repeat		
+     408/    26DB : CD 96 27            loc_26DB:	call	sub_2796
+     409/    26DE : 01 20 00            		ld	bc, 20h		; Blocklänge
+     410/    26E1 : 09                  		add	hl, bc		; Adr. nächster Block
+     411/    26E2 : 22 80 18            		ld	(tbb_aadr), hl	; AAdr. Block
+     412/    26E5 :                     ; repeat
+     413/    26E5 : EB                  loc_26E5:	ex	de, hl
+     414/    26E6 : E1                  		pop	hl
+     415/    26E7 : 22 00 18            		ld	(cupos), hl
+     416/    26EA : CD 37 0A            		call	q_ko21		; Start/Stop-Schaltung start
+     417/    26ED : 18 19               		jr	loc_2708
+     418/    26EF :                     ;		
+     419/    26EF : 30 0E               loc_26EF:	jr	nc, loc_26FF
+     420/    26F1 : CD 08 28            		call	sub_2808	; Scrollen, Zeichenausgabe
+     421/    26F4 : 3A 23 18            		ld	a, (phako)	; Hilfsregister
+     422/    26F7 : A7                  		and	a
+     423/    26F8 : 20 A2               		jr	nz, loc_269C
+     424/    26FA : 2A 80 18            		ld	hl, (tbb_aadr)	; AAdr. Block
+     425/    26FD : 18 90               		jr	loc_268F
+     426/    26FF :                     ;
+     427/    26FF : 3E 3E               loc_26FF:	ld	a, '>'
+     428/    2701 : 32 23 18            		ld	(phako), a	; Hilfsregister
+     429/    2704 : EB                  		ex	de, hl
+     430/    2705 : CD 08 28            		call	sub_2808	; Scrollen, Zeichenausgabe
+     431/    2708 : 2A 7E 18            loc_2708:	ld	hl, (tbb_eadr)	; Endadr. Block
+ AS V1.42 Beta [Bld 157] - Source File AC1-TURBO.asm - Page 13 - 1/25/2023 11:3:40
+
+
+     432/    270B : A7                  		and	a
+     433/    270C : ED 52               		sbc	hl, de
+     434/    270E : EB                  		ex	de, hl
+     435/    270F : D2 8F 26            		jp	nc, loc_268F
+     436/    2712 : C9                  		ret
+     437/    2713 :                     ;
+     438/    2713 : 2A 80 18            loc_2713:	ld	hl, (tbb_aadr)	; AAdr. Block
+     439/    2716 : CD BD 0C            loc_2716:	call	tb_loa3		; Block laden
+     440/    2719 : 3E 3E               		ld	a, '>'
+     441/    271B : 28 0B               		jr	z, loc_2728
+     442/    271D : EB                  		ex	de, hl
+     443/    271E : 21 E0 FF            		ld	hl, -20h
+     444/    2721 : 19                  		add	hl, de
+     445/    2722 : CD 96 27            		call	sub_2796
+     446/    2725 : EB                  		ex	de, hl
+     447/    2726 : 3E 3F               		ld	a, '?'
+     448/    2728 : EB                  loc_2728:	ex	de, hl
+     449/    2729 : CD 08 28            		call	sub_2808	; Scrollen, Zeichenausgabe
+     450/    272C : 2A 7E 18            		ld	hl, (tbb_eadr)	; Endadr. Block
+     451/    272F : A7                  		and	a
+     452/    2730 : ED 52               		sbc	hl, de
+     453/    2732 : EB                  		ex	de, hl
+     454/    2733 : 30 E1               		jr	nc, loc_2716
+     455/    2735 : C9                  		ret
+     456/    2736 :                     
+     457/    2736 :                     ;------------------------------------------------------------------------------
+     458/    2736 :                     ; Kassette Save Turbo
+     459/    2736 :                     ;------------------------------------------------------------------------------
+     460/    2736 :                     
+     461/    2736 : 2A 80 18            sub_2736:	ld	hl, (tbb_aadr)	; AAdr. Block
+     462/    2739 : CD 4A 27            		call	sub_274A	; Ausgabe Block langer Vorton
+     463/    273C : EB                  loc_273C:	ex	de, hl
+     464/    273D : 2A 7E 18            		ld	hl, (tbb_eadr)	; Endadr. Block
+     465/    2740 : A7                  		and	a
+     466/    2741 : ED 52               		sbc	hl, de
+     467/    2743 : EB                  		ex	de, hl
+     468/    2744 : D8                  		ret	c		; wenn File zu Ende
+     469/    2745 : CD 4F 27            		call	sub_274F	; Ausgabe ein Block
+     470/    2748 : 18 F2               		jr	loc_273C	; weiter ausgeben
+     471/    274A :                     
+     472/    274A :                     ;------------------------------------------------------------------------------
+     473/    274A :                     ; lokales tbsave mit leicht geänderten Timing gegenüber Monitor
+     474/    274A :                     ;------------------------------------------------------------------------------
+     475/    274A :                     
+     476/    274A :                     ; Ausgabe Block langer Vorton
+     477/    274A : 11 D0 07            sub_274A:	ld	de, 2000	; langer Vorton
+     478/    274D : 18 03               		jr	loc_2752
+     479/    274F :                     
+     480/    274F :                     ; Ausgabe ein Block = 20H Bytes
+     481/    274F : 11 0E 00            sub_274F:	ld	de, 14		; kurzer Vorton
+     482/    2752 : 06 48               loc_2752:	ld	b, 48h
+     483/    2754 : 10 FE               loc_2754:	djnz	loc_2754
+     484/    2756 : CD 7A 0C            		call	tbsav21		; Save: Flanke wechseln
+     485/    2759 : 1B                  		dec	de
+     486/    275A : 7B                  		ld	a, e
+     487/    275B : B2                  		or	d
+     488/    275C : 20 F4               		jr	nz, loc_2752
+     489/    275E : 0E 02               		ld	c, 2
+     490/    2760 : 06 22               loc_2760:	ld	b, 22h
+     491/    2762 : 10 FE               loc_2762:	djnz	loc_2762
+ AS V1.42 Beta [Bld 157] - Source File AC1-TURBO.asm - Page 14 - 1/25/2023 11:3:40
+
+
+     492/    2764 : CD 7A 0C            		call	tbsav21		; Save: Flanke wechseln
+     493/    2767 : 0D                  		dec	c
+     494/    2768 : 20 F6               		jr	nz, loc_2760
+     495/    276A : E5                  		push	hl
+     496/    276B : ED 5B 5F 18         		ld	de, (ARG3)	; Kdo-Argument 3
+     497/    276F : A7                  		and	a
+     498/    2770 : ED 52               		sbc	hl, de
+     499/    2772 : EB                  		ex	de, hl
+     500/    2773 : E1                  		pop	hl
+     501/    2774 : D5                  		push	de
+     502/    2775 : DD E1               		pop	ix
+     503/    2777 : 06 02               		ld	b, 2
+     504/    2779 : C3 33 0C            		jp	tbsav8		; weiter im Monitor
+     505/    277C :                     					; Kassette Save Turbo ab Kopfinhalt ausgeben
+     506/    277C :                     
+     507/    277C :                     ;------------------------------------------------------------------------------
+     508/    277C :                     ; UP zu Kassette Load Turbo
+     509/    277C :                     ;------------------------------------------------------------------------------
+     510/    277C :                     
+     511/    277C :                     ; Fehler anzeigen
+     512/    277C : 11 82 18            sub_277C:	ld	de, tb_errarr	; Fehler-Array
+     513/    277F : FD 7D               		ld	a, iyl
+     514/    2781 : 93                  		sub	e
+     515/    2782 : 0F                  		rrca
+     516/    2783 : 4F                  		ld	c, a
+     517/    2784 : DF                  		rst	prnst; Ausgabe String
+     518/    2785 : 0E 31 38 31 B2      		db 0Eh,"181",0B2h
+     519/    278A : C8                  		ret	z
+     520/    278B : DF                  		rst	prnst; Ausgabe String
+     521/    278C : 45 72 72 6F 72 A0   		db "Error",0A0h
+     522/    2792 : 47                  		ld	b, a
+     523/    2793 : C3 E1 0D            		jp	loc_DE1		; Weiter mit Code im Monitor
+     524/    2796 :                     					; Rest Fehleranzeige zu Kassette Load Turbo
+     525/    2796 :                     
+     526/    2796 :                     ;------------------------------------------------------------------------------
+     527/    2796 :                     ; Blockendeadresse in Fehler-Array ablegen
+     528/    2796 :                     ;------------------------------------------------------------------------------
+     529/    2796 :                     
+     530/    2796 : FD 7D               sub_2796:	ld	a, iyl
+     531/    2798 : D6 90               		sub	lo(tb_errarr+14)	; Ende Fehlerarray
+     532/    279A : C8                  		ret	z
+     533/    279B : FD 75 00            		ld	(iy+0),	l
+     534/    279E : FD 74 01            		ld	(iy+1),	h
+     535/    27A1 : FD 23               		inc	iy		; Zeiger erhöhen
+     536/    27A3 : FD 23               		inc	iy
+     537/    27A5 : C9                  		ret
+     538/    27A6 :                     
+     539/    27A6 :                     ;------------------------------------------------------------------------------
+     540/    27A6 :                     ; Block laden, lokales tb_loa3
+     541/    27A6 :                     ;------------------------------------------------------------------------------
+     542/    27A6 :                     
+     543/    27A6 : CD 5A 0D            sub_27A6:	call	tb_loa24	; synchronisieren
+     544/    27A9 : CD 52 0D            		call	tb_loa25
+     545/    27AC : 0E 05               		ld	c, 5
+     546/    27AE : 11 0B 06            loc_27AE:	ld	de, 60Bh	; D=6, E=0Bh
+     547/    27B1 : 3E 02               		ld	a, 2
+     548/    27B3 : 3D                  loc_27B3:	dec	a
+     549/    27B4 : 20 FD               		jr	nz, loc_27B3
+     550/    27B6 : CD 5A 0D            		call	tb_loa24	; synchronisieren
+     551/    27B9 : CD 5A 0D            loc_27B9:	call	tb_loa24	; Flanke ?
+ AS V1.42 Beta [Bld 157] - Source File AC1-TURBO.asm - Page 15 - 1/25/2023 11:3:40
+
+
+     552/    27BC : 20 E8               		jr	nz, sub_27A6
+     553/    27BE : 15                  		dec	d
+     554/    27BF : 20 F8               		jr	nz, loc_27B9
+     555/    27C1 : 0D                  		dec	c
+     556/    27C2 : 28 0C               		jr	z, loc_27D0
+     557/    27C4 : DB 05               loc_27C4:	in	a, (PIODB)	; Grafik/Ton
+     558/    27C6 : A8                  		xor	b
+     559/    27C7 : CB 7F               		bit	7, a		; TB-Interface-Eingang
+     560/    27C9 : 20 E3               		jr	nz, loc_27AE
+     561/    27CB : 1D                  		dec	e
+     562/    27CC : 20 F6               		jr	nz, loc_27C4
+     563/    27CE : 18 D6               		jr	sub_27A6
+     564/    27D0 :                     ; Synchronisierimpulse lesen
+     565/    27D0 : CD 52 0D            loc_27D0:	call	tb_loa25	; Flanke abwarten
+     566/    27D3 : 3E 2C               		ld	a, 2Ch
+     567/    27D5 : 3D                  loc_27D5:	dec	a
+     568/    27D6 : 20 FD               		jr	nz, loc_27D5
+     569/    27D8 : CD 5A 0D            		call	tb_loa24	; Flanke ?
+     570/    27DB : 20 F3               		jr	nz, loc_27D0	; wenn nicht
+     571/    27DD : CD 52 0D            		call	tb_loa25	; Flanke abwarten
+     572/    27E0 : 3E 12               		ld	a, 12h
+     573/    27E2 : 3D                  loc_27E2:	dec	a
+     574/    27E3 : 20 FD               		jr	nz, loc_27E2
+     575/    27E5 :                     ; 2 Bytes Kopf lesen		
+     576/    27E5 : CD 64 0D            		call	tb_loa19	; lesen DE
+     577/    27E8 : D5                  		push	de
+     578/    27E9 : DD E1               		pop	ix
+     579/    27EB : E5                  		push	hl
+     580/    27EC : 2A 5F 18            		ld	hl, (ARG3)	; Kdo-Argument 3
+     581/    27EF : 19                  		add	hl, de
+     582/    27F0 : D1                  		pop	de
+     583/    27F1 : A7                  		and	a
+     584/    27F2 : ED 52               		sbc	hl, de
+     585/    27F4 : 20 08               		jr	nz, loc_27FE
+     586/    27F6 : EB                  		ex	de, hl
+     587/    27F7 :                     ; 20H Byte Daten lesen
+     588/    27F7 : 0E 10               		ld	c, 10h		; 10H x 2 Bytes
+     589/    27F9 : 3E 08               		ld	a, 8
+     590/    27FB : C3 06 0D            		jp	0D06h		; weiter im Monitor
+     591/    27FE :                     					; Rest Block lesen
+     592/    27FE :                     		
+     593/    27FE :                     ;
+     594/    27FE : 16 2D               loc_27FE:	ld	d, '-'
+     595/    2800 : 30 02               		jr	nc, loc_2804
+     596/    2802 : 16 2B               		ld	d, '+'
+     597/    2804 : AF                  loc_2804:	xor	a
+     598/    2805 : 7A                  		ld	a, d
+     599/    2806 : 37                  		scf
+     600/    2807 : C9                  		ret
+     601/    2808 :                     
+     602/    2808 :                     ;------------------------------------------------------------------------------
+     603/    2808 :                     ; Scrollen im Fenster, Zeichenausgabe
+     604/    2808 :                     ;------------------------------------------------------------------------------
+     605/    2808 :                     
+     606/    2808 : F5                  sub_2808:	push	af
+     607/    2809 : 2A 00 18            		ld	hl, (cupos)
+     608/    280C : 7D                  loc_280C:	ld	a, l
+     609/    280D : E6 C0               		and	0C0h
+     610/    280F : C6 0B               		add	a, 0Bh
+     611/    2811 : BD                  		cp	l
+ AS V1.42 Beta [Bld 157] - Source File AC1-TURBO.asm - Page 16 - 1/25/2023 11:3:40
+
+
+     612/    2812 : 30 05               		jr	nc, loc_2819
+     613/    2814 : C6 28               		add	a, 28h
+     614/    2816 : BD                  		cp	l
+     615/    2817 : 30 03               		jr	nc, loc_281C
+     616/    2819 : 2B                  loc_2819:	dec	hl
+     617/    281A : 18 F0               		jr	loc_280C
+     618/    281C : 7C                  loc_281C:	ld	a, h
+     619/    281D : FE 11               		cp	11h
+     620/    281F : CC 29 28            		call	z, sub_2829
+     621/    2822 : F1                  		pop	af
+     622/    2823 : 77                  		ld	(hl), a
+     623/    2824 : 2B                  		dec	hl
+     624/    2825 : 22 00 18            		ld	(cupos), hl
+     625/    2828 : C9                  		ret
+     626/    2829 : D5                  sub_2829:	push	de
+     627/    282A : E5                  		push	hl
+     628/    282B : 21 BF 12            		ld	hl, 12BFh
+     629/    282E : 11 FF 12            		ld	de, 12FFh
+     630/    2831 : 01 00 01            		ld	bc, 100h
+     631/    2834 : ED B8               		lddr
+     632/    2836 : E1                  		pop	hl
+     633/    2837 : 11 40 00            		ld	de, 40h
+     634/    283A : 19                  		add	hl, de
+     635/    283B : D1                  		pop	de
+     636/    283C : C9                  		ret
+     637/    283D :                     		
+     638/    283D :                     ;------------------------------------------------------------------------------
+     639/    283D :                     ; NMI-Routine		
+     640/    283D :                     ;------------------------------------------------------------------------------
+     641/    283D :                     
+     642/    283D : 21 77 25            loc_283D:	ld	hl, loc_2577
+     643/    2840 : E5                  		push	hl
+     644/    2841 : ED 4D               		reti
+     645/    2843 :                     		
+     646/    2843 :                     		end
+ AS V1.42 Beta [Bld 157] - Source File AC1-TURBO.asm - Page 17 - 1/25/2023 11:3:40
+
+
+  Symbol Table (* = unused):
+  --------------------------
+
+*ARCHITECTURE :  i386-unknown-win32 - |  ARG1 :                        185B - |
+ ARG2 :                        185D - |  ARG3 :                        185F - |
+*BASIC :                        800 - | *BELL :                           7 - |
+*BIGENDIAN :                      0 - | *BRANCHEXT :                      0 - |
+ BREAK :                        243 - | *BS :                             8 - |
+*BWS :                         1000 - | *CASESENSITIVE :                  0 - |
+*CLLN :                           3 - | *CLS :                           0C - |
+*CLSC :                           2 - | *COLS :                          40 - |
+*CONSTPI :        3.141592653589793 - | *CR :                            0D - |
+ CRC :                          404 - | *CTC0 :                           0 - |
+*CTC1 :                           1 - | *CTC2 :                           2 - |
+*CTC3 :                           3 - |  CUPOS :                       1800 - |
+*DATA :                        1858 - | *DATE :                   1/25/2023 - |
+*DEL :                            4 - | *DOWN :                          0A - |
+*FALSE :                          0 - | *FULLPMMU :                       1 - |
+*GETCO1 :                       7FD - | *HAS64 :                          1 - |
+*HASDSP :                         0 - | *HASFPU :                         0 - |
+*HASPMMU :                        0 - | *HOME :                           1 - |
+ INCH :                           8 - | *INEXTMODE :                      0 - |
+ INHEX :                        7F7 - |  INIT8 :                         6E - |
+ INLINE :                       7F4 - | *INLWORDMODE :                    0 - |
+*INMAXMODE :                      0 - | *INS :                            5 - |
+*INSRCMODE :                      0 - | *INSUPMODE :                      0 - |
+*INV :                           11 - | *JP_NMI :                      1817 - |
+*JP_RST08 :                    1802 - | *JP_RST10 :                    1805 - |
+*JP_RST18 :                    1808 - | *JP_RST20 :                    180B - |
+*JP_RST28 :                    180E - | *JP_RST30 :                    1811 - |
+*JP_RST38 :                    1814 - | *LEFT :                           8 - |
+*LINES :                         20 - | *LISTON :                         1 - |
+ LOC_2012 :                    2012 C |  LOC_2019 :                    2019 C |
+ LOC_2380 :                    2380 C |  LOC_2382 :                    2382 C |
+ LOC_23A4 :                    23A4 C |  LOC_23B2 :                    23B2 C |
+ LOC_23BB :                    23BB C |  LOC_23C2 :                    23C2 C |
+*LOC_23C6 :                    23C6 C |  LOC_2422 :                    2422 C |
+ LOC_2429 :                    2429 C |  LOC_2449 :                    2449 C |
+ LOC_2454 :                    2454 C |  LOC_2459 :                    2459 C |
+ LOC_246B :                    246B C |  LOC_246D :                    246D C |
+*LOC_2477 :                    2477 C |  LOC_2494 :                    2494 C |
+ LOC_24A2 :                    24A2 C | *LOC_24B5 :                    24B5 C |
+ LOC_24D0 :                    24D0 C |  LOC_24D5 :                    24D5 C |
+ LOC_24DF :                    24DF C |  LOC_24E9 :                    24E9 C |
+ LOC_24F1 :                    24F1 C |  LOC_2542 :                    2542 C |
+ LOC_254A :                    254A C |  LOC_2569 :                    2569 C |
+ LOC_256F :                    256F C |  LOC_2577 :                    2577 C |
+ LOC_25AC :                    25AC C |  LOC_25FF :                    25FF C |
+ LOC_2617 :                    2617 C |  LOC_2631 :                    2631 C |
+ LOC_2651 :                    2651 C |  LOC_2653 :                    2653 C |
+ LOC_267E :                    267E C |  LOC_268F :                    268F C |
+ LOC_269C :                    269C C |  LOC_26CE :                    26CE C |
+*LOC_26DB :                    26DB C |  LOC_26E5 :                    26E5 C |
+ LOC_26EF :                    26EF C |  LOC_26FF :                    26FF C |
+ LOC_2708 :                    2708 C |  LOC_2713 :                    2713 C |
+ LOC_2716 :                    2716 C |  LOC_2728 :                    2728 C |
+ LOC_273C :                    273C C |  LOC_2752 :                    2752 C |
+ LOC_2754 :                    2754 C |  LOC_2760 :                    2760 C |
+ LOC_2762 :                    2762 C |  LOC_27AE :                    27AE C |
+ LOC_27B3 :                    27B3 C |  LOC_27B9 :                    27B9 C |
+ AS V1.42 Beta [Bld 157] - Source File AC1-TURBO.asm - Page 18 - 1/25/2023 11:3:40
+
+
+ LOC_27C4 :                    27C4 C |  LOC_27D0 :                    27D0 C |
+ LOC_27D5 :                    27D5 C |  LOC_27E2 :                    27E2 C |
+ LOC_27FE :                    27FE C |  LOC_2804 :                    2804 C |
+ LOC_280C :                    280C C |  LOC_2819 :                    2819 C |
+ LOC_281C :                    281C C |  LOC_283D :                    283D C |
+ LOC_DE1 :                     0DE1 - | *MACEXP :                         7 - |
+ MODUL1 :                        14 - | *MOMCPU :                      80DC - |
+*MOMCPUNAME :              Z80UNDOC - |  MS30 :                         7EB - |
+*NESTMAX :                      100 - |  NMI :                         1817 - |
+*NORM :                          10 - |  OUTCH :                         10 - |
+*OUTHEX :                       7EE - |  OUTHL :                        7F1 - |
+*PACKING :                        0 - | *PADDING :                        1 - |
+ PHAKO :                       1823 - | *PIO2CA :                        0A - |
+*PIO2CB :                        0B - | *PIO2DA :                         8 - |
+*PIO2DB :                         9 - | *PIOCA :                          6 - |
+*PIOCB :                          7 - | *PIODA :                          4 - |
+ PIODB :                          5 - | *PRINTOFF :                      19 - |
+*PRINTON :                       18 - |  PRNST :                         18 - |
+ Q_KO20 :                      0A31 - |  Q_KO21 :                      0A37 - |
+*RAM :                         1800 - | *RELAXED :                        0 - |
+*RIGHT :                          9 - | *ROM :                            0 - |
+*RUBOUT :                        5F - | *SETC :                          0E - |
+ SOIL :                        181A - | *SOL :                            6 - |
+*SPC :                           20 - |  SUB_2639 :                    2639 C |
+ SUB_2736 :                    2736 C |  SUB_274A :                    274A C |
+ SUB_274F :                    274F C |  SUB_277C :                    277C C |
+ SUB_2796 :                    2796 C |  SUB_27A6 :                    27A6 C |
+ SUB_2808 :                    2808 C |  SUB_2829 :                    2829 C |
+ SUB_D89 :                     0D89 - | *SYSSK :                       1856 - |
+*TAB :                           0F - | *TASTE :                        7FA - |
+ TBB_AADR :                    1880 - |  TBB_EADR :                    187E - |
+ TBLOAD :                      0C81 - |  TBL_SPECIAL :                 18D5 - |
+ TBSAV21 :                     0C7A - |  TBSAV8 :                      0C33 - |
+ TBSAVE :                      0BF7 - |  TB_BLKBUF :                   18B6 - |
+ TB_ERRARR :                   1882 - |  TB_KOPFBUF :                  1896 - |
+*TB_LOA12 :                    0D06 - |  TB_LOA19 :                    0D64 - |
+ TB_LOA24 :                    0D5A - |  TB_LOA25 :                    0D52 - |
+ TB_LOA3 :                     0CBD - | *TIME :                     11:3:40 - |
+*TRUE :                           1 - | *UP :                            0B - |
+ UPTAST :                       297 - |  UPTON :                        287 - |
+*VERSION :                     142F - |
+
+    195 symbols
+     85 unused symbols
+
+ AS V1.42 Beta [Bld 157] - Source File AC1-TURBO.asm - Page 19 - 1/25/2023 11:3:40
+
+
+  Defined Functions:
+  ------------------
+
+BWS                                   | LO                                   
+HI                                    |
+
+ AS V1.42 Beta [Bld 157] - Source File AC1-TURBO.asm - Page 20 - 1/25/2023 11:3:40
+
+
+  Code Pages:
+  ----------
+
+STANDARD (0 changed characters)
+
+1 code page
+
+0.02 seconds assembly time
+
+    767 lines source file
+      2 passes
+      0 errors
+      0 warnings
