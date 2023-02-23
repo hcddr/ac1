@@ -1,0 +1,70 @@
+;------------------------------------------------------------------------------
+; Basic 3.2
+;------------------------------------------------------------------------------
+
+IOBYT:		equ 1821h
+cupos:		equ 1800h
+kdov24:		equ 1820h
+
+unk_1818:	equ 1818h			; nmi-sprungadr
+unk_187E:	equ 187Eh			; tbb_eadr
+unk_1880:	equ 1880h			; tbb_aadr
+unk_1896:	equ 1896h			; tb_kopfbuf
+unk_189E:	equ 189Eh		  	; tbh_filename
+unk_18B1:	equ 18B1h			; tbh_eadr
+unk_18B3:	equ 18B3h			; tbh_aadr
+unk_18B6:	equ 18B6h			; tb_blkbuf
+unk_18BE:	equ 18BEh			; tbl_filename
+unk_18D1:	equ 18D1h			; tbl_eadr
+unk_18D3:	equ 18D3h			; tbl_aadr
+unk_18D5:	equ 18D5h			; tbl_special
+
+unk_1F80:	equ 1F80h			; Funktionstasten
+
+;Direktaufrufe in den Monitor
+unk_8:		equ 8h				; inch
+unk_71:		equ 71h				; (BYE) sprung in Monitor, init8 ff
+						; Ausgabe Startmeldung. Besser wäre Adr 006E (init8)
+unk_183:	equ 0183h			; OUTHEX
+unk_272:	equ 0272h			; beep, UP "akustisches Signal"
+unk_287:	equ 0287h			; UPTON, UP "Ton", Reg, B = Tonlaenge, C = Tonhoehe
+unk_297:	equ 0297h			; UPTAST, UP "Taste", testet Tastaturtatus
+unk_A31:	equ 0A31h			; q_ko20, Start/Stop-Schaltung stop
+unk_A37:	equ 0A37h			; q_ko21, Start/Stop-Schaltung start
+unk_BD4:	equ 0BD4h			; tbh6
+unk_BF7:	equ 0BF7h			; tbsave
+unk_C81:	equ 0C81h			; tbload
+
+;------------------------------------------------------------------------------
+; AC1-TURBO.asm (turbo-copy)
+;------------------------------------------------------------------------------
+
+; genutzte interne Systemroutinen und Adressen aus Monitor V8
+
+INIT8		equ 006Eh	; Systemstart
+BREAK		equ 0243h
+UPTON		equ 0287h
+UPTAST		equ 0297h
+crc		equ 0404h
+q_ko20		equ 0A31h	; Start/Stop-Schaltung stop
+q_ko21		equ 0A37h	; Start/Stop-Schaltung start
+tbsave		equ 0BF7h	; Kassette Save Turbo
+tbsav8		equ 0C33h	; Kassette Save Turbo ab Kopfinhalt ausgeben
+tbsav21		equ 0C7Ah	; Save: Flanke wechseln
+tbload		equ 0C81h	; Kassette Load Turbo
+tb_loa3		equ 0CBDh	; Block laden
+tb_loa12	equ 0D06h	; Rest Block lesen
+tb_loa24	equ 0D5Ah	; Load: Bit einlesen,Z=0 --> Flanke
+tb_loa25	equ 0D52h	; Warten auf Flankenwechsel
+tb_loa19	equ 0D64h	; lesen DE
+sub_D89:	equ 0D89h	; Anzeige Dateiname, aadr, eadr
+loc_DE1		equ 0DE1h	; Rest Fehleranzeige zu Kassette Load Turbo
+nmi		equ 1817h	; CALL aktuelle NMI-Routine
+phako		equ 1823h	; Hilfsregister (AC1-Format Einlesen, Phasenkorrektur)
+tbb_eadr:	equ 187Eh	; Endadr. Block
+tbb_aadr:	equ 1880h	; AAdr. Block
+tb_errarr:	equ 1882h	; Speicher für 10 Adressen Blockfehler
+tb_kopfbuf:	equ 1896h	; 32 Byte Buffer für Turbo Namenskopf
+tb_blkbuf:	equ 18B6h	; 32 Byte Kopfblockbuffer beim Lesen
+tbl_special:	equ 18D5h	; tb_blkbuf+31		; Kennung
+

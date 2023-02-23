@@ -1,10 +1,11 @@
-; File Name   :	d:\hobby3\ac1-2010\monitor\v8\mon_v8.bin
+; File Name   :	mon2010c.bin
 ; Base Address:	0000h Range: 0000h - 1000h Loaded length: 1000h
 
 		page	0
 		cpu	z80undoc
 
 ;AC1-MONITOR V8 E. Ludwig SCCH, Monitor Version Nov. 1987
+; Version AC1-2010 * FARBMONITOR * FDC/RFL
 ;reass. Volker Pohlers, Neustadt i.H., 10.01.2023
 ;letzte Änderung 23.01.2023 v24
 
@@ -51,8 +52,8 @@ PIOCB		equ	7
 ;B6 TB-Interface-Ausgang
 ;B7 TB-Interface-Eingang
 
-PIO2DA		equ	8		; b0..b3 V24, b4..b7 IEC	/ U555 Eprommer
-PIO2DB		equ	9		; U555 Eprommer
+PIO2DA		equ	8		; b0..b3 V24, b4..b7 IEC
+PIO2DB		equ	9
 PIO2CA		equ	0ah
 PIO2CB		equ	0bh
 
@@ -65,8 +66,14 @@ PIO2CB		equ	0bh
 ; A5 ATN		IEC - Schnittstelle (in CPM + BASIC)
 ; A6 CLK		IEC - Schnittstelle (in CPM + BASIC)
 ; A7 DATA		IEC - Schnittstelle (in CPM + BASIC)
-; Der Eprommer arbeitet mit PIO 2 Port A + B.
 
+;EPROM auf PIO2-Karte
+PIO2EPROM	equ	0Fh
+; 00 RAM
+; 10 Bank 1 auf 2000h einblenden (ROM 0000-07FF)
+; 20 Bank 2 auf 2000h einblenden (ROM 0800-0FFF)
+; 40 Bank 3 auf 2000h einblenden (ROM 1000-17FF)
+; 60 Bank 4 auf 2000h einblenden (ROM 0800-1FFF)
 
 modul1		equ	14h		; Konfigurationsbyte für SCCH-Modul 1
 ; Port 14h, OUT-Port
@@ -77,10 +84,32 @@ modul1		equ	14h		; Konfigurationsbyte für SCCH-Modul 1
 ; 	x8 - 512K ROM1 aktiv, jeweils 32K-Bänke, x = 0..F Bank0..Bank15, 8000-FFFF
 ; 	x9 - 512K ROM2 aktiv, jeweils 32K-Bänke, x = 0..F Bank0..Bank15, 8000-FFFF
 
+BWSPORT:	EQU	0F0H		; rücklesbares BWS Steuerregister
+;Bit 0 Taktumschaltung, 0=2Mhz, 1=4Mhz Takt
+;Bit 1 BWS INVERS, 0=Hintergrund	dunkel,	1=Hintergrund hell
+;Bit 2 Umschaltung FarbRAM <> BWS RAM, 0=BWS RAM, 1=FarbRAM
+;Bit 3 ZG Programmierung	0=Normal BWS, 1=ZG lesen/schreiben
+;Bit 4 ZG Programmierung	A0 Zeilennummer	Zeichen
+;Bit 5 ZG Programmierung	A1 Zeilennummer	Zeichen
+;Bit 6 ZG Programmierung	A2 Zeilennummer	Zeichen
+;Bit 7 frei
+; Aufbau FarbRAM
+; untere 4 Bit VordergrundFarbe	Bit 0 =	Rot
+;				Bit 1 =	Grün
+;				Bit 2 =	Blau
+;				Bit 3 =	Intensiv
+; obere 4Bits Hintergrundfarbe	Bit 4 =	Rot
+;				Bit 5 =	Grün
+;				Bit 6 =	Blau
+;				Bit 7 =	Intensiv
+
 ;
 NAMELEN		equ	40		; max. Länge des Dateinamens bei LOAD/SAVE
-KDOANF		equ	0400h		; Beginn f. Kdo-Suche
-RAMEND		equ	0BFFFh		; Ende f. Kdo-Suche, auf RAM beschränkt
+;KDOANF		equ	0400h		; Beginn f. Kdo-Suche
+;RAMEND		equ	0BFFFh		; Ende f. Kdo-Suche, auf RAM beschränkt
+KDOANF		equ	0200h		; Beginn f. Kdo-Suche
+RAMEND		equ	0FFFFh		; Ende f. Kdo-Suche, auf RAM beschränkt
+
 
 ; Zeitkonstanten (bei 2 MHz-Takt)
 ZK1    EQU  49        ;Laenge 1.Halbwelle
@@ -216,11 +245,13 @@ rWarm:		call	UPTAST		; Taste bei Einschalten gedrückt?
 rWarm1:		cp	'X'		; 'X' bei Einschalten gedrückt?
 rWarm2:		jp	z, PROGX	; dann zu "Paket X"
 ;
-init8:		xor	a
-		out	(modul1), a	; Modul1 disablen
+init8:		;xor	a
+		;out	(modul1), a	; Modul1 disablen
+		call    sub_2CF
 ;
 		rst	18h		; PRNST
-		db 0Ch,0Dh,0Fh,0Fh,"AC 1 * MONITOR * V.8.0 (C) SCCH ",0Dh,8Dh
+		;db 0Ch,0Dh,0Fh,0Fh,"AC 1 * MONITOR * V.8.0 (C) SCCH ",0Dh,8Dh
+		db 0Ch,0Dh,0Fh,0Fh,"AC1-2010 * FARBMONITOR * FDC/RFL",0Dh,8Dh
 		jp	break2
 
 ;------------------------------------------------------------------------------
@@ -600,7 +631,7 @@ sv_rst:		jp	rinch		; RST 08
 loc_235:	jp	BREAK		; NMI: Breakpoint
 		db 0FFh, 0FFh		; soil
 aSch:		db "SCH"		; 181C
-		db 0AFh			; 181F Warmstartcode
+		db    0			; 181F FarbCode=KEIN BWS voreingestellt
 		db    2			; 1820 Kommandocode V 24 (Adresse 1820H)
 		db  11h			; Ein/Ausgabebyte (Adresse 1821H)
 sv_rstend:
@@ -691,7 +722,8 @@ tast2:		call	tast6
 		cp	c		; noch dieselbe Taste?
 		jr	nz, tast5
 		djnz	tast2
-		cp	0FFh		; in Patches 21h
+;		cp	0FFh		; in Patches 21h
+		cp	21h
 		jr	c, tast4	; sprung wenn a < 0ffh (21h, d.h. Steuerzeichen)
 					; daher patch auf 21h, so dass für
 					; ASCII-zeichen der Grafik-Offs. funktioniert
@@ -719,24 +751,38 @@ tast7:		dec	a
 		res	7, a
 		ret
 
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
+;		db 0FFh
+;		db 0FFh
+;		db 0FFh
+;		db 0FFh
+;		db 0FFh
+;		db 0FFh
+;		db 0FFh
+;		db 0FFh
+;		db 0FFh
+;		db 0FFh
+;		db 0FFh
+;		db 0FFh
+;		db 0FFh
+;		db 0FFh
+;		db 0FFh
+;		db 0FFh
+;		db 0FFh
 
+;------------------------------------------------------------------------------
+sub_2CF:	xor	a
+		out	(modul1), a	; Modul1 disablen
+		jp	loc_E81
+
+;------------------------------------------------------------------------------
+; BASIC-Start		
+		db 0,9,'r',0Dh
+		nop
+		nop
+		nop
+		nop
+		jp	5FD5h
+;
 ;------------------------------------------------------------------------------
 ; UP zu U 555-Eprommer
 ;------------------------------------------------------------------------------
@@ -808,8 +854,12 @@ co2:		ld	(hl), 1		; sonst wieder poscnt auf 1 setzen
 		ex	de, hl		; hl=cupos
 		cp	7Fh		; steuerzeichen 7Fh (del)
 		jr	z, co8
-		cp	5Fh		; steuerzeichen 5Fh (del)
-		jr	z, co8
+;		cp	5Fh		; steuerzeichen 5Fh (del)
+;		jr	z, co8
+		nop
+		nop
+		nop
+		nop
 		ld	(hl), a		; sonst Zeichen in BWS schreiben
 
 ; Kursor nach rechts
@@ -1715,12 +1765,12 @@ step8:		rst	8		; INCH
 
 		jp	0FFFFh		; Reserve
 		jp	MS30		; ca. 30 ms warten
-		jp	OUTHEX		; Ausgabe A hexadezimal
-		jp	OUTHL		; Ausgabe HL hexadezimal
+j_OUTHEX	jp	OUTHEX		; Ausgabe A hexadezimal
+j_OUTHL		jp	OUTHL		; Ausgabe HL hexadezimal
 		jp	INLINE		; Zeile	  eingeben
 		jp	INHEX
 		jp	TASTE
-		jp	GETCO1		; Kommandoschleife
+j_GETCO1	jp	GETCO1		; Kommandoschleife
 
 ;------------------------------------------------------------------------------
 ; weiter mit CTC-ISR
@@ -2291,16 +2341,27 @@ TABIO:		db CTC0
 		db CTC2
 		db  32h			; Zeitkonstante
 ;
-		db PIO2CB
-		db 0CFh			; Mode 3 (Bit E/A)
-		db PIO2CB
-		db    0			; alle Bits Ausgabe
-		db PIO2CA
-		db 0CFh			; Mode 3 (Bit E/A)
-		db PIO2CA
-		db    5			; B3 und b0 Eingabe
-		db PIO2DA
-		db  0Ah			; Bits setzen
+;		db PIO2CB
+;		db 0CFh			; Mode 3 (Bit E/A)
+;		db PIO2CB
+;		db    0			; alle Bits Ausgabe
+;		db PIO2CA
+;		db 0CFh			; Mode 3 (Bit E/A)
+;		db PIO2CA
+;		db    5			; B3 und b0 Eingabe
+;		db PIO2DA
+;		db  0Ah			; Bits setzen
+
+		db  16h
+		db  0Fh
+		db  17h
+		db  0Fh
+		db  15h
+		db    0
+		db  13h
+		db  4Fh
+		db  12h
+		db  0Fh
 ;
 		db PIOCA		; PIOCA Tastatur
 		db 0CFh			; Mode 3 (Bit E/A)
@@ -2972,41 +3033,115 @@ routch0:	ld	hl, kdov24	; hl=Kommandocode V 24
 		jp	routch1		; dann test auf Eingabegerät
 
 ;------------------------------------------------------------------------------
-; c Copyrightmeldung
-;------------------------------------------------------------------------------
+; entfällt: c Copyrightmeldung
+; entfällt: UP "Joy".Abfrage Joystick 1,keine Taste Z - Flag
 
-		db 0,9,'c',0Dh
+; ---------------------------------------------------------------------------
+; '6' Bank 1 (FDC)
+; 8K-Eprom auf PIO2-Karte 
+		db 0,9,'6',0Dh
 
-		rst	18h		; PRNST
-		db 0Fh,"AC1 MONITOR V8.0",0Dh
-		db 0Fh,"Copyright (C) 11/1987 by E.Ludwig ",0Dh
-		db 0Fh,"Str.d.Befreiung 8 ",0Dh
-		db 0Fh,"Halle ",0Dh
-		db 0Fh,"4070",0Dh
-		db 0Fh,11h,"Tel.41082",10h,8Dh
+		ld	a, 10h
+		jr	loc_E72
+; ---------------------------------------------------------------------------
+; '7' Bank 2 (ROM-Bank)
+; 8K-Eprom auf PIO2-Karte 
+		db 0,9,'7',0Dh
+
+		ld	a, 20h
+		out	(PIO2EPROM), a
+		jp	2000h
+
+; ---------------------------------------------------------------------------
+; '8' Bank 3 (frei)
+; 8K-Eprom auf PIO2-Karte 
+		db 0,9,'8',0Dh
+
+		ld	a, 40h
+		jr	loc_E72
+
+; ---------------------------------------------------------------------------
+; '9' Bank 4 (frei)
+; 8K-Eprom auf PIO2-Karte 
+		db 0,9,'9',0Dh
+
+		ld	a, 60h
+		jr	loc_E72
+
+; ---------------------------------------------------------------------------
+; '0' ROM disablen
+; 8K-Eprom auf PIO2-Karte 
+		db 0,9,'0',0Dh
+
+		ld	a, 0
+loc_E72:	out	(PIO2EPROM), a
+		jp	j_GETCO1
+
+; ---------------------------------------------------------------------------
+; ! cc Farbbyte setzen
+; s.a. Monitorpatch 08.11.2011.LISTING
+
+		db 0,9,'!',0Dh
+
+		ld	a, (ARG1)	; mögliches FarbByte laden
+		or	a		; wenn 00H (keine Angabe) dann FarbByte
+		jr	nz, loc_E83
+loc_E81:	ld	a, 0Fh		; bg: schwarz, fg: weiß
+loc_E83:	push	af		; FarbByte sichern
+		xor	a		; noFarbRAM A=00
+		ld	(FARBBWS), a	; noFarbRAM einstellen
+		pop	af		; FarbByte nach A zurück
+		ld	c, BWSPORT
+		in	b, (c)		; akt. Portwert einlesen
+		inc	b		; FFH wenn kein rücklesbares Register
+		ret	z		; Rückkehr weil kein BWSPort gefunden
+					; wenn hier dann wurde KEIN FFH gelesen, altes B zurück
+		dec	b		; altes B zurück
+		ld	d, b		; in B BWS Steuercode für Text RAM
+		set	2, d		; in D BWS Steuercode für FarbRAM
+		ld	hl, BWSEND
+		ld	e, (hl)		; altes TextByte in E merken
+		out	(c), d		; FarbRAM an
+		ld	(hl), a		; Farbbyte schreiben
+		cp	(hl)		; und vergleichslesen
+		out	(c), b		; Text RAM wieder ein (wegen RET)
+		ld	(hl), e		; altes Zeichen Text-RAM zurück
+		ret	nz		; kein phys.RAM (Text- oder FarbRAM!)
+		; wenn hier dann unterschiedliche RAM's! damit gilt der FarbRAM
+		; als erkannt, das 1.Byte ist bereits in Farbe
+		out	(c), d		; FarbRAM an
+		push	bc		; BWSPort und TextRAM ein sichern
+		ld	de, BWSEND+1	; 2.Byte FarbRAM
+		ld	bc, LINES*COLS-1	; restliche Bytezahl
+		ldir			; nun FarbRAM schreiben
+		ld	a, (hl)		; FarbByte zurücklesen (von 17FFH)
+		pop	bc		; BWSPort und TextRAM ein
+		out	(c), b		; Text RAM ein
+		ld	(FARBBWS), a	; FarbByte eintragen
 		ret
 
-;------------------------------------------------------------------------------
-;UP "Joy".Abfrage Joystick 1,keine Taste Z - Flag
-;	    gesetzt und	A = 0,oben bit 0, unten	bit 1,links
-;	    bit	2, rechts bit 3, Feuerknopf bit	4 vom Akku
-;	    gesetzt.
-;------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
+; minimales V24 HeaderSave Load 
+; "* xxxx CR" lädt HeaderSave-File nach xxxx, "* CR" lädt auf originale Adr.
 
-JOYST:		push	bc
-		in	a, (PIODB)
-		ld	c, a
-		res	1, a
-		out	(PIODB), a
-		in	a, (PIODA)	; Tastatur
-		ld	b, a
-		ld	a, c
-		out	(PIODB), a
-		ld	a, b
-		nop
-		and	1Fh
-		pop	bc
-		ret
+		db 0,9,'*',0Dh
+
+		di			; Interrupts sperren
+		call	v24hs
+		ei			; Interrupts freigeben
+		jp	nz, error	; Abbruch bei Fehler & Rücksprung
+		jp	j_OUTHL		; letzte LadeAdresse anzeigen
+					; und RET von OUTHL als Rücksprung
+
+; ---------------------------------------------------------------------------
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+
 
 ;------------------------------------------------------------------------------
 ;? Help
@@ -3074,150 +3209,150 @@ routch5:	pop	af
 		ret
 
 ;------------------------------------------------------------------------------
-;
+; UP lädt ein HeaderSaveFile auf ARG1, ohne ARG1 auf Originale Adresse
+; Rückkehr mit Z wenn alles OK
 ;------------------------------------------------------------------------------
 
-; Tabelle	Tastenkode (nur	Monitorversion 8*8 und 8*12-Tastatur)
-
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-		db 0FFh
-
-;------------------------------------------------------------------------------
-; UP zu u_kdo Programmieren U555
-;------------------------------------------------------------------------------
-
-loc_F42:	rst	18h		; PRNST
-		db " CL",0D2h
-		jp	error		; Ausgabe "Error"
-
-;------------------------------------------------------------------------------
-; U U555	Programmieren U555 / 2708
-;------------------------------------------------------------------------------
-
-		db 0,9,'U',0Dh
-
-u_kdo:		ld	hl, (ARG1)	; Argument 1
-		ld	a, 8Fh
-		out	(PIO2CA), a
-		ld	de, 0
-uko1:		call	sub_2E0
-		and	(hl)
-		cp	(hl)
-		jr	nz, loc_F42
-		call	wko5
-		jr	z, uko1
-		ld	b, 88h
-		in	a, (PIODB)
-		res	4, a
-		out	(PIODB), a
-		ld	c, a
-uko2:		ld	d, 0
-		ld	hl, (ARG1)	; Argument 1
-uko3:		ld	a, (hl)
-		out	(PIO2DA), a
-		ld	a, d
-		out	(PIO2DB), a
+v24hs:		ld	hl, hsbuf
+		ld	de, 20h		; 32Bytes Bytes Header
+		call	v24hs3		; Header laden
+		ld	hl, hsbuf+13	; HL auf HeaderSave Kennung
+		ld	b, 3		; 3 Kennbytes testen
+		ld	a, 0D3h		; KennByte
+v24hs1:		cp	(hl)		; Vergleich
+		inc	hl		; nächstes Byte
+		ret	nz		; <>D3H ->kein HeaderSave = NZ
+		djnz	v24hs1		; bis alle 3 Byte fertig
+		ld	de, (hsbuf+0)	; AADR
+		ld	hl, (hsbuf+2)	; EADR
+		xor	a		; Carry 0
+		sbc	hl, de		; Bytezahl in HL
+		inc	hl		; Korrektur Bytezahl
+		ex	de, hl		; nun HL AAdr, in DE Bytezahl
+					; Zielladeadresse aus ARG1 holen 0000H übernimmt aus Header
+		ld	bc, (ARG1)	; Ladeziel
 		ld	a, c
-		set	4, a
-		out	(PIODB), a
-		ld	a, c
-		out	(PIODB), a
-		ld	a, e
-		out	(PIO2DB), a
-		ld	a, c
-		set	5, a
-		out	(PIODB), a
-		ld	a, 2Eh ; '.'
-uko4:		dec	a
-		jr	nz, uko4
-		ld	a, c
-		out	(PIODB), a
-		call	wko5
-		jr	z, uko3
-		djnz	uko2
-		ld	a, c
-		set	4, a
-		out	(PIODB), a
-		rst	18h		; PRNST
-		db 87h
-		ld	c, 0FFh
-		jr	wko1
-
-;------------------------------------------------------------------------------
-; W Lesen	Eprom Auslesen von U 555/2708 in den Speicher
-;------------------------------------------------------------------------------
-
-		db 0,9,'W',0Dh
-
-w_kdo:		ld	c, 0
-		ld	a, 8Fh
-		out	(PIO2CA), a
-wko1:		ld	hl, (ARG1)	; Argument 1
-		ld	de, 0
-wko2:		call	sub_2E0
-		bit	0, c
-		jr	nz, wko3
-		ld	(hl), a
-wko3:		cp	(hl)
-		jr	z, wko4
-		call	error		; Ausgabe "Error"
-		call	outhlsp		; Ausgabe HL + 4 Leerzeichen
-		call	OUTHEX		; Ausgabe A hexadezimal
-		rst	18h		; PRNST
-		db 0A0h
-		ld	a, (hl)
-		call	OUTHEX		; Ausgabe A hexadezimal
-		rst	8		; INCH
-		cp	0Dh
-		ret	nz
-		rst	10h		; OUTCH
-wko4:		call	wko5
-		jr	z, wko2
-		ld	hl, (ARG1)	; Argument 1
-		ld	de, 3FFh
-		add	hl, de
-		ld	(ARG2),	hl	; Argument 2
-		jp	crc		; CRC
-
-;
-wko5:		inc	hl
-		inc	e
-		bit	6, e
-		jr	z, wko6
-		inc	d
-		ld	e, 0
-wko6:		bit	4, d
+		or	b
+		jr	z, v24hs2	; wenn arg1=0000H, nicht verwenden
+		ld	h, b
+		ld	l, c		; in HL nun Ladeziel
+v24hs2:		call	v24hs3		; hier File holen
+					; Rückkehr mit Z + HL letzte Adr
 		ret
+
+; Header laden
+v24hs3:		call	v24hsin		; 1 Byte lesen
+		ld	(hl), a		; wegschreiben
+		dec	de		; 1 Byte weniger zu senden
+		ld	a, e
+		or	d		; DE = 0000 ?
+		ret	z		; ja, Z und HL auf letzter Adresse
+		inc	hl		; nächste Adresse
+		jr	v24hs3
+
+; V24 Laderoutine ohne Handshake ! 4800Baud
+v24hsin:	push	hl
+		push	de
+		ld	hl, (cupos)
+		ld	e, 8		; Zeitkonstante D=08=4800, 16=2400, 32=1200
+					; Zeitkonstante Baudrate fest 4800Baud
+v24hsin1:	in	a, (PIO2DA)	; Pegel am Datenport abfragen
+		and	1		; nur RxD zulassen (Bits 7-1 ausblenden)
+		jr	nz, v24hsin1	; Dateneingang war L warten auf H-Pegel
+		; RxD war L = StartBit erkannt
+		ld	b, e		; Zeitkonstante nach B
+					; halbe Bitlänge warten
+v24hsin2:	rlc	(hl)		; 15 Takte Statusanzeige
+		djnz	v24hsin2		; Zeit abwarten
+		ld	b, 9		; Startbit + 8 bit
+v24hsin3:	ld	d, e		; Zeitkonstante Baudrate
+		rr	c		; gelesenes CarryBit ins Bit 7 schieben
+					; 19 Takte OK
+v24hsin4:	rlc	(hl)		; 15 Takte Statusanzeige
+		nop			;  4 Takte
+		dec	d		;  4 Takte Zeitzähler decrementieren
+		in	a, (PIO2DA)	; 11 Takte Pegelabfrage
+		jr	nz, v24hsin4	; 7 Takte
+		rra			; Bit0=RxD ins Carry schieben
+		djnz	v24hsin3		; weiter bis alle Bits durch
+		ld	a, c		; gelesenes Byte in A umladen
+		pop	de
+		pop	hl
+		ret
+
+; ---------------------------------------------------------------------------
+; Kommando "p" Clear RAM
+		db 0,9,'p',0Dh
+; ---------------------------------------------------------------------------
+		ld	hl, data
+		ld	(hl), 0FFh	; 1.Byte mit FF
+		ld	de, data+1
+		ld	bc, 0FEFFh-data	; Länge bis FEFF wegen DVHD
+		ldir			; RAM löschen
+		rst	18h
+		db " Clear RAM",8Dh
+		ret
+; ---------------------------------------------------------------------------
+; 'W nn xx' Port nn beschreiben
+		db 0,9,'W',0Dh
+; ---------------------------------------------------------------------------
+		call	para
+		ld	b, h
+		ld	c, l
+		out	(c), e
+		ret
+; ---------------------------------------------------------------------------
+; 'w nn' Port lesen		
+		db 0,9,'w',0Dh
+; ---------------------------------------------------------------------------
+		ld	bc, (ARG1)
+		in	a, (c)
+		jp	j_OUTHEX
+; ---------------------------------------------------------------------------
+; '4' Umschaltung 2/4 Mhz
+		db 0,9,'4',0Dh
+; ---------------------------------------------------------------------------
+		in	a, (BWSPORT)
+		xor	1
+		out	(BWSPORT), a
+		ret
+; ---------------------------------------------------------------------------
+; 'z' Umschaltung Bildschirm-Modus
+		db 0,9,'z',0Dh
+; ---------------------------------------------------------------------------
+		in	a, (PIODB)
+		bit	3, a		; Bildschim-Mode
+		jr	z, loc_FD2
+		res	3, a
+		jr	loc_FD4
+loc_FD2:	set	3, a
+loc_FD4:	out	(PIODB), a
+		ret
+; ---------------------------------------------------------------------------
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
 
 ;------------------------------------------------------------------------------
 ; X Exit Sprung in das Betriebssystem Programmpaket X
@@ -3230,7 +3365,7 @@ wko6:		bit	4, d
 ;------------------------------------------------------------------------------
 ; b Basic	Start des Basic-Interpreters V.	3.2
 ;------------------------------------------------------------------------------
-
+	
 		; db 0 fehlt, aber Befehle davor endet auf 00
 		; da lo(rWarm2) == 0
 		
@@ -3259,7 +3394,7 @@ nmi:		ds 3			; jp	BREAK	NMI: Breakpoint
 ;Hilfsregister, V24, I/O
 soil:		ds 2			; Beginn Eingabezeile	, 0FFFFh
 warmcod:	ds 3			; Warmstartcode		, "SCH"
-kdov24o:	ds 1			; Kommandocode V 24 out	, A2h
+FARBBWS:	ds 1			; 00=wenn KEINE Farbe, sonst akt. Farbbyte
 kdov24:		ds 1			; Kommandocode V 24 in	, 2
 IOBYT:		ds 1			; Ein/Ausgabebyte	; 11h
 			; Eingabe: b0 Tastatur, b1 V24 (Rs 232c), b2 Reserve, b3 User
@@ -3321,6 +3456,10 @@ tbl_eadr:	ds 2			; eadr
 tbl_aadr:	ds 2			; aadr 
 tbl_special:	ds 1			; Kennung
 
+; V24-Headersave-Buffer, 32 Byte
+; überschneidet sich mit tb_errarr..tbh_trenner !!
+hsbuf		equ	188Eh		; 32 Byte bis 18ADh
+
 ; es sind noch ein paar Bytes frei 18D6..18DF
 
 		org	RAM+0F0h
@@ -3331,3 +3470,4 @@ unk_18F3:	ds 3		; User Ausgaberoutine
 sysramend:	equ $
 
 		end
+

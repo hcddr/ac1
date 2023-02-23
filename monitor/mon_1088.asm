@@ -73,6 +73,7 @@ modul1		equ	14h		; Konfigurationsbyte für SCCH-Modul 1
 ; 	00 - Modul nicht aktiv
 ; 	01 - 8K-ROM "PaketX" E000-FFFF
 ; 	02 - 16K-ROM "Basic" 2000-5FFF
+;	04 - System aus (RAM 0000-1FFF, CP/M-Modus, erzeugt Signal C22)
 ; 	x8 - 512K ROM1 aktiv, jeweils 32K-Bänke, x = 0..F Bank0..Bank15, 8000-FFFF
 ; 	x9 - 512K ROM2 aktiv, jeweils 32K-Bänke, x = 0..F Bank0..Bank15, 8000-FFFF
 
@@ -1914,7 +1915,7 @@ d_ko28:		rst	18h		; PRNST
 		jr	f_ko3
 f_ko1:		dec	de
 		ld	a, (de)
-		cp	20h ; ' '
+		cp	' '
 		jr	z, f_ko2
 		exx
 		ld	(hl), a

@@ -1,0 +1,1521 @@
+ AS V1.42 Beta [Bld 157] - Source File cpm.asm - Page 1 - 2/23/2023 8:54:42
+
+
+       1/       0 :                     ;-----------------------------------------------------------------------------
+       2/       0 :                     ; Mini-CP/M f¸r den AC1 ohne Floppy (zum Reinschnuppern)
+       3/       0 :                     ; mit kleiner RAM-Disk
+       4/       0 :                     ; 20.02.2023 V.Pohlers
+       5/       0 :                     ;
+       6/       0 :                     ; letzte ƒnderung 23.02.2023
+       7/       0 :                     ;-----------------------------------------------------------------------------
+       8/       0 :                     
+       9/       0 :                     		cpu	z80
+      10/       0 :                     		LISTING	NOSKIPPED
+      11/       0 :                     
+      12/       0 :                     ;-----------------------------------------------------------------------------
+      13/       0 :                     ; Speicheraufteilung
+      14/       0 :                     ; RAM:
+      15/       0 :                     ; 	E000 CCP
+      16/       0 :                     ; 	E806 BDOS
+      17/       0 :                     ;	F600 BIOS
+      18/       0 :                     ; 	7000-DFFF RAM-Floppy
+      19/       0 :                     
+      20/       0 :                     ;-----------------------------------------------------------------------------
+      21/       0 :                     
+      22/       0 :                     x_align		function x, (($+x-1)/x)*x
+      23/       0 :                     hi              function x, (x>>8) & 0ffh	; High-Byte
+      24/       0 :                     lo              function x, x & 0ffh		; Low-Byte
+      25/       0 :                     
+      26/       0 :                     
+      27/       0 : =0E000H             CCP		equ	0E000h		; base of ccp
+      28/       0 : =0E800H             BDOS       	equ	CCP+0800h	; base of bdos
+      29/       0 : =0F600H             BIOS		equ	CCP+1600h	; base of bios
+      30/       0 :                     
+      31/       0 :                     
+      32/       0 : =3H                 IOLOC	EQU	3		;i/o definition byte.
+      33/       0 : =4H                 DISKA	EQU	4		;current drive name and user number.
+      34/       0 :                     
+      35/       0 :                     ;-----------------------------------------------------------------------------
+      36/       0 :                     ; CCP = orig. DR-CCP + 3 Zusatzbefehle (GO, LOAD, EXIT) + JP -> Jr
+      37/       0 :                     ; vermutlich fr¸he CPA-Version
+      38/       0 :                     ;-----------------------------------------------------------------------------
+      39/       0 :                     ; 2 Spr¸nge extern in BIOS
+      40/       0 :                     ;		dw 0F638h	; exit, BIOS+38
+      41/       0 :                     ;		dw 0F63Bh	; load, BIOS+3B
+      42/       0 :                     ;-----------------------------------------------------------------------------
+      43/       0 :                     
+      44/    E000 :                     		ORG	CCP
+      50/    E7FB :                     		LISTING	NOSKIPPED
+      51/    E7FB :                     		
+      52/    E7FB :                     ;-----------------------------------------------------------------------------
+      53/    E7FB :                     ; BDOS = CPA
+      54/    E7FB :                     ; fr¸here CPA-Version 24.08.86
+      55/    E7FB :                     ;-----------------------------------------------------------------------------
+      56/    E7FB :                     
+      57/    E800 :                     		org	BDOS
+      62/    F600 :                     		LISTING	NOSKIPPED
+      63/    F600 :                     
+      64/    F600 :                     ;-----------------------------------------------------------------------------
+      65/    F600 :                     ; BIOS
+      66/    F600 :                     ;-----------------------------------------------------------------------------
+      67/    F600 :                     
+      68/    F600 :                     		org	BIOS
+      69/    F600 :                     		section BIOS
+ AS V1.42 Beta [Bld 157] - Source File cpm.asm - Page 2 - 2/23/2023 8:54:43
+
+
+      70/    F600 :                     		include	bios15_ac1.asm
+(1)    1/    F600 :                     ; File Name   :	d:\hobby3\cpm11\CPM64_FUA_bios_F600.bin
+(1)    2/    F600 :                     ; Format      :	Binary file
+(1)    3/    F600 :                     ; Base Address:	0000h Range: F600h - FCC0h Loaded length: 06C0h
+(1)    4/    F600 :                     
+(1)    5/    F600 :                     
+(1)    6/    F600 :                     
+(1)    7/    F600 :                     ;------------------------------------------------------------------------------
+(1)    8/    F600 :                     ; BIOS V1.5 CP/M FA  ist die im FA 4/89 abgedruckte Version
+(1)    9/    F600 :                     ; basiert auf cbios.asm aus 
+(1)   10/    F600 :                     ; Manfred Kramer, "Praktische Mikrocomputertechnik", Milit‰rverlag DDR,1987
+(1)   11/    F600 :                     ;
+(1)   12/    F600 :                     ; 1 Laufwerk RAM-Floppy, liegt vor CCP im Speicher
+(1)   13/    F600 :                     ;------------------------------------------------------------------------------
+(1)   14/    F600 :                     
+(1)   15/    F600 :                     		cpu	z80
+(1)   16/    F600 :                     
+(1)   17/    F600 :                     ;hi              function x, (x>>8) & 0ffh	; High-Byte
+(1)   18/    F600 :                     ;CCP		equ	0E000h		; base of ccp
+(1)   19/    F600 :                     ;BDOS       	equ	CCP+0800h	; base of bdos
+(1)   20/    F600 :                     ;BIOS		equ	CCP+1600h	; base of bios
+(1)   21/    F600 :                     ;IOLOC	EQU	3		;i/o definition byte.
+(1)   22/    F600 :                     ;DISKA	EQU	4		;current drive name and user number.
+(1)   23/    F600 :                     
+(1)   24/    F600 :                     ;		org bios
+(1)   25/    F600 :                     
+(1)   26/    F600 : =1H                 NDISK:	EQU	1		;ANZAHL LAUFWERKE
+(1)   27/    F600 :                     
+(1)   28/    F600 : =7FH                CURS	equ	07Fh		;Zeichen f. Cursor
+(1)   29/    F600 :                     
+(1)   30/    F600 :                     CPMON		macro
+(1)   31/    F600 :                     		ld	a, 0FFh
+(1)   32/    F600 :                     		out	(1Eh), a	; CPM-Mode on
+(1)   33/    F600 :                     		endm
+(1)   34/    F600 :                     CPMOFF		macro
+(1)   35/    F600 :                     		ld	a, 0
+(1)   36/    F600 :                     		out	(1Eh), a	; CPM-Mode off
+(1)   37/    F600 :                     		endm
+(1)   38/    F600 :                     
+(1)   39/    F600 :                     ;------------------------------------------------------------------------------
+(1)   40/    F600 :                     ; 
+(1)   41/    F600 :                     ;------------------------------------------------------------------------------
+(1)   42/    F600 :                     
+(1)   43/    F600 : C3 F0 F6            entry:		jp	boot
+(1)   44/    F603 : C3 62 F7            WBOTE:		jp	wboot
+(1)   45/    F606 : C3 D9 F8            		jp	const
+(1)   46/    F609 : C3 69 FA            		jp	conin
+(1)   47/    F60C : C3 12 F9            		jp	conout
+(1)   48/    F60F : C9                  		ret			; list
+(1)   49/    F610 : 00                  		nop
+(1)   50/    F611 : 00                  		nop
+(1)   51/    F612 : C9                  		ret			; punch
+(1)   52/    F613 : 00                  		nop
+(1)   53/    F614 : 00                  		nop
+(1)   54/    F615 : C9                  		ret			; reader
+(1)   55/    F616 : 00                  		nop
+(1)   56/    F617 : 00                  		nop
+(1)   57/    F618 : C3 3E F6            		jp	HOME
+(1)   58/    F61B : C3 43 F6            		jp	SDISK
+(1)   59/    F61E : C3 78 F6            		jp	STRCK
+ AS V1.42 Beta [Bld 157] - Source File cpm.asm(bios15_ac1.asm) - Page 3 - 2/23/2023 8:54:43
+
+
+(1)   60/    F621 : C3 73 F6            		jp	SSEC
+(1)   61/    F624 : C3 7D F6            		jp	SDMA
+(1)   62/    F627 : C3 D4 F7            		jp	RRDSK
+(1)   63/    F62A : C3 C4 F7            		jp	WRDSK
+(1)   64/    F62D : 3E FF               		ld	a, 0FFh		; lstst
+(1)   65/    F62F : C9                  		ret
+(1)   66/    F630 : C3 61 F6            		jp	STRAN
+(1)   67/    F633 :                     
+(1)   68/    F633 :                     ;------------------------------------------------------------------------------
+(1)   69/    F633 :                     ; 
+(1)   70/    F633 :                     ;------------------------------------------------------------------------------
+(1)   71/    F633 :                     
+(1)   72/    F633 : 43 50 4D 41 43      		db "CPMAC"
+(1)   73/    F638 :                     
+(1)   74/    F638 : C3 A4 FC            		jp	exit		; residentes Zusatzkommando CCP
+(1)   75/    F63B : C3 51 FB            		jp	load		; residentes Zusatzkommando CCP
+(1)   76/    F63E :                     
+(1)   77/    F63E :                     ;------------------------------------------------------------------------------
+(1)   78/    F63E :                     ; KOPF AUF SPUR NULL STELLEN
+(1)   79/    F63E :                     ;------------------------------------------------------------------------------
+(1)   80/    F63E :                     
+(1)   81/    F63E : 01 00 00            HOME:		ld	bc, 0
+(1)   82/    F641 : 18 35               		jr	STRCK
+(1)   83/    F643 :                     
+(1)   84/    F643 :                     ;------------------------------------------------------------------------------
+(1)   85/    F643 :                     ;LAUFWERK AUSWAEHLEN
+(1)   86/    F643 :                     ;IN:C LAUFWERK
+(1)   87/    F643 :                     ;OUT:HL DPH-VEKTOR
+(1)   88/    F643 :                     ;------------------------------------------------------------------------------
+(1)   89/    F643 :                     
+(1)   90/    F643 : 21 00 00            SDISK:		ld	hl, 0
+(1)   91/    F646 : C5                  		push	bc
+(1)   92/    F647 : 06 00               		ld	b, 0
+(1)   93/    F649 : 79                  		ld	a, c
+(1)   94/    F64A : FE 01               		cp	NDISK
+(1)   95/    F64C : DA 52 F6            		jp	c, seldsk1
+(1)   96/    F64F :                     
+(1)   97/    F64F :                     		;Fehler
+(1)   98/    F64F : AF                  		xor	a
+(1)   99/    F650 : C1                  		pop	bc
+(1)  100/    F651 : C9                  		ret
+(1)  101/    F652 :                     
+(1)  102/    F652 : 69                  seldsk1:	ld	l, c
+(1)  103/    F653 : 60                  		ld	h, b
+(1)  104/    F654 : 29                  		add	hl, hl
+(1)  105/    F655 : 29                  		add	hl, hl
+(1)  106/    F656 : 29                  		add	hl, hl
+(1)  107/    F657 : 29                  		add	hl, hl
+(1)  108/    F658 : 11 05 F8            		ld	de, DPBAS
+(1)  109/    F65B : 19                  		add	hl, de
+(1)  110/    F65C : 32 04 00            		ld	(DISKA), a
+(1)  111/    F65F : C1                  		pop	bc
+(1)  112/    F660 : C9                  		ret
+(1)  113/    F661 :                     
+(1)  114/    F661 :                     ;------------------------------------------------------------------------------
+(1)  115/    F661 :                     ;SECTOR TRANSFOR.
+(1)  116/    F661 :                     ;------------------------------------------------------------------------------
+(1)  117/    F661 :                     
+(1)  118/    F661 : 06 00               STRAN:		ld	b, 0
+(1)  119/    F663 : 7A                  		ld	a, d
+ AS V1.42 Beta [Bld 157] - Source File cpm.asm(bios15_ac1.asm) - Page 4 - 2/23/2023 8:54:43
+
+
+(1)  120/    F664 : B3                  		or	e
+(1)  121/    F665 : 20 04               		jr	nz, sectran1
+(1)  122/    F667 : 60                  		ld	h, b
+(1)  123/    F668 : 69                  		ld	l, c
+(1)  124/    F669 : 23                  		inc	hl
+(1)  125/    F66A : C9                  		ret
+(1)  126/    F66B : EB                  sectran1:		ex	de, hl
+(1)  127/    F66C : 09                  		add	hl, bc
+(1)  128/    F66D : 7E                  		ld	a, (hl)
+(1)  129/    F66E : 32 25 F8            		ld	(SEC1),	a
+(1)  130/    F671 : 6F                  		ld	l, a
+(1)  131/    F672 : C9                  		ret
+(1)  132/    F673 :                     
+(1)  133/    F673 :                     ;------------------------------------------------------------------------------
+(1)  134/    F673 :                     ;SECTOR EINSTELLEN
+(1)  135/    F673 :                     ;IN: C SECTOR
+(1)  136/    F673 :                     ;OUT: (SEC1) =C
+(1)  137/    F673 :                     ;------------------------------------------------------------------------------
+(1)  138/    F673 :                     
+(1)  139/    F673 : 79                  SSEC:		ld	a, c
+(1)  140/    F674 : 32 25 F8            		ld	(SEC1),	a
+(1)  141/    F677 : C9                  		ret
+(1)  142/    F678 :                     
+(1)  143/    F678 :                     ;------------------------------------------------------------------------------
+(1)  144/    F678 :                     ;SPUR ANWAEHLEN
+(1)  145/    F678 :                     ;IN: C SPUR
+(1)  146/    F678 :                     ;OUT (TRACK)=C
+(1)  147/    F678 :                     ;------------------------------------------------------------------------------
+(1)  148/    F678 :                     
+(1)  149/    F678 : 79                  STRCK:		ld	a, c
+(1)  150/    F679 : 32 24 F8            		ld	(TRACK), a
+(1)  151/    F67C : C9                  		ret
+(1)  152/    F67D :                     
+(1)  153/    F67D :                     ;------------------------------------------------------------------------------
+(1)  154/    F67D :                     ;DMA SETZEN
+(1)  155/    F67D :                     ;IN: BC DMA
+(1)  156/    F67D :                     ;------------------------------------------------------------------------------
+(1)  157/    F67D :                     
+(1)  158/    F67D : ED 43 26 F8         SDMA:		ld	(DMA), bc
+(1)  159/    F681 : C9                  		ret
+(1)  160/    F682 :                     
+(1)  161/    F682 :                     ;------------------------------------------------------------------------------
+(1)  162/    F682 :                     ; 
+(1)  163/    F682 :                     ;------------------------------------------------------------------------------
+(1)  164/    F682 :                     
+(1)  165/    F682 : 0C 1B 03 0A         inimsg:		db 0Ch,1Bh,3,0Ah
+(1)  166/    F686 : 43 50 2F 4D 20 20   		db "CP/M   2.2   V 1.5  auf AC 1"
+                    20 32 2E 32 20 20 
+                    20 56 20 31 2E 35 
+                    20 20 61 75 66 20 
+                    41 43 20 31       
+(1)  167/    F6A2 : 1B 05 0A            SizeMsg:	db 1Bh,5,0Ah
+(1)  168/    F6A5 : 52 41 4D 20 2D 20   		db "RAM - Disk size (1=4K ... 7=28K) ? ",0
+                    44 69 73 6B 20 73 
+                    69 7A 65 20 28 31 
+                    3D 34 4B 20 2E 2E 
+                    2E 20 37 3D 32 38 
+                    4B 29 20 3F 20 00 
+(1)  169/    F6C9 : 1B 08 0A            rdskmsg:	db 1Bh,8,0Ah
+(1)  170/    F6CC : 52 41 4D 20 2D 20   		db "RAM - Disk neu formatieren (Y/n) ? ",0
+ AS V1.42 Beta [Bld 157] - Source File cpm.asm(bios15_ac1.asm) - Page 5 - 2/23/2023 8:54:43
+
+
+                    44 69 73 6B 20 6E 
+                    65 75 20 66 6F 72 
+                    6D 61 74 69 65 72 
+                    65 6E 20 28 59 2F 
+                    6E 29 20 3F 20 00 
+(1)  171/    F6F0 :                     
+(1)  172/    F6F0 :                     ;------------------------------------------------------------------------------
+(1)  173/    F6F0 :                     ; 
+(1)  174/    F6F0 :                     ;------------------------------------------------------------------------------
+(1)  175/    F6F0 :                     
+(1)  176/    F6F0 : 31 FF FF            boot:		ld	sp, 0FFFFh
+(1)  177/    F6F3 : (MACRO)             		CPMON
+(1)  177/    F6F3 : 3E FF                               ld      a, 0FFh
+(1)  177/    F6F5 : D3 1E                               out     (1Eh), a        ; CPM-Mode on
+(1)  178/    F6F7 : 3E C3               		ld	a, 0C3h		; jp
+(1)  179/    F6F9 : 32 00 00            		ld	(0), a
+(1)  180/    F6FC : 21 03 F6            		ld	hl, WBOTE
+(1)  181/    F6FF : 22 01 00            		ld	(1), hl
+(1)  182/    F702 : 32 05 00            		ld	(5), a
+(1)  183/    F705 : 21 06 E8            		ld	hl, BDOS+6
+(1)  184/    F708 : 22 06 00            		ld	(6), hl
+(1)  185/    F70B : 32 38 00            		ld	(38h), a	;HALTEPUNKT VORBEREITEN
+(1)  186/    F70E : 21 F3 F8            		ld	hl, RESTR
+(1)  187/    F711 : 22 39 00            		ld	(39h), hl
+(1)  188/    F714 : 21 82 F6            		ld	hl, inimsg	; "CP/M   2.2   V 1.5  auf AC 1"
+(1)  189/    F717 : CD E2 F8            		call	STR
+(1)  190/    F71A :                     
+(1)  191/    F71A : 21 A2 F6            rsiz:		ld	hl, SizeMsg	; "RAM - Disk size (1=4K ... 7=28K) ?"
+(1)  192/    F71D : CD E2 F8            		call	STR
+(1)  193/    F720 : CD 69 FA            		call	conin
+(1)  194/    F723 : 4F                  		ld	c, a
+(1)  195/    F724 : CD 12 F9            		call	conout
+(1)  196/    F727 : 21 00 A0            		ld	hl, CCP-16*1024	; RDSK f¸r 16k
+(1)  197/    F72A : FE 0D               		cp	0Dh		; CR=16K A000..DFFF
+(1)  198/    F72C : 28 15               		jr	z, rsiz2
+(1)  199/    F72E : FE 31               		cp	'1'		; 1=4K D000...DFFF, 2=8k C000..DFFF ... 7=24k 7000..DFFF
+(1)  200/    F730 : 38 E8               		jr	c, rsiz
+(1)  201/    F732 : FE 38               		cp	'8'
+(1)  202/    F734 : 30 E4               		jr	nc, rsiz
+(1)  203/    F736 : E6 07               		and	7
+(1)  204/    F738 : 47                  		ld	b, a
+(1)  205/    F739 : 21 00 E0            		ld	hl, CCP		; RAF Ende+1
+(1)  206/    F73C : 11 00 10            		ld	de, 4*1024	; -4K
+(1)  207/    F73F : ED 52               rsiz1:		sbc	hl, de
+(1)  208/    F741 : 10 FC               		djnz	rsiz1
+(1)  209/    F743 : 22 D7 F8            rsiz2:		ld	(RDSK),	hl	; RAF Anfang
+(1)  210/    F746 : 21 C9 F6            		ld	hl, rdskmsg	; "RAM - Disk neu formatieren (Y/n) ?"
+(1)  211/    F749 : CD E2 F8            		call	STR
+(1)  212/    F74C : CD 69 FA            		call	conin
+(1)  213/    F74F : 4F                  		ld	c, a
+(1)  214/    F750 : CD 12 F9            		call	conout
+(1)  215/    F753 : FE 59               		cp	'Y'
+(1)  216/    F755 : CC A2 F7            		call	z, FRDSK	; Ramdisk formatieren
+(1)  217/    F758 : CD 65 F7            		call	IRDSK		; init.
+(1)  218/    F75B :                     		;
+(1)  219/    F75B : AF                  		xor	a
+(1)  220/    F75C : 32 03 00            		ld	(IOLOC), a	; IOBYTE
+(1)  221/    F75F : 32 04 00            		ld	(DISKA), a	; DISKA
+(1)  222/    F762 :                     
+(1)  223/    F762 :                     ;------------------------------------------------------------------------------
+ AS V1.42 Beta [Bld 157] - Source File cpm.asm(bios15_ac1.asm) - Page 6 - 2/23/2023 8:54:43
+
+
+(1)  224/    F762 :                     ; 
+(1)  225/    F762 :                     ;------------------------------------------------------------------------------
+(1)  226/    F762 :                     
+(1)  227/    F762 : C3 B7 F7            wboot:		jp	GOCPM
+(1)  228/    F765 :                     
+(1)  229/    F765 :                     ;------------------------------------------------------------------------------
+(1)  230/    F765 :                     ; RAMDISK INITIALISIEREN
+(1)  231/    F765 :                     ;------------------------------------------------------------------------------
+(1)  232/    F765 :                     
+(1)  233/    F765 :                     IRDSK:	; bios-Startleiste vor RAF kopieren
+(1)  234/    F765 : 2A D7 F8            		ld	hl, (RDSK)	; RAF Anfang
+(1)  235/    F768 : 01 80 00            		ld	bc, 80h		; -80h
+(1)  236/    F76B : ED 42               		sbc	hl, bc
+(1)  237/    F76D : E5                  		push	hl		; neue bios-adr. merken
+(1)  238/    F76E :                     		; bios sprungleiste kopieren
+(1)  239/    F76E : 11 00 F6            		ld	de, entry
+(1)  240/    F771 : EB                  		ex	de, hl
+(1)  241/    F772 : 01 3E 00            		ld	bc, 21*3-1
+(1)  242/    F775 : ED B0               		ldir
+(1)  243/    F777 :                     		;
+(1)  244/    F777 : E1                  		pop	hl		; neue bios-Adr
+(1)  245/    F778 : 23                  		inc	hl
+(1)  246/    F779 : 23                  		inc	hl
+(1)  247/    F77A : 23                  		inc	hl		; +3
+(1)  248/    F77B : 22 01 00            		ld	(1), hl		; neuer wboot-einsprung
+(1)  249/    F77E : 11 FD 0D            		ld	de, 0E00h-3	; l‰nge bdos
+(1)  250/    F781 : ED 52               		sbc	hl, de
+(1)  251/    F783 : 22 06 00            		ld	(6), hl		; bdos-einsprung
+(1)  252/    F786 : 36 C3               		ld	(hl), 0C3h 	; jp
+(1)  253/    F788 : 11 06 E8            		ld	de, BDOS + 6
+(1)  254/    F78B : 23                  		inc	hl
+(1)  255/    F78C : 73                  		ld	(hl), e
+(1)  256/    F78D : 23                  		inc	hl
+(1)  257/    F78E : 72                  		ld	(hl), d
+(1)  258/    F78F :                     		;
+(1)  259/    F78F : 21 00 E0            		ld	hl, CCP		; RAF Ende+1
+(1)  260/    F792 : ED 5B D7 F8         		ld	de, (RDSK)	; RAF Anfang
+(1)  261/    F796 : ED 52               		sbc	hl, de
+(1)  262/    F798 : 7C                  		ld	a, h		; a=RAFgrˆﬂe in 1/4K-Einheiten
+(1)  263/    F799 : CB 3F               		srl	a		; /2
+(1)  264/    F79B : CB 3F               		srl	a		; /2	a=RAFgrˆﬂe in 1K-Einheiten
+(1)  265/    F79D : 3D                  		dec	a		; -1
+(1)  266/    F79E : 32 1A F8            		ld	(rafdbp_drm), a	; RAF-Grˆﬂe eintragen
+(1)  267/    F7A1 : C9                  		ret
+(1)  268/    F7A2 :                     
+(1)  269/    F7A2 :                     ;------------------------------------------------------------------------------
+(1)  270/    F7A2 :                     ; RAMDISK FORMATIEREN
+(1)  271/    F7A2 :                     ;------------------------------------------------------------------------------
+(1)  272/    F7A2 :                     
+(1)  273/    F7A2 : 21 00 E0            FRDSK:		ld	hl, CCP		; RAF Ende + 1
+(1)  274/    F7A5 : ED 5B D7 F8         		ld	de, (RDSK)	; RAF Anfang
+(1)  275/    F7A9 : ED 52               		sbc	hl, de
+(1)  276/    F7AB : 44                  		ld	b, h
+(1)  277/    F7AC : 4D                  		ld	c, l
+(1)  278/    F7AD : 0B                  		dec	bc
+(1)  279/    F7AE : EB                  		ex	de, hl
+(1)  280/    F7AF : 54                  		ld	d, h
+(1)  281/    F7B0 : 5D                  		ld	e, l
+(1)  282/    F7B1 : 13                  		inc	de
+(1)  283/    F7B2 : 36 E5               		ld	(hl), 0E5h
+ AS V1.42 Beta [Bld 157] - Source File cpm.asm(bios15_ac1.asm) - Page 7 - 2/23/2023 8:54:43
+
+
+(1)  284/    F7B4 : ED B0               		ldir
+(1)  285/    F7B6 : C9                  		ret
+(1)  286/    F7B7 :                     
+(1)  287/    F7B7 :                     ;------------------------------------------------------------------------------
+(1)  288/    F7B7 :                     ; 
+(1)  289/    F7B7 :                     ;------------------------------------------------------------------------------
+(1)  290/    F7B7 :                     
+(1)  291/    F7B7 : 01 80 00            GOCPM:		ld	bc, 80h	
+(1)  292/    F7BA : CD 7D F6            		call	SDMA
+(1)  293/    F7BD : 3A 04 00            		ld	a, (4)		;AKTUELLES LAUFWERK HOLEN
+(1)  294/    F7C0 : 4F                  		ld	c, a
+(1)  295/    F7C1 : C3 00 E0            		jp	CCP
+(1)  296/    F7C4 :                     
+(1)  297/    F7C4 :                     ;------------------------------------------------------------------------------
+(1)  298/    F7C4 :                     ;RAM-DISK
+(1)  299/    F7C4 :                     ;SCHREIBEN
+(1)  300/    F7C4 :                     ;------------------------------------------------------------------------------
+(1)  301/    F7C4 :                     
+(1)  302/    F7C4 : CD E2 F7            WRDSK:		call	RADR		;SEKTORADR BERECHNEN
+(1)  303/    F7C7 : 38 16               		jr	c, BDERR	;BEREICH UEBERSCHRITTEN
+(1)  304/    F7C9 : EB                  		ex	de, hl		;ZIEL-/QUELLADR. RAM-DISK
+(1)  305/    F7CA : 2A 26 F8            		ld	hl, (DMA)	;ZIEL-/QUELLADR. BDOS
+(1)  306/    F7CD : 01 80 00            RDSK1:		ld	bc, 80h		;=1 SEKTOR
+(1)  307/    F7D0 : ED B0               		ldir
+(1)  308/    F7D2 : AF                  		xor	a
+(1)  309/    F7D3 : C9                  		ret
+(1)  310/    F7D4 :                     
+(1)  311/    F7D4 :                     ;------------------------------------------------------------------------------
+(1)  312/    F7D4 :                     ;LESEN
+(1)  313/    F7D4 :                     ;------------------------------------------------------------------------------
+(1)  314/    F7D4 :                     
+(1)  315/    F7D4 : CD E2 F7            RRDSK:		call	RADR		; Berechnung Adresse
+(1)  316/    F7D7 : 38 06               		jr	c, BDERR	;FEHLER
+(1)  317/    F7D9 : ED 5B 26 F8         		ld	de, (DMA)
+(1)  318/    F7DD : 18 EE               		jr	RDSK1
+(1)  319/    F7DF : 3E 01               BDERR:		ld	a, 1
+(1)  320/    F7E1 : C9                  		ret
+(1)  321/    F7E2 :                     
+(1)  322/    F7E2 :                     ;------------------------------------------------------------------------------
+(1)  323/    F7E2 :                     ;SEKTORADR. IM RAM BERECHNEN
+(1)  324/    F7E2 :                     ;DE AKT. SPUR
+(1)  325/    F7E2 :                     ;C AKT. SEKTOR
+(1)  326/    F7E2 :                     ;B MAX. SEKTORANZAHL/DISK
+(1)  327/    F7E2 :                     ;------------------------------------------------------------------------------
+(1)  328/    F7E2 :                     
+(1)  329/    F7E2 : 16 00               RADR:		ld	d, 0
+(1)  330/    F7E4 : 3A 24 F8            		ld	a, (TRACK)
+(1)  331/    F7E7 : 5F                  		ld	e, a
+(1)  332/    F7E8 : 3A 25 F8            		ld	a, (SEC1)
+(1)  333/    F7EB : 4F                  		ld	c, a
+(1)  334/    F7EC : 21 FF FF            		ld	hl, 0FFFFh
+(1)  335/    F7EF : 06 1A               		ld	b, 26		; Sectors/Track
+(1)  336/    F7F1 : 19                  radr1:		add	hl, de		;UMWANDLUNG SPUREN IN SEKTOREN
+(1)  337/    F7F2 : 10 FD               		djnz	radr1
+(1)  338/    F7F4 : 09                  		add	hl, bc		;AKT.SEKT.DAZU
+(1)  339/    F7F5 : 29                  		add	hl, hl		;WANDLUNG SEKTOR IN BYTES
+(1)  340/    F7F6 : 29                  		add	hl, hl
+(1)  341/    F7F7 : 29                  		add	hl, hl
+(1)  342/    F7F8 : 29                  		add	hl, hl
+(1)  343/    F7F9 : 29                  		add	hl, hl
+ AS V1.42 Beta [Bld 157] - Source File cpm.asm(bios15_ac1.asm) - Page 8 - 2/23/2023 8:54:43
+
+
+(1)  344/    F7FA : 29                  		add	hl, hl
+(1)  345/    F7FB : 29                  		add	hl, hl
+(1)  346/    F7FC : ED 4B D7 F8         		ld	bc, (RDSK)	;RAM-DISK-ANFANG
+(1)  347/    F800 : 09                  		add	hl, bc
+(1)  348/    F801 : 3E DF               		ld	a, hi(CCP-1)	;HIGH-ADR RAM-DISK
+(1)  349/    F803 : BC                  		cp	h
+(1)  350/    F804 : C9                  		ret
+(1)  351/    F805 :                     
+(1)  352/    F805 :                     ;------------------------------------------------------------------------------
+(1)  353/    F805 :                     ; Disk Parameter Header
+(1)  354/    F805 :                     ;------------------------------------------------------------------------------
+(1)  355/    F805 :                     
+(1)  356/    F805 :                     DPBAS:		
+(1)  357/    F805 : 00 00               DPHA:		dw 0
+(1)  358/    F807 : 00 00               		dw 0
+(1)  359/    F809 : 00 00               		dw 0
+(1)  360/    F80B : 00 00               		dw 0
+(1)  361/    F80D : 28 F8               		dw DIRBF
+(1)  362/    F80F : 15 F8               		dw DPBR			;GERABTEBESCHREIBUNG
+(1)  363/    F811 : C7 F8               		dw CHK0			;DIRECTORY-KONTROLLE
+(1)  364/    F813 : A8 F8               		dw ALL0			;BELEGUNG DISKETTE
+(1)  365/    F815 :                     
+(1)  366/    F815 :                     ;------------------------------------------------------------------------------
+(1)  367/    F815 :                     ;DISK-PARAMETER-BLOCK RAM-DISK
+(1)  368/    F815 :                     ;26 Sektoren/Track, BLS 1K
+(1)  369/    F815 :                     ;------------------------------------------------------------------------------
+(1)  370/    F815 :                     
+(1)  371/    F815 : 1A 00               DPBR:		DW	26		;SECTOREN
+(1)  372/    F817 : 03                  		DB	3		;BLOCKGROESSE 1K
+(1)  373/    F818 : 07                  		DB	7		;(SECTOREN/BLOCK)-1
+(1)  374/    F819 : 00                  		DB	00		;NICHT BENUTZT
+(1)  375/    F81A : 01 00               rafdbp_drm:	DW	1		;(BLOECKE/DISK)-1
+(1)  376/    F81C : 1F 00               		DW	31		;32 DIRECTORY-ENTR.
+(1)  377/    F81E : 80                  		DB	080H		;1 BELEGTER BLOCK DURCH DIR.
+(1)  378/    F81F : 00                  		DB	0
+(1)  379/    F820 : 04 00               		DW	4		;DIR/4
+(1)  380/    F822 : 00 00               		DW	0		;0SPUREN DURCH SYSTEM BELEGT
+(1)  381/    F824 :                     
+(1)  382/    F824 :                     ;------------------------------------------------------------------------------
+(1)  383/    F824 :                     ; 
+(1)  384/    F824 :                     ;------------------------------------------------------------------------------
+(1)  385/    F824 :                     
+(1)  386/    F824 : 00                  TRACK:		db 0
+(1)  387/    F825 : 01                  SEC1:		db 1		;BDOS-SEKTOR
+(1)  388/    F826 : 80 00               DMA:		dw 80h		;BDOS-DMA
+(1)  389/    F828 :                     ;
+(1)  390/    F828 :                     DIRBF:		ds 128		;INHALTSVERZ. DISKETTE
+(1)  391/    F8A8 :                     ALL0:		ds 31
+(1)  392/    F8C7 :                     CHK0:		ds 16
+(1)  393/    F8D7 :                     
+(1)  394/    F8D7 : 00 B0               RDSK:		dw 0B000h	; RAF Anfang
+(1)  395/    F8D9 :                     
+(1)  396/    F8D9 :                     ;------------------------------------------------------------------------------
+(1)  397/    F8D9 :                     ; Console Status
+(1)  398/    F8D9 :                     ;------------------------------------------------------------------------------
+(1)  399/    F8D9 :                     
+(1)  400/    F8D9 : DB 04               const:		in	a, (4)
+(1)  401/    F8DB : E6 80               		and	80h
+(1)  402/    F8DD : C8                  		ret	z
+(1)  403/    F8DE : 3E FF               		ld	a, 0FFh
+ AS V1.42 Beta [Bld 157] - Source File cpm.asm(bios15_ac1.asm) - Page 9 - 2/23/2023 8:54:43
+
+
+(1)  404/    F8E0 : A7                  		and	a
+(1)  405/    F8E1 : C9                  		ret
+(1)  406/    F8E2 :                     
+(1)  407/    F8E2 :                     ;------------------------------------------------------------------------------
+(1)  408/    F8E2 :                     ;AUSGABE EINER ZEICHENFOLGE,ABSCHLUSS DER FOLGE MIT 00
+(1)  409/    F8E2 :                     ;IN: ANFANGSADR. IN HL
+(1)  410/    F8E2 :                     ;------------------------------------------------------------------------------
+(1)  411/    F8E2 :                     
+(1)  412/    F8E2 : F5                  STR:		push	af
+(1)  413/    F8E3 : C5                  		push	bc
+(1)  414/    F8E4 : 7E                  str1:		ld	a, (hl)
+(1)  415/    F8E5 : FE 00               		cp	0
+(1)  416/    F8E7 : 28 07               		jr	z, str2
+(1)  417/    F8E9 : 4F                  		ld	c, a
+(1)  418/    F8EA : CD 12 F9            		call	conout
+(1)  419/    F8ED : 23                  		inc	hl
+(1)  420/    F8EE : 18 F4               		jr	str1
+(1)  421/    F8F0 : C1                  str2:		pop	bc
+(1)  422/    F8F1 : F1                  		pop	af
+(1)  423/    F8F2 : C9                  		ret
+(1)  424/    F8F3 :                     
+(1)  425/    F8F3 :                     ;------------------------------------------------------------------------------
+(1)  426/    F8F3 :                     ; HALTEPUNKT
+(1)  427/    F8F3 :                     ;------------------------------------------------------------------------------
+(1)  428/    F8F3 :                     
+(1)  429/    F8F3 : F5                  RESTR:		push	af
+(1)  430/    F8F4 : (MACRO)             		CPMOFF
+(1)  430/    F8F4 : 3E 00                               ld      a, 0
+(1)  430/    F8F6 : D3 1E                               out     (1Eh), a        ; CPM-Mode off
+(1)  431/    F8F8 : DF                  		rst	18h
+(1)  432/    F8F9 : 43 50 4D 2D 42 52   		db "CPM-BREAK",8Dh
+                    45 41 4B 8D       
+(1)  433/    F903 : F1                  		pop	af
+(1)  434/    F904 : FF                  		rst	38h		; durchreichen an Monitor
+(1)  435/    F905 :                     		;
+(1)  436/    F905 : DB 04               sub_F905:	in	a, (4)
+(1)  437/    F907 : CB 7F               		bit	7, a
+(1)  438/    F909 : C8                  		ret	z
+(1)  439/    F90A : CD BF FA            		call	MS30
+(1)  440/    F90D : DB 04               		in	a, (4)
+(1)  441/    F90F : CB 7F               		bit	7, a
+(1)  442/    F911 : C9                  		ret
+(1)  443/    F912 :                     
+(1)  444/    F912 :                     ;------------------------------------------------------------------------------
+(1)  445/    F912 :                     ; Console Ausgabe
+(1)  446/    F912 :                     ;------------------------------------------------------------------------------
+(1)  447/    F912 :                     
+(1)  448/    F912 : F3                  conout:		di
+(1)  449/    F913 : ED 73 CF FA         		ld	(SYSSK), sp
+(1)  450/    F917 : 31 51 FB            		ld	sp, load
+(1)  451/    F91A : F5                  		push	af
+(1)  452/    F91B : E5                  		push	hl
+(1)  453/    F91C : D5                  		push	de
+(1)  454/    F91D : C5                  		push	bc
+(1)  455/    F91E : (MACRO)             		CPMOFF
+(1)  455/    F91E : 3E 00                               ld      a, 0
+(1)  455/    F920 : D3 1E                               out     (1Eh), a        ; CPM-Mode off
+(1)  456/    F922 : 2A CA FA            		ld	hl, (cupos)
+(1)  457/    F925 : 3A CE FA            		ld	a, (buff)	; Zeichen unter	Cursor
+(1)  458/    F928 : 77                  		ld	(hl), a
+ AS V1.42 Beta [Bld 157] - Source File cpm.asm(bios15_ac1.asm) - Page 10 - 2/23/2023 8:54:43
+
+
+(1)  459/    F929 : AF                  		xor	a
+(1)  460/    F92A : CB B9               		res	7, c
+(1)  461/    F92C : 21 CD FA            		ld	hl, escmod
+(1)  462/    F92F : B6                  		or	(hl)
+(1)  463/    F930 : 28 34               		jr	z, co4
+(1)  464/    F932 : 35                  		dec	(hl)
+(1)  465/    F933 : 28 05               		jr	z, co1
+(1)  466/    F935 : 2B                  		dec	hl
+(1)  467/    F936 : 71                  		ld	(hl), c
+(1)  468/    F937 : C3 52 FA            		jp	routch5
+(1)  469/    F93A : 2B                  co1:		dec	hl
+(1)  470/    F93B : 7E                  		ld	a, (hl)
+(1)  471/    F93C : 69                  		ld	l, c
+(1)  472/    F93D : FE 20               		cp	' '
+(1)  473/    F93F : 38 0C               		jr	c, co2
+(1)  474/    F941 : F5                  		push	af
+(1)  475/    F942 : 79                  		ld	a, c
+(1)  476/    F943 : D6 20               		sub	' '
+(1)  477/    F945 : E6 3F               		and	3Fh ; '?'
+(1)  478/    F947 : 6F                  		ld	l, a
+(1)  479/    F948 : F1                  		pop	af
+(1)  480/    F949 : D6 20               		sub	20h ; ' '
+(1)  481/    F94B : E6 1F               		and	1Fh
+(1)  482/    F94D : 16 00               co2:		ld	d, 0
+(1)  483/    F94F : 62                  		ld	h, d
+(1)  484/    F950 : 5F                  		ld	e, a
+(1)  485/    F951 : 06 06               		ld	b, 6
+(1)  486/    F953 : CB 23               co3:		sla	e
+(1)  487/    F955 : CB 12               		rl	d
+(1)  488/    F957 : 10 FA               		djnz	co3
+(1)  489/    F959 : 19                  		add	hl, de
+(1)  490/    F95A : EB                  		ex	de, hl
+(1)  491/    F95B : 21 FF 17            		ld	hl, 17FFh
+(1)  492/    F95E : A7                  		and	a
+(1)  493/    F95F : ED 52               		sbc	hl, de
+(1)  494/    F961 : 22 CA FA            		ld	(cupos), hl
+(1)  495/    F964 : 18 5E               		jr	co5
+(1)  496/    F966 : 2A CA FA            co4:		ld	hl, (cupos)
+(1)  497/    F969 :                     
+(1)  498/    F969 :                     ; Bildschirm-Steuerzeichen, SCP-kompatibel
+(1)  499/    F969 :                     ; 00h            NOP (keine Wirkung)
+(1)  500/    F969 :                     ; 01h            Cursor links oben (home)
+(1)  501/    F969 :                     ; 07h            akustisches  Zeichen an  Tastatur  (i.a. nicht
+(1)  502/    F969 :                     ;                vorh.,  dann  Blinken  der Lampen  neben  Stop-
+(1)  503/    F969 :                     ;                Taste bzw. der Statuszeile beim PC1715)
+(1)  504/    F969 :                     ; 08h            Cursor zurueck
+(1)  505/    F969 :                     ; 0ah            Linefeed (neue Zeile)
+(1)  506/    F969 :                     ; 0ch            Bildschirm  loeschen (verzoegert zum Lesen  der
+(1)  507/    F969 :                     ;                zuletzt ausgegebenen Bildschirmzeilen), Cursor
+(1)  508/    F969 :                     ;                links oben
+(1)  509/    F969 :                     ; 0dh            Carriage Return (an Zeilenanfang)
+(1)  510/    F969 :                     ; 14h            Rest des Bildschirms loeschen
+(1)  511/    F969 :                     ; 15h            Cursor nach rechts
+(1)  512/    F969 :                     ; 16h            Rest der Zeile loeschen
+(1)  513/    F969 :                     ; 18h            Zeile loeschen, Cursor an Zeiilenanfang
+(1)  514/    F969 :                     ; 1ah            Cursor eine Zeile hoch
+(1)  515/    F969 :                     ; 1bh            Einleitung  Cursorpositionierfolge, die naech-
+(1)  516/    F969 :                     ;                sten beiden Bytes beinhalten Zeile und  Spalte
+(1)  517/    F969 :                     ;                Offset 00h oder 80h
+(1)  518/    F969 :                     ; 7fh            Delete (streichen Zeichen links vom Kursor)
+ AS V1.42 Beta [Bld 157] - Source File cpm.asm(bios15_ac1.asm) - Page 11 - 2/23/2023 8:54:43
+
+
+(1)  519/    F969 :                     
+(1)  520/    F969 : 79                  		ld	a, c
+(1)  521/    F96A : FE 1B               		cp	1Bh
+(1)  522/    F96C : 28 59               		jr	z, oesc
+(1)  523/    F96E : FE 01               		cp	1
+(1)  524/    F970 : 28 5D               		jr	z, ohome
+(1)  525/    F972 : FE 07               		cp	7
+(1)  526/    F974 : 28 61               		jr	z, obell
+(1)  527/    F976 : FE 0A               		cp	0Ah
+(1)  528/    F978 : 28 6E               		jr	z, olf
+(1)  529/    F97A : FE 0D               		cp	0Dh
+(1)  530/    F97C : 28 29               		jr	z, ocr		; neue Zeile
+(1)  531/    F97E : FE 15               		cp	15h
+(1)  532/    F980 : 28 6E               		jr	z, oright
+(1)  533/    F982 : FE 16               		cp	16h
+(1)  534/    F984 : CA 16 FA            		jp	z, oclrln
+(1)  535/    F987 : FE 18               		cp	18h
+(1)  536/    F989 : CA 22 FA            		jp	z, oclln
+(1)  537/    F98C : FE 1A               		cp	1Ah
+(1)  538/    F98E : 28 6D               		jr	z, oup
+(1)  539/    F990 : FE 7F               		cp	7Fh
+(1)  540/    F992 : 28 5F               		jr	z, odel
+(1)  541/    F994 : FE 14               		cp	14h
+(1)  542/    F996 : 28 73               		jr	z, clrscr
+(1)  543/    F998 : FE 0C               		cp	0Ch
+(1)  544/    F99A : 28 15               		jr	z, ocls		; Bildschirm lîschen
+(1)  545/    F99C : FE 08               		cp	8
+(1)  546/    F99E : 28 0E               		jr	z, oback	; Backspace
+(1)  547/    F9A0 : FE 20               		cp	20h ; ' '
+(1)  548/    F9A2 : 38 20               		jr	c, co5		; sonstige Steuerzeichen Åbergehen
+(1)  549/    F9A4 : C3 2D FA            		jp	co10
+(1)  550/    F9A7 : 7D                  ocr:		ld	a, l		; neue Zeile
+(1)  551/    F9A8 : F6 3F               		or	3Fh ; '?'
+(1)  552/    F9AA : 6F                  		ld	l, a
+(1)  553/    F9AB : C3 2F FA            		jp	routch3
+(1)  554/    F9AE :                     ;Zeichen lˆschen
+(1)  555/    F9AE : 23                  oback:		inc	hl
+(1)  556/    F9AF : 18 50               		jr	co7
+(1)  557/    F9B1 :                     ; Bildschirm lˆschen		
+(1)  558/    F9B1 : 3E 20               ocls:		ld	a, ' '
+(1)  559/    F9B3 : 21 00 10            		ld	hl, 1000h
+(1)  560/    F9B6 : 77                  		ld	(hl), a
+(1)  561/    F9B7 : 54                  		ld	d, h
+(1)  562/    F9B8 : 5D                  		ld	e, l
+(1)  563/    F9B9 : 1C                  		inc	e
+(1)  564/    F9BA : C5                  		push	bc
+(1)  565/    F9BB : 01 FF 07            		ld	bc, 7FFh
+(1)  566/    F9BE : ED B0               		ldir
+(1)  567/    F9C0 : 22 CA FA            		ld	(cupos), hl
+(1)  568/    F9C3 : C1                  		pop	bc
+(1)  569/    F9C4 : C3 52 FA            co5:		jp	routch5
+(1)  570/    F9C7 :                     ;
+(1)  571/    F9C7 : 3E 02               oesc:		ld	a, 2
+(1)  572/    F9C9 : 32 CD FA            		ld	(escmod), a
+(1)  573/    F9CC : C3 52 FA            		jp	routch5
+(1)  574/    F9CF :                     ;		
+(1)  575/    F9CF : 21 FF 17            ohome:		ld	hl, 17FFh
+(1)  576/    F9D2 : 22 CA FA            		ld	(cupos), hl
+(1)  577/    F9D5 : 18 7B               		jr	routch5
+(1)  578/    F9D7 :                     ;
+ AS V1.42 Beta [Bld 157] - Source File cpm.asm(bios15_ac1.asm) - Page 12 - 2/23/2023 8:54:43
+
+
+(1)  579/    F9D7 : 0E FF               obell:		ld	c, 0FFh
+(1)  580/    F9D9 : 06 30               		ld	b, 30h
+(1)  581/    F9DB : 10 FE               co6:		djnz	co6
+(1)  582/    F9DD : DB 05               		in	a, (5)
+(1)  583/    F9DF : EE 40               		xor	40h
+(1)  584/    F9E1 : D3 05               		out	(5), a
+(1)  585/    F9E3 : 0D                  		dec	c
+(1)  586/    F9E4 : 20 F5               		jr	nz, co6
+(1)  587/    F9E6 : 18 6A               		jr	routch5
+(1)  588/    F9E8 :                     ; line feed
+(1)  589/    F9E8 : 11 40 00            olf:		ld	de, 64		
+(1)  590/    F9EB : A7                  		and	a
+(1)  591/    F9EC : ED 52               		sbc	hl, de
+(1)  592/    F9EE : 18 3F               		jr	routch3
+(1)  593/    F9F0 :                     ;
+(1)  594/    F9F0 : 2B                  oright:		dec	hl
+(1)  595/    F9F1 : 18 3C               		jr	routch3
+(1)  596/    F9F3 :                     ;
+(1)  597/    F9F3 : 23                  odel:		inc	hl
+(1)  598/    F9F4 : 3E 18               		ld	a, 18h
+(1)  599/    F9F6 : BC                  		cp	h
+(1)  600/    F9F7 : 28 59               		jr	z, routch5
+(1)  601/    F9F9 : 36 20               		ld	(hl), ' '
+(1)  602/    F9FB : 18 32               		jr	routch3
+(1)  603/    F9FD :                     ;
+(1)  604/    F9FD : 11 40 00            oup:		ld	de, 64
+(1)  605/    FA00 : 19                  		add	hl, de
+(1)  606/    FA01 : 3E 18               co7:		ld	a, 18h
+(1)  607/    FA03 : BC                  		cp	h
+(1)  608/    FA04 : 28 4C               		jr	z, routch5
+(1)  609/    FA06 : 22 CA FA            		ld	(cupos), hl
+(1)  610/    FA09 : 18 47               		jr	routch5
+(1)  611/    FA0B :                     ;
+(1)  612/    FA0B : 3E 0F               clrscr:		ld	a, 0Fh
+(1)  613/    FA0D : 36 20               co8:		ld	(hl), ' '
+(1)  614/    FA0F : 2B                  		dec	hl
+(1)  615/    FA10 : BC                  		cp	h
+(1)  616/    FA11 : C2 0D FA            		jp	nz, co8
+(1)  617/    FA14 : 18 3C               		jr	routch5
+(1)  618/    FA16 :                     ;
+(1)  619/    FA16 : 7D                  oclrln:		ld	a, l
+(1)  620/    FA17 : E6 3F               		and	3Fh ; '?'
+(1)  621/    FA19 : 47                  		ld	b, a
+(1)  622/    FA1A : 04                  		inc	b
+(1)  623/    FA1B : 36 20               co9:		ld	(hl), ' '
+(1)  624/    FA1D : 2B                  		dec	hl
+(1)  625/    FA1E : 10 FB               		djnz	co9
+(1)  626/    FA20 : 18 30               		jr	routch5
+(1)  627/    FA22 :                     ;
+(1)  628/    FA22 : 7D                  oclln:		ld	a, l
+(1)  629/    FA23 : F6 3F               		or	3Fh ; '?'
+(1)  630/    FA25 : 6F                  		ld	l, a
+(1)  631/    FA26 : 22 CA FA            		ld	(cupos), hl
+(1)  632/    FA29 : 06 40               		ld	b, 40h ; '@'
+(1)  633/    FA2B : 18 EE               		jr	co9
+(1)  634/    FA2D :                     ; Zeichenausgabe
+(1)  635/    FA2D : 77                  co10:		ld	(hl), a
+(1)  636/    FA2E : 2B                  		dec	hl
+(1)  637/    FA2F : EB                  routch3:	ex	de, hl
+(1)  638/    FA30 : 21 FF 0F            		ld	hl, 0FFFh
+ AS V1.42 Beta [Bld 157] - Source File cpm.asm(bios15_ac1.asm) - Page 13 - 2/23/2023 8:54:43
+
+
+(1)  639/    FA33 : A7                  		and	a
+(1)  640/    FA34 : ED 52               		sbc	hl, de
+(1)  641/    FA36 : EB                  		ex	de, hl
+(1)  642/    FA37 : 22 CA FA            		ld	(cupos), hl
+(1)  643/    FA3A : 38 16               		jr	c, routch5
+(1)  644/    FA3C :                     ; 1 Zeile hochscrollen
+(1)  645/    FA3C : 21 BF 17            		ld	hl, 17BFh
+(1)  646/    FA3F : 11 FF 17            		ld	de, 17FFh
+(1)  647/    FA42 : 01 C0 07            		ld	bc, 7C0h
+(1)  648/    FA45 : ED B8               		lddr
+(1)  649/    FA47 : ED 53 CA FA         		ld	(cupos), de
+(1)  650/    FA4B : EB                  		ex	de, hl
+(1)  651/    FA4C : 23                  		inc	hl
+(1)  652/    FA4D : 2D                  routch4:	dec	l
+(1)  653/    FA4E : 36 20               		ld	(hl), ' '
+(1)  654/    FA50 : 20 FB               		jr	nz, routch4
+(1)  655/    FA52 : C1                  routch5:	pop	bc
+(1)  656/    FA53 : D1                  		pop	de
+(1)  657/    FA54 : 2A CA FA            		ld	hl, (cupos)
+(1)  658/    FA57 : 7E                  		ld	a, (hl)
+(1)  659/    FA58 : 32 CE FA            		ld	(buff),	a	; Zeichen unter	Cursor
+(1)  660/    FA5B : 36 7F               		ld	(hl), CURS
+(1)  661/    FA5D : E1                  		pop	hl
+(1)  662/    FA5E : (MACRO)             		CPMON
+(1)  662/    FA5E : 3E FF                               ld      a, 0FFh
+(1)  662/    FA60 : D3 1E                               out     (1Eh), a        ; CPM-Mode on
+(1)  663/    FA62 : F1                  		pop	af
+(1)  664/    FA63 : ED 7B CF FA         		ld	sp, (SYSSK)
+(1)  665/    FA67 : FB                  		ei
+(1)  666/    FA68 : C9                  		ret
+(1)  667/    FA69 :                     
+(1)  668/    FA69 :                     ;------------------------------------------------------------------------------
+(1)  669/    FA69 :                     ; Console Eingabe
+(1)  670/    FA69 :                     ;------------------------------------------------------------------------------
+(1)  671/    FA69 :                     
+(1)  672/    FA69 : F3                  conin:		di
+(1)  673/    FA6A : ED 73 CF FA         		ld	(SYSSK), sp
+(1)  674/    FA6E : 31 51 FB            		ld	sp, load
+(1)  675/    FA71 : (MACRO)             		CPMOFF
+(1)  675/    FA71 : 3E 00                               ld      a, 0
+(1)  675/    FA73 : D3 1E                               out     (1Eh), a        ; CPM-Mode off
+(1)  676/    FA75 : E5                  		push	hl
+(1)  677/    FA76 : C5                  		push	bc
+(1)  678/    FA77 : 2A CA FA            		ld	hl, (cupos)
+(1)  679/    FA7A : 36 7F               ci1:		ld	(hl), CURS
+(1)  680/    FA7C : 06 00               ci2:		ld	b, 0
+(1)  681/    FA7E : C5                  ci3:		push	bc
+(1)  682/    FA7F : 06 00               		ld	b, 0
+(1)  683/    FA81 : 10 FE               ci4:		djnz	ci4
+(1)  684/    FA83 : C1                  		pop	bc
+(1)  685/    FA84 : CD 05 F9            		call	sub_F905
+(1)  686/    FA87 : 20 0D               		jr	nz, ci5
+(1)  687/    FA89 : 10 F3               		djnz	ci3
+(1)  688/    FA8B : 3E 7F               		ld	a, CURS
+(1)  689/    FA8D : BE                  		cp	(hl)
+(1)  690/    FA8E : 20 EA               		jr	nz, ci1
+(1)  691/    FA90 : 3A CE FA            		ld	a, (buff)	; Zeichen unter	Cursor
+(1)  692/    FA93 : 77                  		ld	(hl), a
+(1)  693/    FA94 : 18 E6               		jr	ci2
+(1)  694/    FA96 : F5                  ci5:		push	af
+ AS V1.42 Beta [Bld 157] - Source File cpm.asm(bios15_ac1.asm) - Page 14 - 2/23/2023 8:54:43
+
+
+(1)  695/    FA97 : 3A CE FA            		ld	a, (buff)	; Zeichen unter	Cursor
+(1)  696/    FA9A : 77                  		ld	(hl), a
+(1)  697/    FA9B : DB 05               		in	a, (5)
+(1)  698/    FA9D : CB 87               		res	0, a
+(1)  699/    FA9F : D3 05               		out	(5), a
+(1)  700/    FAA1 : CD BF FA            		call	MS30
+(1)  701/    FAA4 : DB 05               		in	a, (5)
+(1)  702/    FAA6 : CB C7               		set	0, a
+(1)  703/    FAA8 : D3 05               		out	(5), a
+(1)  704/    FAAA : DB 04               ci6:		in	a, (4)
+(1)  705/    FAAC : CB 7F               		bit	7, a
+(1)  706/    FAAE : 20 FA               		jr	nz, ci6
+(1)  707/    FAB0 : (MACRO)             		CPMON
+(1)  707/    FAB0 : 3E FF                               ld      a, 0FFh
+(1)  707/    FAB2 : D3 1E                               out     (1Eh), a        ; CPM-Mode on
+(1)  708/    FAB4 : F1                  		pop	af
+(1)  709/    FAB5 : E6 7F               		and	7Fh
+(1)  710/    FAB7 : C1                  		pop	bc
+(1)  711/    FAB8 : E1                  		pop	hl
+(1)  712/    FAB9 : ED 7B CF FA         		ld	sp, (SYSSK)
+(1)  713/    FABD : FB                  		ei
+(1)  714/    FABE : C9                  		ret
+(1)  715/    FABF :                     
+(1)  716/    FABF :                     ;------------------------------------------------------------------------------
+(1)  717/    FABF :                     ; 
+(1)  718/    FABF :                     ;------------------------------------------------------------------------------
+(1)  719/    FABF :                     
+(1)  720/    FABF : C5                  MS30:		push	bc
+(1)  721/    FAC0 : 01 03 09            		ld	bc, 903h
+(1)  722/    FAC3 : 0B                  ms301:		dec	bc
+(1)  723/    FAC4 : 78                  		ld	a, b
+(1)  724/    FAC5 : B1                  		or	c
+(1)  725/    FAC6 : 20 FB               		jr	nz, ms301
+(1)  726/    FAC8 : C1                  		pop	bc
+(1)  727/    FAC9 : C9                  		ret
+(1)  728/    FACA :                     
+(1)  729/    FACA :                     ;------------------------------------------------------------------------------
+(1)  730/    FACA :                     ; 
+(1)  731/    FACA :                     ;------------------------------------------------------------------------------
+(1)  732/    FACA :                     
+(1)  733/    FACA : FF 17               cupos:		dw 17FFh
+(1)  734/    FACC : 00                  		db    0
+(1)  735/    FACD : 00                  escmod:		db 0
+(1)  736/    FACE : 5B                  buff:		db 5Bh		; Zeichen unter	Cursor
+(1)  737/    FACF : 5D 18               SYSSK:		dw 185Dh	; ZW.Speicher f. Stackpointer
+(1)  738/    FAD1 :                     
+(1)  739/    FAD1 :                     		ds	128
+(1)  740/    FB51 :                     		
+(1)  741/    FB51 :                     ;------------------------------------------------------------------------------
+(1)  742/    FB51 :                     ; residentes Zusatzkommando CCP
+(1)  743/    FB51 :                     ; Programm von Kassette laden, AC1-Format
+(1)  744/    FB51 :                     ;------------------------------------------------------------------------------
+(1)  745/    FB51 :                     
+(1)  746/    FB51 : F3                  load:		di
+(1)  747/    FB52 : ED 73 7C FC         		ld	(sysskl), sp	; Stackspeicher	f. load
+(1)  748/    FB56 : 31 A4 FC            		ld	sp, exit
+(1)  749/    FB59 : F5                  		push	af
+(1)  750/    FB5A : C5                  		push	bc
+(1)  751/    FB5B : D5                  		push	de
+(1)  752/    FB5C : E5                  		push	hl
+ AS V1.42 Beta [Bld 157] - Source File cpm.asm(bios15_ac1.asm) - Page 15 - 2/23/2023 8:54:43
+
+
+(1)  753/    FB5D : AF                  		xor	a
+(1)  754/    FB5E : 32 56 FC            		ld	(phako), a
+(1)  755/    FB61 : CD 3D FC            loa3:		call	loa17		; Lesen	ein Bit
+(1)  756/    FB64 : FE E6               		cp	0E6h
+(1)  757/    FB66 : 28 09               		jr	z, loa4
+(1)  758/    FB68 : FE 19               		cp	19h
+(1)  759/    FB6A : 20 F5               		jr	nz, loa3
+(1)  760/    FB6C : 3E FF               		ld	a, 0FFh
+(1)  761/    FB6E : 32 56 FC            		ld	(phako), a
+(1)  762/    FB71 : CD 2E FC            loa4:		call	loa15		; Lesen	ein Byte A
+(1)  763/    FB74 : FE 55               		cp	55h ; 'U'
+(1)  764/    FB76 : 20 E9               		jr	nz, loa3
+(1)  765/    FB78 : 06 10               		ld	b, 10h
+(1)  766/    FB7A : (MACRO)             		CPMOFF
+(1)  766/    FB7A : 3E 00                               ld      a, 0
+(1)  766/    FB7C : D3 1E                               out     (1Eh), a        ; CPM-Mode off
+(1)  767/    FB7E : 2A CA FA            		ld	hl, (cupos)
+(1)  768/    FB81 : CD 2E FC            loa5:		call	loa15		; Lesen	ein Byte A
+(1)  769/    FB84 : 77                  		ld	(hl), a
+(1)  770/    FB85 : 2B                  		dec	hl
+(1)  771/    FB86 : 10 F9               		djnz	loa5
+(1)  772/    FB88 : 2B                  		dec	hl
+(1)  773/    FB89 : (MACRO)             		CPMON
+(1)  773/    FB89 : 3E FF                               ld      a, 0FFh
+(1)  773/    FB8B : D3 1E                               out     (1Eh), a        ; CPM-Mode on
+(1)  774/    FB8D : 22 CA FA            		ld	(cupos), hl
+(1)  775/    FB90 : EB                  		ex	de, hl
+(1)  776/    FB91 : 21 00 01            		ld	hl, 100h
+(1)  777/    FB94 : CD 2E FC            loa6:		call	loa15		; Lesen	ein Byte A
+(1)  778/    FB97 : FE 78               		cp	'x'
+(1)  779/    FB99 : 28 35               		jr	z, loa11a
+(1)  780/    FB9B : FE 3C               		cp	'<'
+(1)  781/    FB9D : 20 F5               		jr	nz, loa6
+(1)  782/    FB9F : CD 2E FC            		call	loa15		; Lesen	ein Byte A
+(1)  783/    FBA2 : 47                  		ld	b, a
+(1)  784/    FBA3 : E5                  		push	hl
+(1)  785/    FBA4 : CD 10 FC            		call	loa12		; Lesen	2 Byte L,H
+(1)  786/    FBA7 : 85                  		add	a, l
+(1)  787/    FBA8 : 4F                  		ld	c, a
+(1)  788/    FBA9 : E1                  		pop	hl
+(1)  789/    FBAA : CD 2E FC            loa7:		call	loa15		; Lesen	ein Byte A
+(1)  790/    FBAD : 77                  		ld	(hl), a
+(1)  791/    FBAE : 23                  loa9:		inc	hl
+(1)  792/    FBAF : 81                  		add	a, c
+(1)  793/    FBB0 : 4F                  		ld	c, a
+(1)  794/    FBB1 : 10 F7               		djnz	loa7
+(1)  795/    FBB3 : CD 2E FC            		call	loa15		; Lesen	ein Byte A
+(1)  796/    FBB6 : B9                  		cp	c
+(1)  797/    FBB7 : 28 DB               		jr	z, loa6
+(1)  798/    FBB9 : 21 57 FC            		ld	hl, aChecksumerror ; " Checksumerror\n\r"
+(1)  799/    FBBC :                     ; Programmende
+(1)  800/    FBBC : CD E2 F8            loa10:		call	STR
+(1)  801/    FBBF : 21 07 E0            		ld	hl, COMLEN	; 0E007h, CCP.COMLEN
+(1)  802/    FBC2 : 36 00               		ld	(hl), 0
+(1)  803/    FBC4 : E1                  		pop	hl
+(1)  804/    FBC5 : D1                  		pop	de
+(1)  805/    FBC6 : C1                  		pop	bc
+(1)  806/    FBC7 : F1                  		pop	af
+(1)  807/    FBC8 : ED 7B 7C FC         		ld	sp, (sysskl)	; Stackspeicher	f. load
+(1)  808/    FBCC : FB                  		ei
+ AS V1.42 Beta [Bld 157] - Source File cpm.asm(bios15_ac1.asm) - Page 16 - 2/23/2023 8:54:43
+
+
+(1)  809/    FBCD : C3 8F E7            		jp	RETCOM		; 0E78Fh, CCP.RETCOM
+(1)  810/    FBD0 :                     ;		
+(1)  811/    FBD0 : A7                  loa11a:		and	a
+(1)  812/    FBD1 : 11 01 01            		ld	de, 101h
+(1)  813/    FBD4 : ED 52               		sbc	hl, de
+(1)  814/    FBD6 : 7D                  		ld	a, l
+(1)  815/    FBD7 : B7                  		or	a
+(1)  816/    FBD8 : 28 02               		jr	z, loa11b
+(1)  817/    FBDA : 24                  		inc	h
+(1)  818/    FBDB : 24                  		inc	h
+(1)  819/    FBDC : AF                  loa11b:		xor	a
+(1)  820/    FBDD : 44                  		ld	b, h
+(1)  821/    FBDE : 67                  		ld	h, a
+(1)  822/    FBDF : C6 01               loa11c:		add	a, 1
+(1)  823/    FBE1 : 27                  		daa
+(1)  824/    FBE2 : 30 01               		jr	nc, loa11d
+(1)  825/    FBE4 : 24                  		inc	h
+(1)  826/    FBE5 : 10 F8               loa11d:		djnz	loa11c
+(1)  827/    FBE7 : F5                  		push	af
+(1)  828/    FBE8 : 7C                  		ld	a, h
+(1)  829/    FBE9 : 21 69 FC            		ld	hl, a0SectorsLoad ; "  0 Sectors load\n\r"
+(1)  830/    FBEC : 36 20               		ld	(hl), ' '
+(1)  831/    FBEE : B7                  		or	a
+(1)  832/    FBEF : 28 03               		jr	z, loa11e
+(1)  833/    FBF1 : C6 30               		add	a, 30h ; '0'
+(1)  834/    FBF3 : 77                  		ld	(hl), a
+(1)  835/    FBF4 : 23                  loa11e:		inc	hl
+(1)  836/    FBF5 : 36 20               		ld	(hl), ' '
+(1)  837/    FBF7 : F1                  		pop	af
+(1)  838/    FBF8 : F5                  		push	af
+(1)  839/    FBF9 : 07                  		rlca
+(1)  840/    FBFA : 07                  		rlca
+(1)  841/    FBFB : 07                  		rlca
+(1)  842/    FBFC : 07                  		rlca
+(1)  843/    FBFD : E6 0F               		and	0Fh
+(1)  844/    FBFF : 28 03               		jr	z, loa11f
+(1)  845/    FC01 : F6 30               		or	30h ; '0'
+(1)  846/    FC03 : 77                  		ld	(hl), a
+(1)  847/    FC04 : 23                  loa11f:		inc	hl
+(1)  848/    FC05 : F1                  		pop	af
+(1)  849/    FC06 : E6 0F               		and	0Fh
+(1)  850/    FC08 : F6 30               		or	30h ; '0'
+(1)  851/    FC0A : 77                  		ld	(hl), a
+(1)  852/    FC0B : 21 68 FC            		ld	hl, asc_FC68	; " "
+(1)  853/    FC0E : 18 AC               		jr	loa10
+(1)  854/    FC10 :                     ; Lesen	2 Byte L,H
+(1)  855/    FC10 : CD 2E FC            loa12:		call	loa15		; Lesen	ein Byte A
+(1)  856/    FC13 : 6F                  		ld	l, a
+(1)  857/    FC14 : CD 2E FC            		call	loa15		; Lesen	ein Byte A
+(1)  858/    FC17 : 67                  		ld	h, a
+(1)  859/    FC18 : EB                  		ex	de, hl
+(1)  860/    FC19 : (MACRO)             		CPMOFF
+(1)  860/    FC19 : 3E 00                               ld      a, 0
+(1)  860/    FC1B : D3 1E                               out     (1Eh), a        ; CPM-Mode off
+(1)  861/    FC1D : CB 4E               		bit	1, (hl)
+(1)  862/    FC1F : 28 04               		jr	z, loa13
+(1)  863/    FC21 : 36 20               		ld	(hl), ' '
+(1)  864/    FC23 : 18 02               		jr	loa14
+(1)  865/    FC25 : 36 2A               loa13:		ld	(hl), '*'
+(1)  866/    FC27 : EB                  loa14:		ex	de, hl
+ AS V1.42 Beta [Bld 157] - Source File cpm.asm(bios15_ac1.asm) - Page 17 - 2/23/2023 8:54:43
+
+
+(1)  867/    FC28 : (MACRO)             		CPMON
+(1)  867/    FC28 : 3E FF                               ld      a, 0FFh
+(1)  867/    FC2A : D3 1E                               out     (1Eh), a        ; CPM-Mode on
+(1)  868/    FC2C : 7C                  		ld	a, h
+(1)  869/    FC2D : C9                  		ret
+(1)  870/    FC2E :                     ; Lesen	ein Byte A
+(1)  871/    FC2E : C5                  loa15:		push	bc
+(1)  872/    FC2F : 06 08               		ld	b, 8
+(1)  873/    FC31 : CD 3D FC            loa16:		call	loa17		; Lesen	ein Bit
+(1)  874/    FC34 : 10 FB               		djnz	loa16
+(1)  875/    FC36 : 4F                  		ld	c, a
+(1)  876/    FC37 : 3A 56 FC            		ld	a, (phako)
+(1)  877/    FC3A : A9                  		xor	c
+(1)  878/    FC3B : C1                  		pop	bc
+(1)  879/    FC3C : C9                  		ret
+(1)  880/    FC3D :                     ; Lesen	ein Bit
+(1)  881/    FC3D : C5                  loa17:		push	bc
+(1)  882/    FC3E : F5                  		push	af
+(1)  883/    FC3F : DB 05               		in	a, (5)
+(1)  884/    FC41 : E6 80               		and	80h
+(1)  885/    FC43 : 4F                  		ld	c, a
+(1)  886/    FC44 : DB 05               loa18:		in	a, (5)
+(1)  887/    FC46 : E6 80               		and	80h
+(1)  888/    FC48 : B9                  		cp	c
+(1)  889/    FC49 : 28 F9               		jr	z, loa18
+(1)  890/    FC4B : 4F                  		ld	c, a
+(1)  891/    FC4C : 06 3F               		ld	b, 3Fh
+(1)  892/    FC4E : 10 FE               loa19:		djnz	loa19
+(1)  893/    FC50 : F1                  		pop	af
+(1)  894/    FC51 : CB 11               		rl	c
+(1)  895/    FC53 : 17                  		rla
+(1)  896/    FC54 : C1                  		pop	bc
+(1)  897/    FC55 : C9                  		ret
+(1)  898/    FC56 :                     
+(1)  899/    FC56 : DF                  phako:		db 0DFh
+(1)  900/    FC57 : 20 43 68 65 63 6B   aChecksumerror:	db " Checksumerror",0Ah
+                    73 75 6D 65 72 72 
+                    6F 72 0A          
+(1)  901/    FC66 : 0D 00               		db 0Dh,0
+(1)  902/    FC68 : 20                  asc_FC68:	db ' '
+(1)  903/    FC69 : 20 20 30 20 53 65   a0SectorsLoad:	db "  0 Sectors load",0Ah
+                    63 74 6F 72 73 20 
+                    6C 6F 61 64 0A    
+(1)  904/    FC7A : 0D 00               		db 0Dh,0
+(1)  905/    FC7C :                     
+(1)  906/    FC7C : 7E 11               sysskl:		dw 117Eh		; ZW.Speicher f. Stackpointer
+(1)  907/    FC7E :                     
+(1)  908/    FC7E :                     
+(1)  909/    FC7E :                     		ds	38		; frei
+(1)  910/    FCA4 :                     		
+(1)  911/    FCA4 :                     ;------------------------------------------------------------------------------
+(1)  912/    FCA4 :                     ; residentes Zusatzkommando CCP
+(1)  913/    FCA4 :                     ;------------------------------------------------------------------------------
+(1)  914/    FCA4 :                     
+(1)  915/    FCA4 : E1                  exit:		pop	hl
+(1)  916/    FCA5 : 21 07 E0            		ld	hl, COMLEN	; 0E007h, CCP.COMLEN
+(1)  917/    FCA8 : 36 00               		ld	(hl), 0
+(1)  918/    FCAA : (MACRO)             		CPMOFF
+(1)  918/    FCAA : 3E 00                               ld      a, 0
+(1)  918/    FCAC : D3 1E                               out     (1Eh), a        ; CPM-Mode off
+ AS V1.42 Beta [Bld 157] - Source File cpm.asm(bios15_ac1.asm) - Page 18 - 2/23/2023 8:54:43
+
+
+(1)  919/    FCAE : 21 3F 10            		ld	hl, 103Fh
+(1)  920/    FCB1 : 22 00 18            		ld	(1800h), hl	; cupos
+(1)  921/    FCB4 : C3 FD 07            		jp	7FDh		; GETCO1
+(1)  922/    FCB7 :                     
+(1)  923/    FCB7 :                     ;		end
+(1)  924/    FCB7 :                     
+      71/    FCB7 :                     		;include	bios16_ac1.asm
+      72/    FCB7 : [BIOS]              		endsection
+      73/    FCB7 :                     
+      74/    FCB7 :                     		end
+ AS V1.42 Beta [Bld 157] - Source File cpm.asm - Page 19 - 2/23/2023 8:54:43
+
+
+  Symbol Table (* = unused):
+  --------------------------
+
+ A0SECTORSLOAD [BIOS] :       0FC69 C |  ACHECKSUMERROR [BIOS] :      0FC57 C |
+ ADDH [CCP] :                 0E251 C |  ADDH [BDOS] :                0ED20 C |
+ ADDHCF [CCP] :               0E451 C |  ADDLIST [BDOS] :                 8 - |
+ ALL0 [BIOS] :                0F8A8 C |  ALLOCA [BDOS] :              0F5BF C |
+ ALLOCATED [BDOS] :           0EC45 C |  ALLOCWD [BDOS] :             0F233 C |
+*ARCHITECTURE :  i386-unknown-win32 - |  ARECORD [BDOS] :             0F5E5 C |
+ ARECORD1 [BDOS] :            0F5E7 C |  ARET [BDOS] :                0EB12 C |
+ ASC_FC68 [BIOS] :            0FC68 C |  ATRAN [BDOS] :               0EC4B C |
+ ATRAN0 [BDOS] :              0EC51 C |  BACKSP [BDOS] :              0EA61 C |
+ BACKUP [BDOS] :              0E993 C |  BACKX [BDOS] :               0EA2B C |
+ BADSEEK [BDOS] :             0F345 C |  BADSERIAL [CCP] :            0E3D5 C |
+ BDERR [BIOS] :               0F7DF C |  BDOS :                       0E800 - |
+ BDOS [CCP] :                     5 - | *BDOSA [BDOS] :                   6 - |
+ BDOSE [BDOS] :               0E863 C |  BDOSL [CCP] :                0E800 - |
+ BDOS_COND [CCP] :            0E0EC C |  BDOS_INR [CCP] :             0E0C0 C |
+*BIGENDIAN :                      0 - |  BIOS :                       0F600 - |
+ BIOS [BDOS] :                0F600 - |  BLANK [CCP] :                0E0A1 C |
+ BLKMSK [BDOS] :              0F5C4 C |  BLKSHF [BDOS] :              0F5C3 C |
+ BLOCKOK [BDOS] :             0F219 C |  BMOVE0 [CCP] :               0E739 C |
+ BMOVE1 [CCP] :               0E747 C |  BMOVE2 [CCP] :               0E74C C |
+ BMOVE3 [CCP] :               0E758 C |  BOOT [BIOS] :                0F6F0 C |
+*BOOTF [BDOS] :               0F600 - |  BPTR [CCP] :                 0E7FA C |
+*BRANCHEXT :                      0 - |  BREAKF [CCP] :                  0B - |
+ BREAK_KEY [CCP] :            0E1BA C |  BUFF [CCP] :                    80 - |
+ BUFF [BIOS] :                0FACE C |  BUFFA [BDOS] :               0F5B9 C |
+ BUFFNZERO [BDOS] :           0F0C8 C |  BYTE [BDOS] :                    1 - |
+*CASESENSITIVE :                  0 - |  CCP :                        0E000 - |
+ CCP [CCP] :                  0E382 C |  CCP0 [CCP] :                 0E398 C |
+ CCPCLEAR [CCP] :             0E358 C |  CCPLOC [CCP] :               0E000 - |
+ CCPSTART [CCP] :             0E35C C |  CDISK [CCP] :                0E7F8 C |
+ CDRMAXA [BDOS] :             0F5B3 C |  CHECKA [BDOS] :              0F5BD C |
+ CHECKSUM [BDOS] :            0ED5A C |  CHECK_RODIR [BDOS] :         0ED00 C |
+ CHECK_ROFILE [BDOS] :        0ED03 C |  CHECK_WRITE [BDOS] :         0ED10 C |
+ CHK0 [BIOS] :                0F8C7 C |  CHKSIZ [BDOS] :              0F5CC C |
+ CI1 [BIOS] :                 0FA7A C |  CI2 [BIOS] :                 0FA7C C |
+ CI3 [BIOS] :                 0FA7E C |  CI4 [BIOS] :                 0FA81 C |
+ CI5 [BIOS] :                 0FA96 C |  CI6 [BIOS] :                 0FAAA C |
+ CLOSE [CCP] :                0E0D5 C |  CLOSE [BDOS] :               0F08C C |
+ CLOSEF [CCP] :                  10 - |  CLRMODNUM [BDOS] :           0ED2E C |
+ CLRSCR [BIOS] :              0FA0B C |  CO1 [BIOS] :                 0F93A C |
+ CO10 [BIOS] :                0FA2D C |  CO2 [BIOS] :                 0F94D C |
+ CO3 [BIOS] :                 0F953 C |  CO4 [BIOS] :                 0F966 C |
+ CO5 [BIOS] :                 0F9C4 C |  CO6 [BIOS] :                 0F9DB C |
+ CO7 [BIOS] :                 0FA01 C |  CO8 [BIOS] :                 0FA0D C |
+ CO9 [BIOS] :                 0FA1B C |  COLUMN [BDOS] :              0EACA C |
+ COMADDR [CCP] :              0E088 C |  COMBUF [CCP] :               0E008 C |
+ COMERR [CCP] :               0E201 C |  COMERR0 [CCP] :              0E207 C |
+ COMERR1 [CCP] :              0E21A C |  COMFCB [CCP] :               0E7D6 C |
+ COMLEN :                     0E007 C |  COMPCDR [BDOS] :             0ED3B C |
+ COMPCOL [BDOS] :             0EAC8 C |  COMPEXT [BDOS] :             0EEBA C |
+ COMPOUT [BDOS] :             0E955 C |  COMPUTECS0 [BDOS] :          0ECBB C |
+ COMPUTE_CS [BDOS] :          0ECB5 C |  COMPUTE_RR [BDOS] :          0F366 C |
+ COMREC [CCP] :               0E7F6 C |  COMTYPE [CCP] :              0E78C C |
+ CONBRK [BDOS] :              0E936 C |  CONECH [BDOS] :              0E919 C |
+ CONIN [BIOS] :               0FA69 C |  CONINF [BDOS] :              0F609 - |
+ CONOUT [BDOS] :              0E93C C |  CONOUT [BIOS] :              0F912 C |
+ CONOUTF [BDOS] :             0F60C - |  CONST [BIOS] :               0F8D9 C |
+ AS V1.42 Beta [Bld 157] - Source File cpm.asm - Page 20 - 2/23/2023 8:54:43
+
+
+ CONSTF [BDOS] :              0F606 - | *CONSTPI :        3.141592653589793 - |
+ CONV0 [CCP] :                0E40E C |  CONV1 [CCP] :                0E439 C |
+ COPY_DIR [BDOS] :            0EFA2 C |  COPY_DIRLOC [BDOS] :         0EEB4 C |
+ COPY_FCB [BDOS] :            0EF9E C |  CR [CCP] :                      0D - |
+ CR [BDOS] :                     0D - |  CRLF [CCP] :                 0E098 C |
+ CRLF [BDOS] :                0E9B7 C |  CRLFP [BDOS] :               0E9A0 C |
+ CRLFP0 [BDOS] :              0E9A8 C |  CSELECT [CCP] :              0E1C8 C |
+ CSELF [CCP] :                   19 - |  CTL [BDOS] :                    5E - |
+ CTLC [BDOS] :                    3 - |  CTLE [BDOS] :                    5 - |
+ CTLH [BDOS] :                    8 - |  CTLOUT [BDOS] :              0E971 C |
+ CTLP [BDOS] :                   10 - | *CTLR [BDOS] :                   12 - |
+*CTLS [BDOS] :                   13 - | *CTLU [BDOS] :                   15 - |
+ CTLX [BDOS] :                   18 - | *CTLZ [BDOS] :                   1A - |
+ CUPOS [BIOS] :               0FACA C |  CURDSK [BDOS] :              0EB0F C |
+ CURRECA [BDOS] :             0F5B7 C |  CURS [BIOS] :                   7F - |
+ CURSELECT [BDOS] :           0F408 C |  CURTRKA [BDOS] :             0F5B5 C |
+*DATE :                   2/23/2023 - |  DCNT [CCP] :                 0E7F7 C |
+ DCNT [BDOS] :                0F5EA C |  DEBLANK [CCP] :              0E247 C |
+ DELETE [CCP] :               0E0E7 C |  DELETE [BDOS] :              0EF44 C |
+ DELETE0 [BDOS] :             0EF4C C |  DELF [CCP] :                    13 - |
+ DELIM [CCP] :                0E228 C |  DEL_SUB [CCP] :              0E1D5 C |
+ DIOCOMP [BDOS] :             0EB85 C |  DIR0 [CCP] :                 0E48E C |
+ DIR1 [CCP] :                 0E495 C |  DIR2 [CCP] :                 0E49E C |
+ DIR3 [CCP] :                 0E4DF C |  DIR4 [CCP] :                 0E4FF C |
+ DIR5 [CCP] :                 0E514 C |  DIR6 [CCP] :                 0E515 C |
+ DIRB [CCP] :                 0E4FD C |  DIRBF [BIOS] :               0F828 C |
+ DIRBLK [BDOS] :              0F5CA C | *DIRCOL :                     0E4B8 - |
+ DIRECT [CCP] :               0E47D C |  DIRHDR0 [CCP] :              0E4D2 C |
+ DIRHDR1 [CCP] :              0E4DA C |  DIRINP [BDOS] :              0EAA3 C |
+ DIRLOC [BDOS] :              0F5D4 C |  DIRMAX [BDOS] :              0F5C8 C |
+ DIRREC [BDOS] :                  4 - |  DIR_TO_USER [BDOS] :         0EDA1 C |
+ DISKA :                          4 - |  DISKEOF [BDOS] :             0F1CF C |
+*DISKF [BDOS] :                  0C - |  DISKO [BDOS] :               0F5EE C |
+ DISKREAD [CCP] :             0E0F1 C |  DISKREAD [BDOS] :            0F199 C |
+ DISKREADC [CCP] :            0E0F6 C | *DISKWR0 [BDOS] :             0F1F0 C |
+ DISKWR1 [BDOS] :             0F23D C |  DISKWR11 [BDOS] :            0F287 C |
+ DISKWR2 [BDOS] :             0F29D C |  DISKWR3 [BDOS] :             0F2C8 C |
+ DISKWRITE [CCP] :            0E0FC C |  DISKWRITE [BDOS] :           0F1D7 C |
+ DISKWRU [BDOS] :             0F23B C |  DLOG [BDOS] :                0F5AF C |
+ DMA [BIOS] :                 0F826 C |  DMAAD [BDOS] :               0F5B1 C |
+ DMAF [CCP] :                    1A - |  DMINX [BDOS] :               0F5D7 C |
+ DMPOS0 [BDOS] :              0EC0A C |  DMPOS1 [BDOS] :              0EC17 C |
+ DMPOS2 [BDOS] :              0EC1E C |  DMSET [BDOS] :               0F0E0 C |
+ DM_POSITION [BDOS] :         0EC03 C |  DPBADDR [BDOS] :             0F5BB C |
+ DPBAS [BIOS] :               0F805 C |  DPBLIST [BDOS] :                0F - |
+ DPBR [BIOS] :                0F815 C | *DPHA [BIOS] :                0F805 C |
+ DPTR [BDOS] :                0F5E9 C |  DREADF [CCP] :                  14 - |
+ DREC [BDOS] :                0F5EC C |  DSKERR [BDOS] :              0E8C8 C |
+ DSKMAP [BDOS] :                 10 - |  DSKMSG [BDOS] :              0E8BC C |
+ DSKMSK [BDOS] :                  3 - |  DSKSHF [BDOS] :                  2 - |
+ DVERS [BDOS] :                  22 - |  DWRITF [CCP] :                  15 - |
+ ECHOC [BDOS] :               0E927 C |  EFCB [BDOS] :                0F5AC C |
+ EFILL [CCP] :                0E2E8 C |  EFILL0 [CCP] :               0E2EA C |
+ EMPTY [BDOS] :                 0E5 - |  ENDCOM [CCP] :               0E792 C |
+ ENDDIR [BDOS] :              0FFFF - |  ENDIR [CCP] :                0E521 C |
+ ENDMERGE [BDOS] :            0F0F8 C |  ENDSEARCH [BDOS] :           0EF2B C |
+ END_OF_DIR [BDOS] :          0EDAD C |  ENTRY [BIOS] :               0F600 C |
+ ENTSP [BDOS] :               0EACC C |  EOFILE [CCP] :                  1A - |
+ ERASE [CCP] :                0E525 C |  ERASEFILE [CCP] :            0E548 C |
+ ERMSG [CCP] :                0E558 C |  ERRFLG [BDOS] :              0E900 C |
+ AS V1.42 Beta [Bld 157] - Source File cpm.asm - Page 21 - 2/23/2023 8:54:43
+
+
+ ESCMOD [BIOS] :              0FACD C |  EXIT [BIOS] :                0FCA4 C |
+ EXTMSK [BDOS] :              0F5C5 C |  EXTNUM [BDOS] :                 0C - |
+ EXTVAL [BDOS] :              0F5E2 C |  FALSE :                          0 - |
+ FALSE_ [BDOS] :                  0 - |  FCB [CCP] :                     5C - |
+ FCBDSK [BDOS] :              0F5E0 C |  FCBLEN [BDOS] :                 20 - |
+ FCBNZERO [BDOS] :            0F0C3 C |  FCBSHF [BDOS] :                  5 - |
+ FCB_COPIED [BDOS] :          0F5D2 C |  FILL0 [BDOS] :               0F259 C |
+ FILL1 [BDOS] :               0F267 C |  FILLFCB [CCP] :              0E258 C |
+ FILLFCB0 [CCP] :             0E256 C |  FRDSK [BIOS] :               0F7A2 C |
+ FULLMSG [CCP] :              0E60D C | *FULLPMMU :                       1 - |
+ FUNC1 [BDOS] :               0EA8E C |  FUNC10 [BDOS] :              0E9CE - |
+ FUNC11 [BDOS] :              0EABD C |  FUNC12 [BDOS] :              0F458 C |
+ FUNC13 [BDOS] :              0F45D C |  FUNC13A [BDOS] :             0F479 C |
+ FUNC14 [BDOS] :              0F403 - |  FUNC14X [BDOS] :             0F403 C |
+ FUNC15 [BDOS] :              0F48B C |  FUNC16 [BDOS] :              0F494 C |
+ FUNC17 [BDOS] :              0F49A C |  FUNC18 [BDOS] :              0F4B6 C |
+ FUNC19 [BDOS] :              0F4C5 C |  FUNC2 [BDOS] :               0E981 - |
+ FUNC20 [BDOS] :              0F4CE C |  FUNC21 [BDOS] :              0F4D4 C |
+ FUNC22 [BDOS] :              0F4DA C |  FUNC23 [BDOS] :              0F4E3 C |
+ FUNC24 [BDOS] :              0F4EC C |  FUNC25 [BDOS] :              0F4F2 C |
+ FUNC26 [BDOS] :              0F502 C |  FUNC27 [BDOS] :              0F509 C |
+ FUNC28 [BDOS] :              0ECE8 - |  FUNC29 [BDOS] :              0F50F C |
+ FUNC3 [BDOS] :               0EA93 C |  FUNC30 [BDOS] :              0F515 C |
+ FUNC31 [BDOS] :              0F51E C |  FUNC32 [BDOS] :              0F525 C |
+ FUNC33 [BDOS] :              0F538 C |  FUNC34 [BDOS] :              0F53E C |
+ FUNC35 [BDOS] :              0F544 C |  FUNC36 [BDOS] :              0F3CC - |
+ FUNC37 [BDOS] :              0F54A C |  FUNC38 [BDOS] :              0EAC3 - |
+ FUNC39 [BDOS] :              0EAC3 - |  FUNC40 [BDOS] :              0F586 C |
+ FUNC6 [BDOS] :               0EA98 C |  FUNC7 [BDOS] :               0EAAD C |
+ FUNC8 [BDOS] :               0EAB2 C |  FUNC9 [BDOS] :               0EAB7 C |
+ FUNCTAB [BDOS] :             0E811 C |  FUNC_RET [BDOS] :            0EAC3 C |
+ FWFMSK [BDOS] :                 80 - |  GETALLOCBIT [BDOS] :         0EDEA C |
+ GETDM [BDOS] :               0EC20 C |  GETDMD [BDOS] :              0EC32 C |
+ GETDPTRA [BDOS] :            0ED1A C |  GETEXTA [BDOS] :             0EC66 C |
+ GETFCB [BDOS] :              0EC7B C |  GETFCBA [BDOS] :             0EC6E C |
+ GETFILESIZE [BDOS] :         0F393 C |  GETMODNUM [BDOS] :           0ED25 C |
+ GETNEXTSIZE [BDOS] :         0F3C5 C |  GETNUMBER [CCP] :            0E3FE C |
+ GETSIZE [BDOS] :             0F3A5 C |  GETUSER [CCP] :              0E10B C |
+ GET_BLOCK [BDOS] :           0EF65 C |  GO [CCP] :                   0E70F C |
+*GO100 [CCP] :                0E6AB C |  GOBACK [BDOS] :              0F56B C |
+ GOCPM [BIOS] :               0F7B7 C |  GOERR [BDOS] :               0EB17 C |
+*HAS64 :                          1 - | *HASDSP :                         0 - |
+*HASFPU :                         0 - | *HASPMMU :                        0 - |
+ HLROTL [BDOS] :              0ECC1 C |  HLROTL0 [BDOS] :             0ECC2 C |
+ HLROTR [BDOS] :              0ECA9 C |  HLROTR0 [BDOS] :             0ECAA C |
+ HOME [BDOS] :                0EB6C C |  HOME [BIOS] :                0F63E C |
+ HOMEF [BDOS] :               0F618 - |  INDEX [BDOS] :               0EC38 C |
+ INDIC0 [BDOS] :              0F02D C |  INDICATORS [BDOS] :          0F028 C |
+*INEXTMODE :                      0 - | *INEXTMODE [CCP] :                0 - |
+*INEXTMODE [BDOS] :               0 - | *INEXTMODE [BIOS] :               0 - |
+ INFO [BDOS] :                0EB10 C |  INIMSG [BIOS] :              0F682 C |
+ INITF [CCP] :                   0D - |  INITIAL0 [BDOS] :            0EE60 C |
+ INITIAL2 [BDOS] :            0EE80 C |  INITIALIZE [CCP] :           0E0B5 C |
+ INITIALIZE [BDOS] :          0EE52 C |  INITIAL_CS [BDOS] :          0ED7E C |
+*INLWORDMODE :                    0 - | *INLWORDMODE [CCP] :              0 - |
+*INLWORDMODE [BDOS] :             0 - | *INLWORDMODE [BIOS] :             0 - |
+*INMAXMODE :                      0 - | *INSRCMODE :                      0 - |
+*INSUPMODE :                      0 - |  INTLEN [CCP] :                   9 - |
+ INTRIN0 [CCP] :              0E337 C |  INTRIN1 [CCP] :              0E340 C |
+ INTRIN2 [CCP] :              0E350 C |  INTRIN3 [CCP] :              0E354 C |
+ AS V1.42 Beta [Bld 157] - Source File cpm.asm - Page 22 - 2/23/2023 8:54:43
+
+
+ INTRINSIC [CCP] :            0E332 C |  INTVEC [CCP] :               0E308 C |
+*INVIS [BDOS] :                  0A - |  IOLOC :                          3 - |
+ IRDSK [BIOS] :               0F765 C |  JMPTAB [CCP] :               0E3C1 C |
+ LA [CCP] :                      5F - |  LEFTTST [BDOS] :             0EF67 C |
+ LF [CCP] :                      0A - |  LF [BDOS] :                     0A - |
+*LIFTF [CCP] :                   0C - |  LINELEN [BDOS] :             0EA3A C |
+ LINFO [BDOS] :               0F5D6 C |  LISTCP [BDOS] :              0EACB C |
+ LISTF [BDOS] :               0F60F - | *LISTON :                         2 - |
+*LISTSTF [BDOS] :             0F62D - |  LOA10 [BIOS] :               0FBBC C |
+ LOA11A [BIOS] :              0FBD0 C |  LOA11B [BIOS] :              0FBDC C |
+ LOA11C [BIOS] :              0FBDF C |  LOA11D [BIOS] :              0FBE5 C |
+ LOA11E [BIOS] :              0FBF4 C |  LOA11F [BIOS] :              0FC04 C |
+ LOA12 [BIOS] :               0FC10 C |  LOA13 [BIOS] :               0FC25 C |
+ LOA14 [BIOS] :               0FC27 C |  LOA15 [BIOS] :               0FC2E C |
+ LOA16 [BIOS] :               0FC31 C |  LOA17 [BIOS] :               0FC3D C |
+ LOA18 [BIOS] :               0FC44 C |  LOA19 [BIOS] :               0FC4E C |
+ LOA3 [BIOS] :                0FB61 C |  LOA4 [BIOS] :                0FB71 C |
+ LOA5 [BIOS] :                0FB81 C |  LOA6 [BIOS] :                0FB94 C |
+ LOA7 [BIOS] :                0FBAA C | *LOA9 [BIOS] :                0FBAE C |
+ LOAD [BIOS] :                0FB51 C |  LOAD0 [CCP] :                0E6EA C |
+ LOAD1 [CCP] :                0E70A C |  LOADERR [CCP] :              0E77A C |
+ LOADMSG [CCP] :              0E783 C |  LOC_0 [BDOS] :               0E800 C |
+ LOC_D5F9 [BDOS] :            0E9FB C | *LOC_D8DB [BDOS] :            0ECDD C |
+ LOC_D908 [BDOS] :            0ED0A C |  LOC_DBEA [BDOS] :            0EFEC C |
+ LOC_DC04 [BDOS] :            0F006 C |  LOC_E034 [BDOS] :            0F436 C |
+ LOC_E043 [BDOS] :            0F445 C |  LOC_E0FA [BDOS] :            0F4FC C |
+*LOGF [CCP] :                    18 - |  LRET [BDOS] :                0EB12 - |
+ LSTACK [BDOS] :              0EB0E C | *LSTFCB [BDOS] :                 1F - |
+ LSTREC [BDOS] :                 7F - | *MACEXP :                         7 - |
+ MAKE [CCP] :                 0E101 C |  MAKE [BDOS] :                0F105 C |
+ MAKE0 [BDOS] :               0F127 C |  MAKEF [CCP] :                   16 - |
+ MAXALL [BDOS] :              0F5C6 C |  MAXEXT [BDOS] :                 1F - |
+ MAXLEN [CCP] :               0E006 C |  MAXMOD [BDOS] :                 0F - |
+ MERGE0 [BDOS] :              0F0B7 C |  MERGED [BDOS] :              0F0CD C |
+ MERGERR [BDOS] :             0F100 C |  MERGEZERO [BDOS] :           0F07E C |
+ MODNUM [BDOS] :                 0E - | *MOMCPU :                        80 - |
+*MOMCPU [CCP] :                  80 - | *MOMCPU [BDOS] :                 80 - |
+*MOMCPU [BIOS] :                 80 - | *MOMCPUNAME :                   Z80 - |
+*MOMCPUNAME [CCP] :             Z80 - | *MOMCPUNAME [BDOS] :            Z80 - |
+*MOMCPUNAME [BIOS] :            Z80 - |  MOVE [BDOS] :                0EB1C C |
+ MOVE0 [CCP] :                0E448 C |  MOVE0 [BDOS] :               0EB1D C |
+ MOVENAME [CCP] :             0E446 C |  MS30 [BIOS] :                0FABF C |
+ MS301 [BIOS] :               0FAC3 C |  NAMLEN [BDOS] :                 0F - |
+ NDISK [BIOS] :                   1 - | *NESTMAX :                      100 - |
+ NEWCHECKSUM [BDOS] :         0ED58 C |  NFUNCS [BDOS] :                 29 - |
+ NOFILE [CCP] :               0E3F0 C |  NOFMSG [CCP] :               0E3F6 C |
+ NOPBLOCK [BDOS] :            0F20D C |  NOREAD [CCP] :               0E19F C |
+ NOSELECT [BDOS] :            0F44F C |  NOSPACE [BDOS] :             0F2C6 C |
+ NOSUB [CCP] :                0E18E C |  NOTBACKSP [BDOS] :           0E96B C |
+ NOTC [BDOS] :                0EA83 C |  NOTE [BDOS] :                0EA17 C |
+ NOTP [BDOS] :                0EA26 C |  NOTRUB [BDOS] :              0EA08 C |
+*NOUPDATE [BDOS] :            0F2AA C |  NOWRITE [BDOS] :             0ECDA C |
+ NXTREC [BDOS] :                 20 - |  OBACK [BIOS] :               0F9AE C |
+ OBELL [BIOS] :               0F9D7 C |  OCLLN [BIOS] :               0FA22 C |
+ OCLRLN [BIOS] :              0FA16 C |  OCLS [BIOS] :                0F9B1 C |
+ OCR [BIOS] :                 0F9A7 C |  ODEL [BIOS] :                0F9F3 C |
+ OESC [BIOS] :                0F9C7 C | *OFF [BDOS] :                     0 - |
+ OFFSET [BDOS] :              0F5CE C |  OHOME [BIOS] :               0F9CF C |
+ OLDDSK [BDOS] :              0F5DF C |  OLF [BIOS] :                 0F9E8 C |
+ ON [BDOS] :                  0FFFF - |  OPEN [CCP] :                 0E0C8 C |
+ AS V1.42 Beta [Bld 157] - Source File cpm.asm - Page 23 - 2/23/2023 8:54:43
+
+
+ OPEN [BDOS] :                0F03D C |  OPENC [CCP] :                0E0CC C |
+ OPENF [CCP] :                   0F - |  OPEN_COPY [BDOS] :           0F046 C |
+ OPEN_MOD [BDOS] :            0F160 C |  OPEN_RCNT [BDOS] :           0F075 C |
+ OPEN_REEL [BDOS] :           0F13A C |  OPEN_REEL0 [BDOS] :          0F16A C |
+ OPEN_REEL1 [BDOS] :          0F184 C |  OPEN_REEL2 [BDOS] :          0F187 C |
+ OPEN_R_ERR [BDOS] :          0F18E C |  ORIGHT [BIOS] :              0F9F0 C |
+ OUP [BIOS] :                 0F9FD C | *PACKING :                        0 - |
+*PADDING :                        1 - |  PADNAME [CCP] :              0E2B1 C |
+ PADTY [CCP] :                0E2E1 C | *PBUFF [CCP] :                    9 - |
+ PCHARF [CCP] :                   2 - |  PCTLH [BDOS] :               0E99B C |
+ PDOLLAR [BDOS] :             0EEAA C |  PERERR [BDOS] :              0E809 C |
+ PERMSG [BDOS] :              0E8CC C |  PERSUB [BDOS] :              0E89D C |
+ PHAKO [BIOS] :               0FC56 C |  PRIN0 [CCP] :                0E0AA C |
+ PRINT [CCP] :                0E0A5 C |  PRINT [BDOS] :               0E9C1 C |
+ PRINTBC [CCP] :              0E092 C |  PRINTCHAR [CCP] :            0E08C C |
+ PUNCHF [BDOS] :              0F612 - |  QSELECT [BDOS] :             0F4B0 C |
+ RADR [BIOS] :                0F7E2 C |  RADR1 [BIOS] :               0F7F1 C |
+ RAFDBP_DRM [BIOS] :          0F81A C |  RANCLOSE [BDOS] :            0F30C C |
+ RANDISKREAD [BDOS] :         0F354 C |  RANDISKWRITE [BDOS] :        0F35D C |
+ RANREC [BDOS] :                 21 - |  RBUFF [CCP] :                   0A - |
+ RCHARF [CCP] :                   1 - |  RCOUNT [BDOS] :              0F5E1 C |
+ RDBUFF [BDOS] :              0EB7D C | *RDECH1 [BDOS] :              0EA70 C |
+ RDECHO [BDOS] :              0EA6D C |  RDMSG [CCP] :                0E3E5 C |
+ RDSK [BIOS] :                0F8D7 C |  RDSK1 [BIOS] :               0F7CD C |
+ RDSKMSG [BIOS] :             0F6C9 C |  RD_DIR [BDOS] :              0ED8D C |
+ READ [BDOS] :                0E9CE C |  READCOM [CCP] :              0E131 C |
+ READCOM0 [CCP] :             0E1A3 C |  READCOM1 [CCP] :             0E1B2 C |
+ READEN [BDOS] :              0EA87 C |  READERF [BDOS] :             0F615 - |
+ READERR [CCP] :              0E3DF C |  READF [BDOS] :               0F627 - |
+ READN0 [BDOS] :              0E9DE C |  READNX [BDOS] :              0E9DC C |
+ READ_DIR [BDOS] :            0EDBD C |  READ_DIR0 [BDOS] :           0EDCF C |
+ READ_DIR1 [BDOS] :           0EDD6 C |  REBOOT [BDOS] :                  0 - |
+ RECCNT [BDOS] :                 0F - |  RECORDOK [BDOS] :            0F1BB C |
+ RECSIZ [BDOS] :                 80 - | *RELAXED :                        0 - |
+ REN1 [CCP] :                 0E645 C |  REN2 [CCP] :                 0E65F C |
+ RENAM [CCP] :                0E106 C |  RENAME [CCP] :               0E616 C |
+ RENAME [BDOS] :              0EFB7 C |  RENAME0 [BDOS] :             0EFF3 C |
+ RENERR1 [CCP] :              0E673 C |  RENERR2 [CCP] :              0E679 C |
+ RENERR3 [CCP] :              0E67F C |  RENF [CCP] :                    17 - |
+ RENMSG [CCP] :               0E688 C |  REP0 [BDOS] :                0EA42 C |
+ REP1 [BDOS] :                0EA52 C |  RESEL [BDOS] :               0F5DE C |
+ RESELECT [BDOS] :            0F413 C |  RESETDISK [CCP] :            0E46C C |
+ RESTR [BIOS] :               0F8F3 C |  RETBLOCK [BDOS] :            0EF8E C |
+ RETBLOCK0 [BDOS] :           0EF96 C |  RETCOM :                     0E78F C |
+ RETMON [BDOS] :              0F578 C |  RETSAVE [CCP] :              0E607 C |
+ RETSELECT [BDOS] :           0EB68 C |  RIGHTTST [BDOS] :            0EF76 C |
+ RMF [BDOS] :                 0F5D3 C |  RODERR [BDOS] :              0E80D C |
+ RODMSG [BDOS] :              0E8FC C |  RODSK [BDOS] :               0F5AD C |
+ RODSUB [BDOS] :              0E8AE C |  ROFERR [BDOS] :              0E80F C |
+*ROFILE [CCP] :                   9 - |  ROFILE [BDOS] :                  9 - |
+ ROFMSG [BDOS] :              0E8F7 C |  ROFSUB [BDOS] :              0E8B3 C |
+ ROTL [BDOS] :                0EE0B C |  ROTR [BDOS] :                0EE18 C |
+ ROUTCH3 [BIOS] :             0FA2F C |  ROUTCH4 [BIOS] :             0FA4D C |
+ ROUTCH5 [BIOS] :             0FA52 C |  RRDSK [BIOS] :               0F7D4 C |
+ RSEEK [BDOS] :               0F2CB C |  RSEEK1 [BDOS] :              0F2CF C |
+ RSIZ [BIOS] :                0F71A C |  RSIZ1 [BIOS] :               0F73F C |
+ RSIZ2 [BIOS] :               0F743 C |  RUBOUT [BDOS] :                 7F - |
+ SAVE [CCP] :                 0E5B3 C |  SAVE0 [CCP] :                0E5DA C |
+ SAVE1 [CCP] :                0E5F7 C |  SAVERR [CCP] :               0E601 C |
+ SAVEUSER [CCP] :             0E112 C |  SCANDM [BDOS] :              0EE1E C |
+ AS V1.42 Beta [Bld 157] - Source File cpm.asm - Page 24 - 2/23/2023 8:54:43
+
+
+ SCANDM0 [BDOS] :             0EE28 C |  SCANDM1 [BDOS] :             0EE39 C |
+ SCANDM2 [BDOS] :             0EE3F C |  SCANM3 [BDOS] :              0EE4D C |
+ SCNQ [CCP] :                 0E2F9 C |  SCNQ0 [CCP] :                0E301 C |
+ SDISK [CCP] :                0E7F9 C |  SDISK [BIOS] :               0F643 C |
+ SDMA [BIOS] :                0F67D C |  SEARCH [CCP] :               0E0D9 C |
+ SEARCH [BDOS] :              0EECB C |  SEARCHA [BDOS] :             0F5D9 C |
+ SEARCHCOM [CCP] :            0E0E1 C |  SEARCHEXT [BDOS] :           0EF1D C |
+ SEARCHL [BDOS] :             0F5D8 C |  SEARCHLOOP [BDOS] :          0EF03 C |
+ SEARCHN [CCP] :              0E0DD C |  SEARCHN [BDOS] :             0EEE0 C |
+ SEARCHNEXT [BDOS] :          0EEFA C |  SEARCHOK [BDOS] :            0EF25 C |
+ SEARCH_FIN [BDOS] :          0EF3C C |  SEARF [CCP] :                   11 - |
+ SEARNF [CCP] :                  12 - |  SEC1 [BIOS] :                0F825 C |
+ SECTPT [BDOS] :              0F5C1 C |  SECTRAN [BDOS] :             0F630 - |
+ SECTRAN1 [BIOS] :            0F66B C |  SEEK [BDOS] :                0EB9B C |
+ SEEK0 [BDOS] :               0EBAE C |  SEEK1 [BDOS] :               0EBC2 C |
+ SEEK2 [BDOS] :               0EBD4 C |  SEEKERR [BDOS] :             0F34C C |
+ SEEKOK [BDOS] :              0F340 C |  SEEK_COPY [BDOS] :           0EFB1 C |
+ SEEK_DIR [BDOS] :            0EB8D C |  SELDSK1 [BIOS] :             0F652 C |
+ SELDSKF [BDOS] :             0F61B - |  SELECT [CCP] :               0E0BA C |
+ SELECT [BDOS] :              0F3DF C |  SELECTDISK [BDOS] :          0EB25 C |
+ SELERR [BDOS] :              0E80B C |  SELF [CCP] :                    0E - |
+ SELMSG [BDOS] :              0E8F0 C |  SELSUB [BDOS] :              0E8A9 C |
+ SEL_ERROR [BDOS] :           0EB14 C |  SEQDISKREAD [BDOS] :         0F194 C |
+ SEQDISKWRITE [BDOS] :        0F1D2 C |  SEQIO [BDOS] :               0F5D5 C |
+ SER0 [CCP] :                 0E1F5 C |  SERIAL [CCP] :               0E32C C |
+ SERIALIZE [CCP] :            0E1ED C |  SETALLOCBIT [BDOS] :         0EE10 C |
+ SETCDR [BDOS] :              0ED48 C | *SETCUR [CCP] :               0E280 C |
+ SETCUR0 [CCP] :              0E281 C |  SETDATA [BDOS] :             0ED93 C |
+ SETDIR [BDOS] :              0ED98 C |  SETDISK [CCP] :              0E45A C |
+ SETDISKA [CCP] :             0E121 C |  SETDMA [CCP] :               0E1D0 C |
+ SETDMA [BDOS] :              0ED9B C |  SETDMABUFF [CCP] :           0E1CD C |
+ SETDMAF [BDOS] :             0F624 - |  SETDSK [CCP] :               0E288 C |
+ SETFCB [BDOS] :              0EC92 C |  SETFCB1 [BDOS] :             0EC9D C |
+ SETFWF [BDOS] :              0ED34 C |  SETLRET1 [BDOS] :            0EAC4 C |
+ SETNAM0 [CCP] :              0E290 C |  SETNAM1 [CCP] :              0E2A1 C |
+ SETNAM2 [CCP] :              0E2A3 C |  SETNAME [CCP] :              0E28E C |
+ SETRANDOM [BDOS] :           0F3CC C |  SETSECF [BDOS] :             0F621 - |
+ SETSIZE [BDOS] :             0F3CA C |  SETTRKF [BDOS] :             0F61E - |
+ SETTY [CCP] :                0E2B8 C |  SETTY0 [CCP] :               0E2C0 C |
+ SETTY1 [CCP] :               0E2D1 C |  SETTY2 [CCP] :               0E2D3 C |
+ SETUSER [CCP] :              0E10D C |  SETUSRCODE [BDOS] :          0F532 C |
+ SET_CDISK [BDOS] :           0ECC7 C |  SET_END_DIR [BDOS] :         0EDB6 C |
+ SET_RO [BDOS] :              0ECE8 C |  SINGLE [BDOS] :              0F5DD C |
+ SIZEMSG [BIOS] :             0F6A2 C |  SSEC [BIOS] :                0F673 C |
+ SSIZE [BDOS] :                  20 - |  STACK [CCP] :                0E7B4 C |
+ STADDR [CCP] :               0E08A C |  STA_RET [BDOS] :             0EAC0 C |
+ STHL_RET [BDOS] :            0F521 C |  STR [BIOS] :                 0F8E2 C |
+ STR1 [BIOS] :                0F8E4 C |  STR2 [BIOS] :                0F8F0 C |
+ STRAN [BIOS] :               0F661 C |  STRCK [BIOS] :               0F678 C |
+ STRTCOL [BDOS] :             0EAC9 C |  SUBCR [CCP] :                0E7D5 C |
+ SUBDH [BDOS] :               0ED51 C |  SUBFCB [CCP] :               0E7B5 C |
+ SUBMIT [CCP] :               0E7B4 C |  SUBMOD [CCP] :               0E7C3 C |
+ SUBRC [CCP] :                0E7C4 C |  SUB_F905 [BIOS] :            0F905 C |
+ SYSFILE [CCP] :                 0A - |  SYSSK [BIOS] :               0FACF C |
+ SYSSKL [BIOS] :              0FC7C C |  TAB [BDOS] :                     9 - |
+ TAB0 [BDOS] :                0E986 C |  TABOUT [BDOS] :              0E981 C |
+ TBUFF [BDOS] :                  80 - | *TEST [BDOS] :                0FFFF - |
+*TESTING [CCP] :                  0 - | *TFCB [BDOS] :                   5C - |
+*TIME :                     8:54:42 - | *TINFO [BDOS] :               0F5DB C |
+ TRACK [BIOS] :               0F824 C |  TRAN [CCP] :                   100 - |
+ AS V1.42 Beta [Bld 157] - Source File cpm.asm - Page 25 - 2/23/2023 8:54:43
+
+
+ TRANM [CCP] :                0E000 - |  TRANSLATE [CCP] :            0E128 C |
+ TRANV [BDOS] :               0F5D0 C |  TRNAME [CCP] :               0E2A7 C |
+ TRTYP [CCP] :                0E2D7 C | *TRUE :                           1 - |
+ TRUE_ [BDOS] :                 0FF - |  TYPE [CCP] :                 0E563 C |
+ TYPE0 [CCP] :                0E57A C |  TYPE1 [CCP] :                0E58D C |
+ TYPEOF [CCP] :               0E5A6 C |  TYPERR [CCP] :               0E5AD C |
+ UBYTES [BDOS] :                 0D - |  UNK_DC06 [BDOS] :            0F008 C |
+ USER [CCP] :                 0E694 C |  USER0 [CCP] :                0E6CD C |
+ USERER [CCP] :               0E774 C |  USERF [CCP] :                   20 - |
+ USERFUNC [CCP] :             0E6AE C |  USRCODE [BDOS] :             0EB0E C |
+*VERSION :                     142F - |  VRECORD [BDOS] :             0F5E3 C |
+ WAIT_ERR [BDOS] :            0E8B6 C |  WBOOT [BIOS] :               0F762 C |
+ WBOOTF [BDOS] :              0F603 - |  WBOTE [BIOS] :               0F603 C |
+ WORD [BDOS] :                    2 - |  WRBUFF [BDOS] :              0EB82 C |
+ WRDIR [BDOS] :               0ED80 C |  WRDSK [BIOS] :               0F7C4 C |
+ WRITEF [BDOS] :              0F62A - |
+
+    745 symbols
+     67 unused symbols
+
+ AS V1.42 Beta [Bld 157] - Source File cpm.asm - Page 26 - 2/23/2023 8:54:43
+
+
+  Defined Macros:
+  ---------------
+
+CPMOFF[BIOS]                          | CPMON[BIOS]                          
+
+      2 macros
+
+ AS V1.42 Beta [Bld 157] - Source File cpm.asm - Page 27 - 2/23/2023 8:54:43
+
+
+  Defined Functions:
+  ------------------
+
+LO                                    | HI                                   
+X_ALIGN                               |
+
+ AS V1.42 Beta [Bld 157] - Source File cpm.asm - Page 28 - 2/23/2023 8:54:43
+
+
+  Code Pages:
+  ----------
+
+STANDARD (0 changed characters)
+
+1 code page
+
+0.05 seconds assembly time
+
+   5237 lines source file
+   5259 lines incl. macro expansions
+      2 passes
+      0 errors
+      0 warnings

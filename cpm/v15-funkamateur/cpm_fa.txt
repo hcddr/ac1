@@ -1,0 +1,346 @@
+;------------------------------------------------------------------------------
+Funkamateur 04 u. 05/89
+ 
+CP/M* mit "AC1" zum Kennenlernen (1 u. 2)
+F. HEYDER - Y21SO
+
+In den vergangenen fünf Jahren ist die Entwicklung auch am "AC1" nicht spurlos
+vorbeigegangen. Aus dem damals vorgestellten Minimalsystem mit 1 (2) KByte
+Arbeitsspeicher ist bei vielen Nutzern ein ausgewachsener U 880-Rechner mit 64-
+KByte-RAM-Erweiterung, 32 Zeilen a 64 Zeichen-Bildschirmanzeige, 2-KByte-
+Zeichengenerator und so manch anderer Zusatzbaugruppe geworden. Wenn man den
+Ausbau soweit getrieben hat, daß die beiden erstgenannten Punkte zutreffen, dann
+ist die Nutzung des Betriebssystems CP/M auf dem "AC1" zum Greifen nahe, und die
+Vielfalt der dort vorhandenen Programme bleibt dem "AC1"-Besitzer keineswegs
+mehr vorenthalten.
+
+Die geringfügige Modifizierung, die dazu noch am "AC1" notwendig ist, ist
+eigentlich nicht der Rede wert und mit der Erfahrung, die man beim Aufbau des
+"AC1" gewonnen hat, leicht zu realisieren. Die dazu notwendigen Bauelemente
+(vier Dioden und ein DL 074) finden noch auf der Grundleiterplatte des "AC1"
+Platz und nach etwa einer Stunde Arbeit kann man dann mit den ersten
+Gehversuchen unter CP/M beginnen, denn den Rest erledigen wir vorerst mit
+Software. Dabei spielt der im "AC1" fest installierte Monitor nur noch die Rolle
+eines Anfangsladers, CP/M selbst benötigt ihn nicht. Die Leistungsfähigkeit
+dieser Minimalversion wird später noch betrachtet, aber zum Kennenlernen vieler
+CP/M-Programme dürfte sie ausreichen. Danach kann jeder selbst entscheiden, ob
+er tiefer einsteigen und mehr RAM-Disk oder sogar ein Floppydisk-Laufwerk mit
+Interface anschließen oder ob er es dabei belassen will. Übrigens schadet diese
+Erweiterung nicht, "AC1"-Software läuft nach wie vor ohne Änderung.
+
+Nun etwas genauer zur Funktion des Ganzen. CP/M benötigt zwei Voraussetzungen,
+um auf "AC1" zu laufen. Diese sind:
+- RAM ab Adresse 0 bis FFFFH, also 64 KByte;
+- externer Speicher mit freiem Zugriff (im allgemeinen mit Diskettenlaufwerken
+  realisiert).
+
+Die erste Voraussetzung ist bei einem "AC1" mit der Speichererweiterung auf 64
+KByte (8x U 2164), zum Beispiel der in diesem Beitrag noch einmal gezeigten,
+eigentlich schon erfüllt. Hier werden die unteren 8 KByte wegen des auf der
+Grundleiterplatte vorhandenen Speichers (ROM, BWS, RAM) aber ausgeblendet. Wer
+diese RAM-Erweiterung noch nicht hat, kann auch auf einer 16-KByte-RAM-
+Leiterplatte nach Y21SO mit relativ wenig Aufwand (1 x D 100 weglassen, dafür
+drei DL-IS auf Subplatine einfügen) einen 64-KByte-dRAM mit U 2164 realisieren.
+Aber dazu später.
+
+Für CP/M sind nun auch die unteren 8 KByte der RAM-Erweiterung einzuschalten.
+Bei der oben genannten Schaltung ist dies bereits vorgesehen, dort muß man nur
+die entsprechende Leitung (DL 020, Pin 5) mit Low-Pegel versehen. Gleichzeitig
+ist dann natürlich der Speicher der Grundleiterplatte, also auch der BWS,
+abzuschalten; sonst kommt es zu Buskonflikten. Da bei jeder Bildschirmausgabe
+kurzzeitig der Bildspeicher wieder aus der Versenkung zu holen ist, kann diese
+Umschaltung nur softwaregesteuert erfolgen, z.B. über einen entsprechenden OUT-
+Befehl. Die Speicheraufteilung des "AC1" für beide Fälle ist in Bild 1
+dargestellt. Um dies nun alles zu realisieren, sind folgende Voraussetzungen auf
+der Grundleiterplatte des "AC1" zusätzlich zu schaffen:
+- Ausblenden des Speichers der Grundleiterplatte;
+- softwaregesteuerter Umschalter;
+- Unterdrückung des IOSEL bei Interruptanerkennung.
+Nun wird der Lötkolben angeheizt, das Kratzwerkzeug angeschliffen ... und los geht es!
+
+Ausblenden des Speichers der Grundleiterplatte
+
+Hierzu ist es notwendig, die Auswahllogik für den Speicherdekoder D3 (7442) um
+eine Steuerleitung zu erweitern. Bisher erfolgt die Verknüpfung der dafür
+nötigen Signale mit dem Vierfach-NAND D18, das aber eigentlich keinen Eingang
+mehr frei hat. Dieses Problem hatten wir doch schon mal ... ; wir erinnern uns
+an die Verknüpfung der Signale zum Dunkeltasten des Bildschirmes in der
+Anfangszeit des "AC1". Dort fehlte auch ein Eingang und wir haben zwei Dioden zu
+Hilfe genommen. Genau das tun wir auch hier. Die Zuleitung von /A13 zum Pin 2
+von D18 wird aufgetrennt, eine Ge-Diode eingefügt, die zweite geht zum
+Umschalter, ... erledigt.
+
+Es hätte genauso /A14 oder /A15 genommen werden können, aber /A13 bietet sich,
+von der Leiterzugführung her gesehen, an. /MREQ ist, vor allem aus Zeitgründen,
+nicht zu verwenden.
+
+Softwaregesteuerter Umschalter
+
+Man benötigt eine Leitung, die je nach dem geforderten Mode ("AC1" bzw.
+Bildausgabe oder CP/M) den Pegel High oder Low einnimmt. Das Ganze ist durch das
+BIOS softwaregesteuert.
+
+Eine PIO-Ausgabeleitung würde dafür schon ausreichen, aber erstens sind die
+freien Leitungen der PIO der Grundleiterplatte schon so verschiedenartig genutzt
+und zweitens erfordert dies sehr viel Sorgfalt bei der Nutzung der restlichen
+Leitungen, wenn es keine Softwareabstürze geben soll. Das lassen wir also
+lieber.
+
+Eine zweite PIO stellt einen erhöhten Aufwand dar und würde auch irgendwann die
+gleichen Probleme bringen. Es genügt bereits ein D-Latch (1/2 DL 074), das über
+drei Leitungen angeschlossen wird. Die Information kommt über DB 0, die
+Übernahme erfolgt mit IOSEL 7. Damit der Zustand nach dem Einschalten nicht dem
+Zufall überlassen bleibt, wird der Reseteingang des Latch mit dem RESET des
+"AC1" verbunden. Die Information am Q-Ausgang des Latch wird zur
+Speicherumschaltung genutzt und wer immer über den gerade aktuellen Zustand
+informiert sein will, kann an den Q-Ausgang über einen Vorwiderstand von 560 O
+eine Leuchtdiode an + 5 V anschließen, aber das ist schon Luxus.
+
+Unterdrückung des IOSEL bei Interruptanerkennungszyklen
+
+Da beim Anschluß des D-Latch an IOSEL 7 zur Datenübernahme sozusagen minimaler
+Aufwand getrieben wurde, IOSEL aber bei entsprechendem PC auch bei der
+Interruptanerkennung aktiv wird, könnte es hier zu Fehlschaltungen kommen. Beim
+Spielen mit "Cycle" passiert das übrigens mit Sicherheit. Den
+Peripherieschaltkreisen des U880-Systems ist dieses Verhalten von IOSEL gleich,
+sie verknüpfen es ja noch mit /RD oder /M1. Das kann man auch bei dem D-Latch
+machen, dazu braucht man aber mindestens ein Gatter eines DL 002 oder bei
+anderen Typen entsprechend mehr.
+
+Es geht aber auch mit zwei weiteren Ge-Dioden. Analog der Speicherausblendung
+wird /M1 einfach mit in die Auswahllogik für den IOSEL-Dekoder D2 (7442)
+einbezogen und das Problem ist gelöst. Also, die Zuleitung von /A5 zum Pin 10
+des D18 aufkratzen, eine Ge-Diode einfügen; die andere geht zum Pin 27 der CPU
+(/M1). Die Gesamtschaltung dieser kleinen Erweiterung ist in Bild 2 dargestellt.
+Damit ist die erste Voraussetzung für CP/M erfüllt.
+
+Nun zum externen Speicher mit freiem Zugriff oder einfach Floppydisk. Hier
+helfen wir uns fürs erste mit der Simulation einer Diskette im RAM, einer RAM-
+Disk, und - damit es keinen Aufwand macht, wird kein weiterer Speicher
+aufgebaut, sondern einfach ein Stück des TPA dafür reserviert, wie es Y23VO z.B.
+auch in seinem Buch gezeigt hat. Also vorerst nicht löten, hier genügt Software.
+Einige Programme unter CP/M werden damit zwar nicht so zufrieden sein, aber
+erste CP/M-Versionen waren mit etwa 20 KByte Speicher bereits lauffähig. Um ein
+sinnvolles Verhältnis zwischen TPA und Kapazität der RAM-Disk zu bekommen, wird
+als Vorzugswert für die RAM-Disk 16 KByte gewählt.
+
+Die Software
+
+Die Datei "RAM-CPM" befindet sich nach einem Vorwort am Beginn der "AC1"-CP/M-
+Musterkassette. Wer sie nicht hat, wendet sich entweder an einen "AC1"-
+Computerklub in seinem Einzugsbereich (bitte nicht an den ACC Berlin, der damit
+hoffnungslos überlastet würde, zumal bereits etwa 400 Kassetten seit dem
+Solibasar im November 1988 unterwegs sind) oder er tippt das hier abgedruckte
+Listing ein bzw. schneidet es am 14.5.89 bei Radio DDR mit.
+
+Diese Datei enthält die drei Komponenten des CP/M-Betriebssystems: CCP, BDOS und
+BIOS. Das BIOS wurde entsprechend den Anforderungen des CP/M [1] für die
+Hardware des "AC1" neu geschrieben. Es enthält die Treiber für Tastatur,
+Bildschirm, Kassetteneinlesen und die Organisation der RAM-Disk. Letztere wurde
+nach einer kleinen Fehlerkorrektur aus [2] übernommen. Das BIOS endet etwa 1
+KByte vor dem Speicherende, so daß jeder noch seinen speziellen Druckertreiber
+anfügen kann. Dann sind aber auch die Adressen für LIST und LISTST im BIOS-
+Sprungverteiler zu ändern!
+
+Das BDOS entspricht unverändert dem Original. Der CCP dagegen mußte etwas
+zusammengeschoben werden, um Platz für drei zusätzliche residente Kommandos zu
+schaffen.
+
+Man starte das CP/M auf der Adresse F600H. Nach dem Löschen des Bildschirms und
+dem Erscheinen der Überschrift wird nach der Größe der RAM-Disk gefragt. Hier
+kann man zwischen 4 KByte und 28 KByte in Schritten zu 4 KByte wählen. RAM-Disk-
+Größe und der belegte Speicherbereich sind in der nachfolgenden Tabelle
+dargestellt.
+
+RAM-Disk Speicherbereich
+(für S-Kommando des Monitors)
+1	-   4 K S D000 DFFF F600 name
+2	-   8 K S C000 DFFF F600 name
+3	- 12 K S B000 DFFF F600 name
+4	- 16 K S A000 DFFF F600 name
+5	- 20 K S 9000 DFFF F600 name
+6	- 24 K S 8000 DFFF F600 name
+7	- 28 K S 7000 DFFF F600 name
+CR	- 16 K S A000 DFFF F600 name
+
+Ist die Größe der RAM-Disk festgelegt, wird noch gefragt, ob diese neu zu
+formatieren (oder zu löschen) ist. Das ist nach jedem Erststart des CP/M, bei
+dem keine RAM-Disk von Kassette geladen wurde, unbedingt erforderlich! Hat man
+eine RAM-Disk von Kassette geladen, so muß natürlich deren Größe mit der
+festgelegten übereinstimmen. Verläßt man das CP/M kurz mit EXIT und will danach
+weiterarbeiten, so ist mit J F600 erneut zu starten, die gleiche RAM-Disk
+festzulegen und nicht zu formatieren.
+
+Ist dieser Anfangsdialog beendet, erscheint das CP/M-Prompt A> und es kann
+losgehen. Zur besseren Handhabung wurde der CCP um das Kommando LOAD, GO und
+EXIT erweitert.
+
+LOAD: Einlesen eines Files von Kassette ab Adresse 100H
+GO: Start ab Adresse 100H (TPA-Anfang)
+EXIT: Rücksprung zum "AC1"-Monitor
+
+Um nicht noch mehr Verwirrung zu schaffen, behalten wir das originale "AC1"-
+Kassettenformat bei. Damit die CP/M-Files problemlos zu kopieren sind, werden
+diese mit einem Offset von 1F00H, d.h., ab 2000H aufgezeichnet. Bei der
+Benutzung der LOAD-Kommandos erscheinen der Name und der blockweise blinkende
+Stern. War alles ohne Lesefehler, folgt die Ausschrift 'xx Sectors load'. Dies
+soll als kleine Hilfe dienen, falls man dieses File gleich mit dem SAVE-Kommando
+in die RAM-Disk bringen will. Dies dürfte für alle Files, die nicht vom Typ
+*.com sind, die Regel sein. Files vom Typ *.com können natürlich genauso in die
+RAM-Disk geschafft werden, sofern ihre Größe das erlaubt. Sonst startet man
+diese Programme dann mit dem Kommando GO.
+
+Beispiel: A>LOAD
+power.com 60 Sectors load
+A>GO
+A>LOAD
+turbo-msg 7 Sectors load
+A>SAVE 7 TURBO.MSG
+A>.....
+
+Will man ein File aus CP/M auf Kassette bringen, so speichert man entweder die
+gesamte RAM-Disk unter dem "AC1"-Monitor ab, oder man benutzt das COPAC-COM, ©
+1988; U. Zellner, welches sich übrigens auch auf vielen anderen Rechnern unter
+CP/M leicht installieren lassen dürfte.
+
+Soweit zu den Besonderheiten der hier vorgestellten Minimalvariante. Diese kurze
+Anleitung soll und kann keine ausführliche Erläuterung des CP/M-Betriebssystems
+ersetzen. Dazu muß auf die dazu erschienene Literatur wie z.B. [1], [2], [3],
+[4] und die Systemdokumentationen, die teilweise auch als Files vorhanden sind,
+verwiesen werden.
+
+Was geht damit nun schon?
+
+Alles, was mit großen Dateien arbeitet, natürlich nicht, so auch "Wordstar".
+Aber dieses Textverarbeitungsprogramm hat einen kleinen Bruder: "Wordmaster",
+der ist etwa 12 K lang und hat nur ein Helpmenü, aber dafür kann er auch schon
+eine Menge. Ausprobierte CP/M-Programme sind u.a. "Turbopascal", "MBasic",
+"Power" "Nsweep", "Wordmaster" und einige Spiele.
+
+So bietet "Turbopascal" bei 16 KByte RAM-Disk immer noch 4880 freie Bytes. Zum
+Lernen reicht das allemal. Bei "MBasic" sind es mehr als das Doppelte.
+
+Die Spiele brauchen fast alle 80 Zeichen je Zeile, aber sie lohnen meist nicht
+die Mühe der Anpassung. Da hat der "AC1" Besseres zu bieten.
+
+Alle bisher probierten Programme liefen ohne jede Änderung, von
+Installationsarbeiten einmal abgesehen.
+
+Auch dieses Manuskript ist auf "AC1" unter CP/M erstellt, mit" Wordstar",
+allerdings in einer Version mit einem Floppydisk-Laufwerk.
+
+Jetzt aber selbst probiert
+
+Einfach die CP/M-Kassette nehmen, das Betriebssystem einlesen, und etwa 45 s
+nach dem Kennton kann man bereits wie gewohnt mit J: starten und der Einstieg in
+CP/M ist da!
+
+Wenn der Hauptspeicher noch nicht reicht
+
+Auch hier kann geholfen werden, zumal U 2164 heute fast billiger sind als die
+Fassungen, in denen sie stecken.
+
+Im Bild 3 ist ein bereits vielfach nachgebauter Schaltungsvorschlag für eine 64-
+KByte-Speichererweiterung dargestellt. Hier kann man sich auch noch einmal die
+Funktion der wahlweisen Ausblendung der unteren 8 KByte betrachten. Auf die
+eigentliche Funktion dieser Schaltung will ich hier nicht näher eingehen,
+erstens ähnelt sie der in [6] gezeigten 16-KByte-dRAM-Karte und zweitens ist
+mittlerweile genügend über die Funktion der U 2164 geschrieben worden, Für den,
+der bis jetzt die gerade genannte 16-KByte-dRAM-Karte [6] nutzt oder noch eine
+leere Platine besitzt, bietet sich ein Umbau auf Grundlage dieser Schaltung an.
+Dazu ist der gestrichelt eingerahmte Logikteil der Schaltung auf einer kleinen
+Universalplatte aufzubauen und über dem Platz des D 100 der 16-KByte-Platte zu
+montieren. Die nachfolgenden Arbeitsgänge seien nur kurz in Stichpunkten
+genannt:
+
+- U 256 und D 100 (falls noch vorhanden) entfernen,
+- Universalplatte entsprechend Schaltung anschließen,
+- Pins l der 16-K-RAM von - 5 V trennen,
+- Pins 8 der 16-K-RAM von + 12 V trennen und mit + 5 V verbinden,
+- Pins 9 der 16-K-RAM von + 5 V trennen und an Pin 12 von A1 legen,
+- Pin 15 von A2 auf Masse legen,
+- Pins 14 von A1 von Masse trennen und an /AB7 legen,
+- Pin 3 von A1 von /AB7 trennen und an /AB15 legen,
+- U 2164 einsetzen,
+- Schaltung mit Monitor und Testprogramm prüfen.
+
+Wer sowieso eine neue Platine braucht, sollte gleich Nägel mit Köpfen machen,
+die RAM-Disk aus [5] aufbauen und dann deren 64-KByte-Hauptspeicher nutzen.
+
+Aussichten
+
+Die hier dargestellte Lösung gestattet es, CP/M auf dem "AC1" mit einem
+minimalen Aufwand zu nutzen. Das dies natürlich seine Grenzen hat, dürfte wohl
+klar sein.
+
+Wer die vollen Möglichkeiten der CP/M-Standardsoftware (Textverarbeitung,
+Dateiverwaltung, Berechnungen, Hochsprachen, Assembler, Linker ... ), wobei hier
+Programmzahlen von über 1000 wohl doch etwas übertreiben, nutzen möchte, der muß
+seinen "AC1" auch noch nicht in die Ecke stellen, aber eine größere RAM-Disk
+oder besser ein richtiges FloppyDisk-Laufwerk oder noch besser beides,
+anschließen. Für beides existieren bereits Lösungen, die zur Zeit erprobt und
+verbessert werden. Wenn diese dann ebenfalls nachbausicher und dokumentiert
+sind, dürfte deren Veröffentlichung ebenfalls nichts mehr im Wege stehen. Aber
+hier ist dann doch etwas mehr Hardware vonnöten. Grundlage der RAM-Disk wird die
+in [5] veröffentlichte Leiterplatte sein, die z.B. beim Elektronikversand
+Wermsdorf erhältlich ist.
+
+Der Abdruck des Hexlistings wird im Heft 5/89 fortgesetzt (d. Red.).
+
+* CP/M ist ein eingetragenes Warenzeichen der Digital Research Corp.
+Literatur
+[1]	Johnson-Laird, A.: The programmer's CP/M handbook,
+Osborne/McGraw-Hill 1983
+[2]	Kramer, M.: Praktische Mikrocomputertechnik,
+Militärverlag der DDR, 1987
+[3]	Mugler, A., Mathes, H.: Komfortabler Personalcomputer für den erfahrenen Amateur,
+FUNKAMATEUR 37 (1988), H. 1 bis 10 (Beitragsserie)
+[4]	Benert, Burow, Hanisch: CP/M in der Praxis,
+VEB Verlag Technik, Berlin, 1988
+[5]	Kammer, Spindler: RAM-Disk für K 1520 Systeme,
+Mikroprozessortechnik 2 (1988), H. 3, S.74
+[6]	Heyder, F.: 16-KByte-RAM Erweiterung für AC1,
+FUNKAMATEUR 35 (1986), H.9, S.464
+[7]	Heyder, F.: Funkamateure entwickeln Amateurcomputer,
+FUNKAMATEUR, 32 (1983), H.12 bis 33 (1984), H.12 (Beitragsserie).
+
+Mit dem Abdruck des zweiten Teils des Hexlistings beenden wir in dieser Ausgabe
+die Beitragsfolge zum CP/M auf dem "AC1". Aus drucktechnischen Gründen sind hier
+die Prüfsummen getrennt vom Listing aufgeführt:
+
+E800 bis EBFF - D511;
+EC00 bis EFFF - 9453;
+F000 bis F3FF - 3CAB;
+F400 bis F7FF - C47E;
+F800 bis FCBF - 1090.
+Die Prüfsumme über alles beträgt 2D03.
+;------------------------------------------------------------------------------
+CPM64_FUA_E000_FCBF_F600.bin
+
+CP/M   2.2   V 1.5  auf AC 1
+RAM - Disk size (1=4K ... 7=28K) ?
+RAM - Disk neu formatieren (Y/n) ?
+
+;------------------------------------------------------------------------------
+d:\hobby3\ac1-2010\cpm11\ACC-CP_M   4000 4D9F 4000.TXT
+
+==============================================================================
+Programmname        Anfadr.   Endadr.   Startadr. Laenge    Zweck
+==============================================================================
+Vorwort             4000      4D9F      4000      3488
+RAM-CP/M            E000      FC9F      E600      7328      Betriebssystem
+POWER.COM           2000      59FF      0        14848      Dienstprogamm
+IRR.COM             2000      597F      0        14720      Spiel
+MBASIC.COM          2000      7EFF      0        24320      Basic-Interpreter
+TURBO.COM           2000      96FF      0        30464      Turbo-Pascal 
+TURBO.MSG           2000      25FF      0         1536      
+TURBO.OVR           2000      23FF      0         1024
+WM.HLP              2000      2A7F      0         2688      Textverarbeitung
+WM.COM              2000      4BFF      0        11264
+ED.COM              2000      39FF      0         6656      Quelltexteditor
+PIP.COM             2000      3CFF      0         7424      Dienstprogramm
+COPAC2.COM          2000      39FF      0         6656      
+==============================================================================
+
+;------------------------------------------------------------------------------
+

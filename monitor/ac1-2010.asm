@@ -37,11 +37,18 @@ jp_rst30:	equ	1811h		; jp	0FFFFh
 jp_rst38:	equ	1814h		; jp	rError
 jp_nmi:		equ	1817h		; jp NMI-Routine
 soil:		equ	181Ah		; Beginn Eingabezeile
-SYSSK:		equ	1856h		; System-Stack 
+syssk:		equ	1856h		; System-Stack 
 data:		equ	1858h		; interner Speicher f. Monitor
 ARG1:		equ	185Bh		; Kdo-Argument 1
 ARG2:		equ	185Dh		; Kdo-Argument 2
 ARG3:		equ	185Fh		; Kdo-Argument 3
+
+; erw. 2010
+warmst:		equ	181Ch		; warmstart-Erkennung ("SCH")
+farbbws:	equ	181Fh		; Farb-Attribut
+kdov24:		equ	1820h		; V24-Konfiguration
+iobyt:		equ	1821h		; I/O-Byte
+
 
 ;------------------------------------------------------------------------------
 ; I/O-Adressen
@@ -62,7 +69,11 @@ PIO2DB		equ	9
 PIO2CA		equ	0Ah
 PIO2CB		equ	0Bh
 
+
+PIO2EPROM	equ	0Fh		; EPROM auf PIO2-Karte
 modul1		equ	14h		; Konfiguationsbyte für Modul 1
+cpmumsch	equ	1Eh		; Bit0=1 64K RAM aktiv
+
 
 ;------------------------------------------------------------------------------
 ; Monitor-Funktionen

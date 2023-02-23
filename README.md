@@ -12,3 +12,10 @@ Mit dem Perl-Programm wav2ac1 können AC1-WAV-Dateien im Monitor-3.1-Format und 
 
 2022: turbo2ac1.pl konvertiert Turbo-Tape-Programme (SCCH, E. Ludwig)
 Es gibt Quellcodes der SCCH-Monitore V8, 10/88 und der angepassten Version für den AC1-2010 
+
+
+23.02.2023
+
+- basic/grafikbasic-v3-2.asm:	SCCH-Grafic-BASIC V3.2 + Patch f. Modul 1/Paket X
+- minibasic/minibasic_4000.asm:	gelinkt auf Adr. 4000h, so dass auch mit einem 4K-Monitor die alten Programme direkt geladen werden können. RAM-Bereich bleibt 1800h ff !
+- cpm/v15-funkamateur:	Das CP/M aus dem Funkamateur 04/89. Ein Mini-CPM mit Kassette und RAM-Disk. BDOS ist von CP/A, CCP von DR (modifiziert), BIOS nach Kramer
