@@ -1,0 +1,103 @@
+            ********************************
+              M O N I T O R         Z 1Ø13
+            ********************************
+
+Das Betriebssystem  des  Z1Ø13  läuft  auf  dem AC1 nur in Ver-
+bindung  mit dem Modul  1 des SCCH.  Damit  wird  der BWS,  das
+Betriebssystem  und der statische Ram (2kByte) durch den Befehl
+'LD A,4 und OUT (#14),A ' ausgeblendet.  Bei Zugriffen  zum BWS
+wird dieser  vom Modul  1 kurz zugeschaltet.  Der Z1Ø13 Monitor
+benötigt keine Routinen  des AC1 Monitors.  Die Ausgabe auf den
+Bildschirm  durch  den Bildschirmtreiber  erfolgt  gleichzeitig
+zum Z1Ø13 BWS (#ECØØ-#EFFF) und zum AC1 (#1ØØØ-#17FF).  Ausser-
+dem erfolgt eine zyklische  Umladung  nach dem Start von Anwen-
+derprogrammen  durch eine Interruptroutine  des CTC-Schaltkrei-
+ses. Dadurch  sind  auch Programme  lauffähig,  die direkt  die
+Speicherzellen  des Z1Ø13  Bildwiederholspeichers  beschreiben.
+Die Anzahl der Interrupt's  pro Sekunde  lässt sich mit dem 'I'
+Befehl  vereinbaren.  Dadurch  kann  auch  bei Bewegungsspielen
+ein gleitender  Bewegungsablauf  erzeugt werden. Störungen  auf
+dem Bildschirm durch CPU-Zugriffe können durch eine eine Schal-
+tung in Verbindung mit WAIT unterdrückt werden.
+Am CTC-Schaltkreis  ist eine Brücke  zwischen  zc/to1  und clk2
+erforderlich!
+Ab der Version  1.1 kann der Stack bei Anwenderprogrammen  auch
+unterhalb  von 2ØØØH liegen. Dadurch sind mehr Programme  lauf-
+fähig.   Schwierigkeiten   gibt   es nur,   wenn  in Z1Ø13-Pro-
+grammen die Tastatur direkt abgefragt wird
+
+Start:
+mit Monitor V.8.Ø Autostart
+oder 'Y' - Cr
+oder JFØØ9
+
+Die Eingabe von Kommandos entspricht weitestgehend  der Eingabe
+beim AC1 Monitor.  Das bedeutet:  Kommandobuchstabe  Arg1  Arg2
+u.s.w.
+Anwenderprogrammme  können  beim Original  Z1Ø13 Monitor  durch
+den Vorsatz  von  "@"  zum Kommandobuchstaben  bzw.  durch  den
+'J' Befehl gestartet  werden. Tabellen mit den Buchstaben  wer-
+den  ab Adresse  ØØBØH abgelegt.
+Beispiel:
+
+ØØBØ:   41
+ØØB1/2: ØØ Ø3
+ØØB3:   42
+ØØB4/5: ØØ Ø4
+
+Das bedeutet:
+
+@A  Sprung nach 3ØØH
+@B  Sprung nach 4ØØH
+
+In dieser  Version  des  Monitors  entfällt  das alles.  Es ist
+immer der Kennbuchstabe   'a' bzw. 'b' festgelegt.  Im Beispiel
+würde mit 'a' nach Adresse 3ØØH gesprungen werden.
+
+Bedeutung der Kommandobuchstaben:
+
+a-      1.Sonderkommando
+b-      2.Sonderkommando
+A-      Kopieren des zuletzt mit 'L'geladenen Files
+C-      Vergleichen    wie AC1
+D-      D arg1 arg2
+        Hexdump mit Zeilenprüfsumme
+F-      F 'von' 'byteanzahl' xx yy zz
+        Suchen von Bytes (xx yy zz (anzahl hier 3))
+I-      Ixx  (xx-Zeitkonstante für CTC-IC zB.I3Ø)
+J-      J adr   (Start von Programmen)
+K-      Kaaaa bbbb"name
+        Kaaaa bbbb cccc"name   (cccc=Offset)
+        K:*"name               (Datei)
+        2x Abspeichern Turbotape
+L-      L"name
+        L2ØØØ"name        (mit Offset)
+        L*                (Datei)
+        Laden von Turbotapefiles. Nach fehler-
+        haftem Laden erfolgt Korrektur der
+        "Error" Blöcke. Dazu Kassette wieder
+        auf Fileanfang spulen!
+M-      Ändern von Speicherzellen
+        . = Betriebssystem
+        R = eine Zelle zurück
+N-      CRC Prüfsumme
+P-      Pattern wie AC1
+Q-      Qaaaa eeee
+        Laden von Z1Ø13 Files
+S-      Saaaa eeee
+        Speichern von Files im Z1Ø13 Modus
+        (2-Mhz Takt)
+T-      Transfer wie AC1
+W-      Window einstellen
+        es werden die Z1Ø13 BWS-Adressen
+        eingegeben. Beispiel: W EDØØ EEØØ
+Z-      Verify von Turbotapefiles
+
+---------------------------------------------------------------
+
+        Jürgen Beisler
+        Gärtnerstr.83
+        Leipzig
+        7Ø62
+
+---------------------------------------------------------------

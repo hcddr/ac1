@@ -1,0 +1,149 @@
+             *************************
+             *                       *
+             *       ZELDIS*@        *
+             *                       *
+             *************************
+
+
+ Der Reassembler  ZELDIS*@ uebesetzt  den U 88Ø Maschinenkode
+in eine dem EDAS*4 kompatible  Memnonik. Er arbeitet Menuege-
+steuert.  Es koennen  der  Pufferbereich  fuer  das zu ueber-
+setzende Maschinenprogramm,  der Bereich fuer die Quelle, das
+RAM-Ende, Datenfelder  und Optionen eingegeben  werden. Dabei
+sind folgende Optionen moeglich :
+
+     * Datenmarken
+     * Wortmarken
+     * Bytemarken
+     * Portmarken
+     * Erkennung des RST18 Aufrufs fuer Zeichenketten
+     * Erkennung des RST2Ø Systemaufrufs entsprechend
+       des Z 1Ø13 Systemrufs
+     * Intepretation als ASCII-Zeichen
+
+ Adressmarken werden prinzipiell benutzt.
+
+ Der Aufruf erfolgt  mittels  J ladr oder @ cr. Der Reassemb-
+ler meldet sich mit der Frage, ob der Puffer bereit ist. Wird
+dies mit N beantwortet,  wird wieder in den Monitor  gesprun-
+gen. Nun kann an beliebiger  Adresse  ein Puffer eingerichtet
+werden.  Es ist jedoch  darauf  zu achten,  dass dieser  sich
+nicht  zwischen  Quellanfang  und  RAM-Ende  befindet,  da er
+sonst beim Uebesetzungslauf  zerstoert  werden wuerde. Da mit
+einem Offset  gearbeitet  werden kann, muss der Pufferbereich
+nicht dem Orginalbereich entsprechen.
+
+ Nachdem  die Frage nach Einrichten  des Puffers mit J beant-
+wortet wurde, meldet sich die Parametereingabe mit den Fragen
+nach Pufferanfang,  -ende, Quellanfang, Offset und den Optio-
+nen. Nach Beantwortung  aller  dieser  Fragen  erscheint  das
+Menue. Von hier aus koennen alle Moeglichenkeiten  angesprun-
+gen werden.
+
+
+E - Parametereingabe
+--------------------
+
+ Es werden die obengenannten  Parameter  und Optionen  erneut
+abgefragt.
+
+
+D - Datenfeldeingabe
+--------------------
+
+ Bei der Eingabe von Datenfeldern,  die dann spaeter mit DEFB
+uebersetzt  werden,  koennen  die Adressen  jeweils  fuer den
+Orginal- oder den Pufferbereich angegeben werden. Beim Aufruf
+werden eventuell vorhandene  Datenfelder  geloescht.  Nur auf
+diese Art (erneuter  Aufruf) koennen Fehleingaben  korrigiert
+werden.  Die Anzahl  der Datenfelder  wird nur durch die RAM-
+Groesse begrenzt.
+
+
+P - Druck
+---------
+
+ Fuer den Pas 2 und die Quellausgabe  ist ein Druck moeglich.
+Nach Zuschalten  des Druckers  mittels P aus dem Menue oder D
+aus dem Minimenue  bei Unterbrechung  der Ausgaben  wird  die
+jeweilge  Ausgabe  parallel  zeichenweise  der Druckerroutine
+uebergeben.  Es muessen dazu folgende Adressen belegt werden:
+
+    Ladeadresse +3 -> Sprung zur Druckerinitialisierung
+
+    Ladeadresse +6 -> Sprung zur Druckroutine
+
+ Es brauchen keine Register gerettet werden. Das Zeichen wird
+im Register A im ASCII-Kode  uebergeben.  Fuer Zeilenvorschub
+wird der Kode ØDH (cr) benutzt.
+
+
+W - Zeitverzoegeung bei Bildschirmausgaben
+------------------------------------------
+
+ Um  die  Bildschirmausgaben  beim  Pas  2  und  Quellausgabe
+verfolgen  zu koennen,  kann eine Wartezeit  nach jeder Zeile
+eingestellt werden. Diese kann zwischen Ø und 9 Zeiteinheiten
+gewaehlt  werden. Da bei Druckerzuschaltung  schon eine Zeit-
+verzoegerung eintritt, ist die Wartezeit ausgeschaltet.
+
+
+R - Reassemblerlauf
+-------------------
+
+ Mittels  R (RUN)  wird  der Reassemblerlauf  gestartet.  Der
+Pas 1 ist in der letzten Zeile zu verfolgen. Weiterhin werden
+im Kopf dem Benutzer  wichtige  Parameter  mitgeteilt.  Diese
+werden  im Pas 2 laufend  aktualisiert.  Mittels  der Taste H
+kann die Bildschirmausgabe beim Pas 2 und bei der Quellausga-
+be jederzeit  gestoppt  werden. Anschliessend  koennen einige
+Funktionen,  wie Wait, Druck, Abbruch und Fortsetzen,  aufge-
+rufen werden. Falls der Speicherbereich  fuer die Ubersetzung
+nicht ausreicht,  wird mit der Ausschrift  "Speicher  voll !"
+der Uebersetzungslauf  abgebrochen.  Ebenso  wie beim gewoll-
+ten Abbruch  steht  eine EDAS-kompatible  Quelle  zur Verfue-
+gung. Es fehlen jedoch die Markenaufloesungen.
+
+
+Q - Quellausgabe
+----------------
+
+ Mit  diesem  Aufruf  kann  die Quelle  zur Anzeige  gebracht
+werden.  Sie wird  in der von EDAS  gewohnten  Form  gezeigt.
+Auch  hier  kann  die  Bildschirmausgabe  ueber  den  Drucker
+geleitet werden.
+
+
+M - Rueckkehr zum Monitor
+-------------------------
+
+ Nach der Rueckkehr  in den Monitor  kann die Quelle  mittels
+S: name auf Kassette abgespeichert werden.
+
+
+
+
+Wichtige Adressen
+-----------------
+
+
+Ladeadr.+Ø     Ansprung des Reassemblers
+
+   "    +3     Sprung zur Druckerinitialisierung
+
+   "    +6     Sprung zur Druckerausgabe
+
+ Die Druckerroutinen  muessen Unterprogramme sein und mit RET
+(C9H) enden. Die Register duerfen veaendert werden.
+
+
+Fuer Hinweise und Fragen wende man sich an folgende Adresse :
+
+
+              Ulrich Zellner
+
+              Amselweg 3Ø
+
+              Dessau
+
+              45Ø7

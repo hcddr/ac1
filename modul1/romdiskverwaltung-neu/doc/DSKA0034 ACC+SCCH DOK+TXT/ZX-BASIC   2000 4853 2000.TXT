@@ -1,0 +1,469 @@
+
+                       SPECTRUM BASIC
+------------------------------------------------------------
+
+
+   Befehl:               Wirkung:
+============================================================
+
+   BEEP  a,b             Gibt einen Ton der Hoehe b  Halb-
+                         toene ueber dem mittleren C
+                         (oder unter, falls b negativ) von
+                         Dauer a
+   BORDER  c             Legt die Farbe fuer die  Umrandung
+                         und die Hintergrundfarbe fuer den
+                         unteren  Teil des Bildschirms fest.
+
+   BRIGHT                Legt  den Kontrast des  gedruckten
+                         Zeichens fest.    Ø=normal,
+                                           1=scharf,
+                                           8=transparent
+
+   CAT                   nur fuer Microdrives (Floppies)       x
+
+   CIRCLE   a.b,c        Zeichnet  einen  Kreis  mit  den
+                         Mittelpunktkoordinaten a,b und dem
+                         Radius c.
+
+   CLEAR                 Loescht alle Variablen,  den  Bild-
+                         schirm, die letzte PLOT- Position
+                         und die GOSUB- Ruecksprungadressen.
+
+   CLOSE #               nur fuer Mikrodrives
+
+   CLS                   Loescht den Bildschirminhalt.
+
+   CONT                  Setzt die Programmausfuehrung  nach
+                         einer Unterbrechung fort.
+
+   COPY                  Kopiert den Bildschirminhalt  auf
+                         Drucker. Ist ohne angeschlossenen
+                         Drucker wirkungslos.
+
+   DATA                  Variablenliste fuer den READ- Befehl.
+
+   DEF FN                Funktionsdefinition
+
+   DELETE a              nur fuer Mikrodrives
+
+   DIM a(..)             Dimensionert ein numerisches  Feld,
+                         deren Elemente dabei automatisch
+                         zu Ø gesetzt werden.
+
+   DIM a$(..)            Dimensioniert ein Feld aus Strings.
+
+   DRAW   a,b,c          Zeichnet  eine  Gerade  von  der
+                         derzeitigen Position x,y zur Posi-
+                         tion x+a,y+b. Ist c <> Ø
+                         (DRAW a,b,Ø= DRAWa,b),  so wird ein
+                         Kreisausschnitt ueber den Winkel c
+                         (im Bogenmass) gezeichnet.
+
+   ERASE                 nur fuer Mikrodrives
+
+   FLASH                 FLASH 1 laesst ein Zeichen blinken,
+                         FLASH Ø stellt das Blinken ab.
+
+   FORx=aTOeSTEPs        Beginn einer Schleife,  in der die
+                         Variable x von a bis e um den Wert
+                         s erhoeht wird.
+
+   FORMAT                nur fuer Mikrodrives
+
+   GOSUB  n              Ausfuehrung eines  Unterprogramms,
+                         das bei Zeilennummer n beginnt.
+
+   GOTO n                Sprung zur Zeilennummer n.
+
+   IF  a  THEN b         Wenn eine Bedingung  a  zutrifft,
+                         fuehre Anweisung b aus; b darf da-
+                         bei keine Zeilennummer sein.
+
+   INK                   Waehlt  die Farben fuer den  Vorder
+                         grund.
+
+   INPUT                 Stoppt das Programm und wartet auf
+                         eine Eingabe, die mit ENTER abge-
+                         schlossen wird.
+
+   INVERSE               Wechselt Vorder- und  Hintergrund-
+                         farben aus.
+
+   LET  a=b              Weisst der Variable a den Wert  b
+                         zu. Eine Variable muss durch LET
+                         /  INPUT  definiert werden.
+
+   LIST                  Auflisten des ganzen Programms.
+
+   LIST n                Auflisten des Programms ab Zeile n.
+
+   LLIST                 Wie  LIST,  aber Ausgabe  auf  den
+                         Drucker.
+
+   LOAD p                Laedt ein Programm von Kassette mit
+                         dem Namen p.
+
+   LOAD p DATA           Laedt ein numerisches Feld.
+
+   LOAD p DATA $         Laedt ein Stringfeld.
+
+   LOAD p CODE r,s       Laedt s Bytes beginnend bei Adresse
+                         r.
+
+   LOAD p CODE r         Laedt Bytes ab Adresse r.
+
+   LOAD p CODE           Laedt Bytes zu den Adressen,  woher
+                         sie abgespeichert worden.
+
+   LOAD  SCREEN$         Laedt die Bytes des Bildschirmspei
+                         chers (- LOAD CODE 16384,6912)
+
+   LPRINT                Wie Print, aber Ausgabe  auf  den
+                         Drucker.
+   MERGE                 Wie LOAD, jedoch ohne Loeschung des
+                         im Speicher befindlichen Programms.
+
+   MOVE                  nur fuer Mikrodrives
+
+   NEW                   Loescht das ganze Programm und die
+                         Variablen.
+
+   NEXT x                Erhoeht x um den Schrittwert s  und
+                         springt zur FOR= Zeile, solange x
+                         kleiner oder gleich dem Zielwert ist.
+
+   OPEN                  nur fuer Mikrodrives
+
+   OUT  x,y              Gibt am Ausgang x des System Bus y
+                         Bytes aus.
+
+   OVER                  Ueberschreibt ein Zeichen ohne es zu
+                         loeschen.
+
+   PAPER                 Steuert die Hintergrundfarbe.
+
+   PAUSE  n              Stoppt das Programm und  wartet  n
+                         Zeiteinheiten oder auf einen Tasten-
+                         druck; 1  Zeiteinheit = 1/5Ø s.
+
+   PLOT s,z              Setzt einen Grafikpunkt (Pixel) auf
+                         den Punkt s,z.
+
+   POKE a,w              Schreibt den Wert w in Adresse a.
+
+   PRINT                 Ausgabe auf den Bildschirm.  Danach
+                         kann ein durch Anfuehrungszeichen
+                         begrenzter String oder ein
+                         numerischer Ausdruck folgen.
+
+   PRINT   AT  x,y;      Ausdruck beginnt bei den Koordina-
+                         ten x und y.
+
+   PRINT TAB n           Ausdruck beginnt ab Spalte n.
+
+   RAND n                Initialisiert Zufallsgenerator  mit
+                         dem Wert n.
+
+   READ                  Variablenzuweisung  in  Verbindung
+                         mit DATA.
+
+   REM                   Kommentarzeile. Der Text nach REM
+                         wird bei der Programmausfuehrung
+                         ignoriert.
+
+   RESTORE  a            Legt den Zeiger bei der READ- An-
+                         weisung auf den ersten Wert ab
+                         Zeile a in der DATA- Anweisung
+                         zurueck. RESTORE=RESTORE ab
+                         1. Programmzeile.
+
+   RETURN                Beendet Unterprogramm; Rueckkehr
+                         zum Hauptprogramm.
+
+   RUN  n                Loescht Variablen und startet  die
+                         Programmausfuehrung ab Zeile n.
+
+   SAVE "p"              Speichert ein Programm mit Namen  p
+                         und allen Variablen auf Kassette.
+
+   SAVE  p LINE a        Speichert das Programm p und  alle
+                         Variablen, so das beim Laden  ein
+                         automatischer Programmstart  bei
+                         Zeile  a  stattfindet. SAVE p LINE
+                         startet bei der ersten Programmzeile.
+
+   SAVE p DATA           Speichert ein numerisches Feld.
+
+   SAVE p DATA $         Speichert ein Stringfeld.
+
+   SAVE p CODE r,s       Speichert ab Adresse r s Bytes.
+
+   SAVE p SCREEN $       Speichert den Bildschirmspeicher.
+                         (= SAVE CODE 16384,6912)
+
+   STOP                  unterbricht das Programm.
+
+   VERIFY                Ueberprueft  das   abgespeicherte
+                         Programm bzw. Daten mit dem Spei-
+                         cherinhalt des Computers.
+
+
+                      SPECTRUM FUNKTIONEN
+------------------------------------------------------------
+   Funktion              Ergebnis
+------------------------------------------------------------
+   ABS x                 Absolutwert x.
+
+   ACS x                 Arcuscosinus von x.
+
+   AND                   Logische Verknuepfung. a  AND  b
+                         heisst: Sowohl a als auch b.
+
+   ASN x                 Arcussinus von x.
+
+   ATN x                 Arcustangens von x.
+
+   ATTR  (x,y)           x ist Zeilen,  y ist Spalte.  Dann
+                         ergibt ATTR (x,y) eine Zahl, deren
+                         binaere Form alle Attribute  des an
+                         der Stelle x,y angezeigten  Zeichen
+                         ergibt. Das 7. Bit fuer Flashing
+                         (=1), Bit 6 fuer Bright, Bit  3-5
+                         fuer die Paperfarben, Bit 2-Ø fuer
+                         die INK- Farben. Ø<=x<=23, Ø<=y<31
+
+   BIN                   Soll eine Zahl statt in  dezimaler
+                         in binaerer Form dargestellt werden,
+                         so wird sie mit BIN versehen.
+                         PRINT BIN 11Ø ergibt 6.
+
+
+   CHR$   x              Ergibt das Zeichen mit den Charak-
+                         ktercode x. PRINT CHR$ 65 ergibt a.
+
+   CODE a$               Umkehrfunktion von CHR$. Ergibt die
+                         Code-zahl des ersten Zeichens von
+                         String a$. PRINT CODE"A" ergibt 65.
+
+   COS x                 Cosinus von x.
+
+   EXP x                 Expotentialfunktion von x.
+
+   FN a(x)               Ruft eine mit DEF FN a  definierte
+                         Funktion auf. Das Argument x muss
+                         in Klammern stehen.
+
+   IN x                  Ergibt als Ergebnis den Wert der am
+                         Prozessor-Port x eingelesen wurde.
+
+   INKEY$                Fragt Tastatur nach einer gedruek-
+                         kten Taste ab. Wird vorher PAUSE Ø
+                         eingegeben, wartet INKEY$ bis die
+                         Eingabe erfolgt ist.
+
+   INT x                 Ganzzahliger Anteil von x.
+
+   LEN a$                Laenge des Strings a$.
+
+   LN  x                 Natuerlicher Logarithmus der Zahl x.
+
+   NOT x                 =Ø, wenn x <> Ø ; =1, wenn x=Ø.
+
+   OR                    Logische Verknuepfung.  a  OR  b
+                         heisst: a oder b oder beides.
+
+   PEEK X                Wert des Bytes an der Stelle x.       q
+
+   PI                    Konstante (3,14159265...)
+
+   POINT  (x,y)          Ergibt 1,wenn der Pixelpunkt  s,z
+                         INK-Colour besitzt, und Ø bei
+                         PAPER-Colour. Ø<=s<-255; Ø<=z<=175.
+
+   RND                   Zufallszahlen zwischen Ø und 1.
+
+   SCREEN$ (x,y)         Ergibt das im Bildschirm  an  der
+                         Stelle x,y Abgebildete Zeichen.
+                         Falls kein Zeichen vorhanden ist,
+                         ist das Ergebnis der Leerstring "  ".
+                         Ø<=x<=23;  Ø<=y<=31.
+
+   SGN x                 Vorzeichen von x (-1, Ø, +1).
+
+   SIN x                 Sinus von x.
+
+   SQR x                 Wurzel aus x.
+
+   STR$  x               Verwandelt die Zahl  x  in  einen
+                         String.
+
+   TAN x                 Tangens von x.
+
+   USE a                 Sprung zur Adresse x  (dient  zur
+                         Ausfuehrung eines Maschinensprache-
+                         programms.
+
+   USE  a$               Gibt die Adresse fuer das Bit-Muster
+                         des selbstdefinierten Zeichens an.
+
+   VAL a$                Numerischer Wert des Strings a$ als
+                         Zahl.
+
+   VAL$ a$               Numerischer Wert des String a$  als
+                         String.
+
+   -x                    Vorzeichenwechsel von x.
+
+   a + b                 Addition von a und b.
+
+   a - b                 Subtraktion von a und b.
+
+   a * b                 Multiplikation von a und b.
+
+   a / b                 Division; a durch b.
+
+   a ^ b                 Potenzierung; a hoch b.
+
+   a = b                 a gleich b.
+
+   a > b                 a groesser b.
+
+   a < b                 a kleiner b.
+
+   a >= b                a groesser gleich b.
+
+   a<= b                 a kleiner gleich b.
+
+   a <> b                a verschieden von b .
+
+
+
+
+                      FEHLERMELDUNGEN
+------------------------------------------------------------
+
+Nach jeder Programmausfuehrung meldet sich der SPECTRUM
+mit einem Code am unteren linken Bildschirmrand.
+
+Dort stehen, durch einen Schraegstrich voneinander getrennt,
+ein Fehlercode, ein erlaeuternder Text, die Zeilennummer und
+hinter einem Doppelpunkt die Nummer des Befehls in dieser
+Zeile, wo der Fehler aufgetreten ist. Nach einem erfolg-
+reichen Programmablauf sollte der Code heissen:
+
+            Ø OK, z:b
+
+wobei z die letzte Zeilennummer und b der letzte Befehl
+dieser  Zeile  des Programms ist.  Wenn im  Programm  Fehler
+auftauchen,  so  stoppt  der Computer und singnalisiert  mit
+seinem   Code,   was  fuer  ein  Fehler  in  welcher   Zeile
+aufgetaucht  ist.  In  der Uebersicht finden  Sie  nun  eine
+Zusammenstellung aller moeglichen Fehlermeldungen:
+
+
+Code:          Bedeutung:
+Ø              OK
+               Erfolgreicher Programmablauf.
+
+1              NEXT without FOR
+               Die  Kontrollvariable  hinter NEXT ist  nicht
+               durch einen FOR...TO-Befehl definiert worden.
+
+2              Variable not found
+               Eine  Variable  ist vorher nicht  durch  DIM,
+               LET, READ oder INPUT definiert worden.
+
+3              Subscript wrong
+               Unerlaubte Bereichsueberschreitung; Bereich
+               bei Feldern zu klein mit DIM dimensioniert.
+
+4              Out of memory
+               Kein Speicherplatz mehr vorhanden.
+
+5              Out of screen
+               Bei INPUT, wenn mehr als 23 Zeilen in der
+               unteren  Haelfte  des  Bildschirms  gefordert
+               werden. Ebenfalls bei PRINT AT 22,...
+
+6              Number too big
+               Arithmetischer Ueberlauf, Zahl groesser als
+               1Ø hoch 38.
+
+7              RETURN without GOSUB
+               RETURN-Befehl ohne vorheriges GOSUB.
+
+8              End of file
+               Nur fuer Microdrives
+
+9              STOP statement
+               Programmabbruch durch STOP-Befehl.
+
+A              Invalid argument
+               Unerlaubtes Argument bei mathem. Funktion.
+
+B              Integer out of range
+               Ueberlauf einer Integer-Zahl.
+
+C              Nonsense in BASIC
+               Der  durch  VAL  berechnete  String  enthaelt
+               keinen gueltigen Ausdruck.
+
+D              BREAK - CONT repeats
+               Programmabbruch durch BREAK-Taste.
+               Cont wiederholt den letzten Befehl.
+
+E              Out of DATA
+               READ    Befehl   ohne    verfuegbare    DATA-
+               Zuweisungen.
+
+F              Invalid file name
+               SAVE-Befehl   ohne  Programmnamen  oder   mit
+               Programnamen groesser als 1Ø Zeichen.
+
+
+G              No room for line
+               Kein Speicherplatz mehr fuer die naechste
+               einzugebende Programmzeile.
+
+H              STOP in INPUT
+               Waehrend  einer  INPUT-Anweisung  wurde  STOP
+               gedrueckt. CONT faehrt bei INPUT fort.
+
+I              FOR without NEXT
+               Eine  Schleife wurde mit FOR eroeffnet,  aber
+               nicht mit einem NEXT geschlossen.
+
+J              Invalid I/O device
+               Ungueltiger I/O-Befehl bei Microdrives.
+
+K              Invalid Colour
+               Farbe fuer die eingegebene Zahl nicht
+               vorhanden.
+
+L              BREAK into program
+               Die BREAK-Taste wurde zwischen zwei Befehlen
+               gedrueckt. Im Gegensatz zu Fehler D geht CONT
+               zum naechsten Befehl weiter.
+
+M              RAMTOP no good
+               Die  angegebene Zahl fuer den RAMTOP  ist  zu
+               hoch oder zu niedrig.
+
+N              Statement lost
+               Bei RETURN, NEXT oder CONTINUE ein Sprung zu
+               einem Befehl, der nicht mehr existiert.
+
+O              Invalid stream
+               Nur fuer Microdrives.
+
+P              FN without DEF
+               Eine  Funktion  wurde  aufgerufen,  ohne  sie
+               zuvor durch DEF FN zu definieren.
+
+Q              Parameter error
+               Bei  FN  falsche Anzahl von  Parametern  oder
+               falscher   Typ   (Zahl  statt   String   oder
+               umgekehrt).
+
+R              Tape loading error
+               Lesefehler beim Laden vom Band.

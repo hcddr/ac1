@@ -1,0 +1,8 @@
+MULTICOPY                                C000-C95F (08) => RAM: 2000, start at 2859 
+OCEAC1FSR                                C960-E87F (08) => RAM: 4000, start at 4000 
+EPROMMER 1.3                             E880-EC8F (08) => RAM: 1900, start at 1931 
+FSR 1D00                                 EC90-ED9F (08) => RAM: 1D00, start at 1DD7 
+FSR BE00                                 EDA0-EEAF (08) => RAM: BE00, start at BED7 
+EDASFSR                                  C000-D6FF (09) => RAM: 4000, start at 4000 
+REQUELLE (e)                             D700-E02F (09) => RAM: 5600, start at 0000 
+TPGFSR                                   E030-F88F (09) => RAM: 4F00, start at 508B 

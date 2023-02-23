@@ -1,0 +1,195 @@
+               Beschreibung AC1-Fig-Forth            Teil 2.
+               ==========================
+
+2.3 Der Parameterstack
+----------------------
+
+Die bergabe  von Parametern  an ein FORTH-Wort  erfolgt  auf
+dem Parameterstack  (soll im folgenden Stack genannt werden).
+Ein FORTH-Wort  erwartet seine Parameter  auf dem TOS (Top of
+Stack), verarbeitet  sie und hinterlt  Ergebnisse ebenfalls
+auf dem TOS. Ein Element  dieses Stacks ist eine 16-Bit-Zahl.
+Mit dem Stammvokabular  von Forth ist eine 16/32-Bit Integer-
+Arithmetik  mit/ohne  Vorzeichen  mglich.  Hhere Funktionen
+sind  nicht  Bestandteil  des  Stammvokabulars.  Berechnungen
+werden nach dem Prinzip der Umgekehrten  Polnischen  Notation
+durchgefhrt.  Die allgemeine Beschreibung eines FORTH-Wortes
+sieht so aus:
+
+WORT (n1 n2 n3 --> n4 n5)   ( Kommentar )
+n1 n2 n3           sind die Werte, welche das Wort auf dem
+                   Stack erwartet
+n4 n5              sind die Werte, welche das Wort auf dem
+                   Stack nach Ausfhrung hinterlt wobei
+                   die rechts stehenden Werte den TOS repr-
+                   sentieren
+( Kommentar )      zur Funktion des Wortes
+
+Im AC1-Fig-Forth  wird der Hardwarestack  des Prozessors  als
+Parameterstack verwendet.
+
+2.4. Der Returnstack
+--------------------
+
+Der Returnstack  wird von den Prozeduren  DOCOL und SEMIS zur
+Zwischenspeicherung von  Rcksprungadressen  bei der Abarbei-
+tung der Adresslisten  im Parameterfeld  (indirekt gefdelter
+Code) verwendet.
+Wichtige  Wrter  im Zusammenhang  mit dem Returnstack  sind:
+
+>R   (n --> )  ( bringt TOS auf TORS )
+R>   (  -->n)  ( bringt TORS auf TOS )
+R    (  -->n)  ( kopiert TORS auf TOS)
+               TORS- Top of Returnstack
+
+Innerhalb  eines FORTH-Wortes  ist auf einen sauberen Return-
+stack zu achten.  Ein Element des Returnstacks  ist ebenfalls
+eine 16-Bit Zahl. Der Returnstack  ist im AC1-FORTH software-
+mig realisiert.
+
+2.5. Das duale FORTH-System
+---------------------------
+
+Ein FORTH-Wort  ist eine  beliebige,  max.  31 Zeichen  lange
+Zeichenfolge in welcher 3 Zeichen nicht enthalten sein drfen
+
+RETURN      ( <RETURN> , schliet Eingabe ab )
+BACKSPACE   ( DEL (и8h) Korrektur der Eingabe)
+SPACE       ( 2иh  Trennzeichen zwischen FORTH-Worten )
+
+Nach dem Start erwartet  das FORTH-System  vom Benutzer  eine
+Eingabe von Wrtern  und Zahlen,  getrennt  durch Spaces. Der
+Abschlu  mit RETURN  bringt diese Wortfolge  zur Ausfhrung.
+Nach erfolgreicher  Ausfhrung  meldet  sich das FORTH-System
+mit
+
+     OK
+
+oder mit einer Fehlermeldung.  Anschlieend  erwartet es eine
+neue Eingabe. Ein FORTH-System kann im Interpertermodus  oder
+im Compilermodus arbeiten.
+
+2.5.1. FORTH im Interpretermodus
+--------------------------------
+
+Die Ausfhrung  eines Wortes erfolgt in FORTH im Interpreter-
+modus. Der FORTH-Textinterpreter  ist eine Endloschleife  mit
+folgender Funktion:
+
+          BEGIN                       Schleifenbeginn
+          nchstes Wort im Wrter-
+          buch suchen
+          gefunden?
+          IF
+          Ausfhrung des Wortes
+          ELSE
+          ist das Wort eine Zahl?
+             IF
+             Zahl auf TOS
+             ELSE
+             "FEHLER"
+             ENDIF
+          ENDIF
+         AGAIN                        Endlosschleife
+
+Abb.8: FORTH im Interpretermodus
+
+2.5.2. FORTH im Compilermodus
+-----------------------------
+
+Die Definition eines neuen Wortes erfolgt in FORTH im
+Compilermodus.  Das  FORTH-Wort   :  bringt  das FORTH-System
+in den  Compilermodus  und  das  ; beendet  ihn (Doppelpunkt-
+Definition ). Der FORTH-Compiler  ist ebenfalls eine Schleife
+mit folgendem Aufbau:
+
+       neuen Wortnamen ins Wrterbuch eintragen
+       BEGIN Schleifenbeginn
+       nchstes Wort im Inputstrom im Wrterbuch suchen
+       gefunden?
+       IF
+       Wort in das Parameterfeld compilieren 1)
+       ELSE
+       ist das Wort eine Zahl?
+       IF
+       zahl als Literal in das Parameterfeld compilieren
+       ELSE
+       "FEHLER"
+       ENDIF
+       ENDIF
+       REPEAT bis Ende Compilermodus
+
+Abb.9: FORTH im Compilermodus
+
+1) Bei einem  normalem  Wort  (nicht  IMMEDIATE)  wird dessen
+   CFA in das Parameterfeld  compiliert.  Ein IMMEDIATE  Wort
+   entfaltet eigene Aktivitten im Compilermodus  (z.B.: com-
+   piliert CFA's anderer Wrter mit entsprechenden Parametern
+   ins Wrterbuch
+
+
+2.6 Speicheraufbau des AC1-FORTH
+---------------------------------
+
+Das Laden des FORTH-Systems  wird vom Monitor  des AC1 durch-
+gefhrt. Wenn der Speicher auf 64-kbyte ausgebaut ist,besteht
+die Mglichkeit, die  oberen  32 kByte  als Quelltextspeicher
+zu nutzen.  Hat  man noch  keinen  Quelltext  geschrieben, so
+sollte vorher die RAMdisk mit 2иH belegt werden.
+
+ Monitorkommando P 8иии FFFF 2и
+
+Hat man schon einen Quelltext, so muss man diesen mit
+L oder L offset+- laden.Das Abspeichern von FORTH-Quelltexten
+kann von FORTH aus erfolgen s.u. .
+
+Starten von FORTH
+-----------------
+
+Kaltstart  J 4иии
+Warmstart  J 4ии4 !!!
+
+Verlassen von FORTH
+-------------------
+
+Eingabe des Forth-Wortes BYE <cr>
+
+Nach dem Systemstart ist der Speicher so aufgebaut:
+
+4иииh         NOP
+4ии1h         JMP COLD
+4ии4h         NOP
+4ии5h         JMP WARM
+4ии8h-4ииBh   Informationen ber Version
+
+  Boot-Parameter
+ ---------------
+
+4ииCh         NFA des hchsten Wortes im Vokabular
+4ииEh         externer Backspace kann gendert werden
+4и1иh         User-Area-Pointer
+4и12h         Initialisierungswert Parameterstackpointer
+4и14h              -"-             Returnstackpointer
+4и16h              -"-             Terminalinputbuffer TIB
+4и18h         maximale Wortnamenslnge WIDTH
+4и1Ah         INIT WARNING
+4и1Ch         Limit fr FORGET
+4и1Eh         Init Dictionarypointer
+4и2иh         Pointer zum neuesten Vocabular VOC-LINK
+4и35h         DPUSH
+4и36h         HPUSH
+4и37h         NEXT
+4и45h         ab hier beginnt das Wrterbuch
+5FFFh         Ende des Stammvokabulars
+6и2иh         Beginn der vom User erzeugten Vokabularerweit.
+7FFFh         Ende des Forth-RAMs
+8иииH         Beginn RAM-Disk
+bis Ende physischer RAM
+
+Wenn  nur  eine  16-KByte  Speichererweiterung  nutzbar  ist,
+kann man kein  Quelltexte  in Forth  schreiben und editieren,
+aber ansonsten alles was Forth bietet nutzen.
+
+                        Ende 2.Teil
+
+                        Teil 3 folgt

@@ -1,0 +1,89 @@
+275 000BD740 79 D740 B Z Chess - Anleitun                 60F7-72AF,0000
+
+                _                             _
+                _ *  C H E S S M A S T E R  * _
+                _           V.2               _
+
+      Chessmaster ist ein Schachprogramm, dass die normalen
+      Schachregeln kennt. Die Bildschirmanzeige erfolgt
+      grafisch in der Draufsicht.
+
+      ANLEITUNG:
+      Laden von Chessmaster:
+      Über Monitorfunktion 'L': L"CHESSMASTER" (CR)
+      Das Programm wird automatisch gestartet, nach 'RESET'
+      ist ein Neustart über ' Y (CR) ' möglich.
+
+      Kommandos:
+      NEWGAME........neues Spiel
+      LEVEL (0-7)....Spielstärke
+      RANDOM (0-9)...Zufall für Eröffnung
+      SELFPLAY.......Computer spielt gegen sich, Zug: 'CR'
+      AUTO...........Wie SELFPLAY, ohne 'CR' abzuwarten
+      REFEREE........Computer als Schiedsrichter, 2 Spieler
+      COLOR..........Farbe wechseln (schwarz o. weiß)
+      BOARD..........Figuren setzen
+
+      Die einzelnen Kommandos können auch während des
+      Spiel neu eingegeben werden, z.B.mit LEVEL Spiel-
+      stärke neu eingeben.
+      Kommandos können abgekürzt werden, es genügt die
+      Eingabe der ersten 2 Buchstaben.
+
+
+      Mit NEWGAME erfolgt bei Spielbeginn das Setzen
+      der Spielfiguren in Anfangsstellung. Weiterhin kann
+      mit NEWGAME jederzeit ein neues Spiel begonnen wer-
+      den. NEWGAME löscht alle Figuren.
+
+      Mit BOARD läßt sich bei leeren Brett eine Stellung
+      aufbauen, z.B. : KA3 (CR) weißer König auf A3
+                      -KC5 (CR) schwarzer König auf C5
+                       0D5 (CR) Feld D5 leer
+
+      RANDOM 0-9 verwandelt unterschiedliche Anfangseröff-
+      nungen nach Bibliothek und in Spiel andere Züge in
+      gleiche Stellung.
+
+      AUTO kann über die BREAK-Taste (NMI) verlassen werden
+      wobei man in den SELFPLAY-Modus gelangt. Mit COLOR
+      kann der Spieler weiter gegen Computer spielen.
+
+      Das Wechseln der Farbe erfolgt am Spielanfang nach
+      NEWGAME mit Eingabe COLOR. Im Spiel kann die Farbe
+      nur gewechselt werden, bevor der Computer seinen Zug
+      ausführt.
+      Eingabe der Züge:
+      Z.B. von E2 nach E4 : E2E4 (CR)
+                  Rochade : E1G1 (CR)
+      Der Computerzug wird an Figur angezeigt(+ u.-), Aus-
+      führung erfolgt erst mit (CR).
+
+
+      ERWEITERUNGEN   CHESSMASTER V.2 (August 1987):
+
+      DREHEN.......Schachbrett um 180 Grad drehen
+      CLS..........Figuren nicht sichtbar,Blindschach
+      BYE..........Spiel unterbrechen, Sprung in Monitor
+
+      Aktueller Spielstand wird mit # K:*"name"(CR) gespei-
+      chert.Nach Laden gepeicherter Spielstellungen erfolgt
+      Warmstart von CHESSMASTER mit: # y (CR).
+
+      CHRONIK......Anzeige des Spielverlauf
+      RUECKWÄRTS...Zurücknahme von bis zu 3 Zügen
+      ZUGFARBE.....Wechselt Farbe, die am Zuge ist
+      HELP.........Anzeige der gesamten Kommandos
+      ZEIT.........Zeitauswahl nach Menü:
+
+        1 ein: schaltet Uhr ein
+        2 aus: schaltet Uhr aus
+        3 contdown: schaltet Uhr ein und gibt bei Überschrei-
+        ten der eingestellten Zeit akust. Signal (Vermerk in
+        der Chronik!). Eingabe h,m,s: Stunde,Minute,Sekunden.
+      START........Uhr starten
+
+      STUDIO COMPUTER CLUB HALLE wünscht viel Spaß
+
+           mit  C H E S S M A S T E R  V.2  .
+

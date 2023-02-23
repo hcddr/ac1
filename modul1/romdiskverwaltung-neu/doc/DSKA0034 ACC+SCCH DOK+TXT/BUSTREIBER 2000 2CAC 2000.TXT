@@ -1,0 +1,128 @@
+
+Bustreiberlogik V.1.1   Teil 1   (C)ZEPERSOFT        Ø6.12.88
+===============================================================
+Allgemeines:
+------------
+Für  den Datenbustreiber  muß der bidirektionale Datentransport
+gewährleistet werden.  Um einen von der  Grundplatine kommenden
+RETI-Befehl zu erkennen,  ist der  Datenbus ständig in Richtung
+Peripherie geschaltet  (A --> B ; DIR=H).  Eine Umschaltung von
+B --> A ist nur in 3 Fällen notwendig (DIR = L):
+
+1.Lesen  einer externen  Speicheradresse; Signale Memory intern
+  (MEMI=H, D18 Pin 6) und /RD = L
+2.Lesen  einer  externen  IN/OUT-Adresse; Signale IN-OUT-intern
+  (IOI=H, D18 Pin 8) und /RD = L
+3.Lesen eines externen Interruptvektors
+  (Signale /IORQ, /M1 = L und IEO = H)
+  *IEO am besten von PIO und CTC über ein Gatter Ø8 zusam-
+   menfassen. (zeitliche Verbesserung)*
+
+          +--+
+A 3 /IOI--!Ø8!   +--+
+          !  !---!ØØ!  L = B-->A
+B 3 /MEMI-!  !   !  o-------------+
+          +--+ +-!  !             !
+               ! +--+             !
+A 7 RD --------+                  !
+   (DN21)                         !
+          +--+                    !  +--+
+          !Ø4!                    +--!Ø8!
+A14 /M1---!  o---+                   !  !--------------+
+          !  !   !                +--!  !              !
+          +--+   !                !  +--+              !
+                 ! +--+           !                    !
+                 +-!Ø8!    +--+   !                    !
+                   !  !----!ØØ!   !                    !
+B 5 IORQ ----------!  !    !  o---+                    !
+   (DN2Ø)          +--+  +-!  ! L = B-->A              !
+                         ! +--+                        !
+B4Ø IEO -----------------+                             ! K152Ø
+                                     +---+------+---+  !
+B14 DØ ------------------------------!AØ ! DS <>! BØ!--+-> B7
+B13 D1 ------------------------------!A1 ! 8286 ! B1!--+-> A7
+B16 D2 ------------------------------!A2 !      ! B2!--+-> B6
+B2Ø D3 ------------------------------!A3 !      ! B3!--+-> A6
+B21 D4 ------------------------------!A4 !      ! B4!--+-> B5
+B19 D5 ------------------------------!A5 !      ! B5!--+-> A5
+B18 D6 ------------------------------!A6 !      ! B6!--+-> B4
+B15 D7 ------------------------------!A7 !      ! B7!--+-> A4
+              +--+                   !---!      !---!  !
+A1Ø /BUSAK----!Ø4o--o----------------!OE !      !+5V!  !
+              +--+  !  H=Tristate +--!DIR!      ! ØV!  !
++------+            !             !  +---+------+---+  !
+!X1/AC1!            !             !                    !
++------+            V             !    L = B --> A     !
+           zu 8282 u.8216         +--------------------+
+
++----------------------------------------------+
+!/IOI  !/MEMI ! RD   !/M1   ! IORQ! IEO !! DIR !
+!----------------------------------------------!
+!  H   !   H  !  H   !  X   !  X  !  X  !!  L  !
+!  X   !   X  !  L   !  L   !  H  !  H  !!  L  !
++----------------------------------------------+
+
+Bustreiber V.1.1      Teil 2    (C)ZEPERSOFT       Ø6.12.99
+===============================================================
+AC1-X1                                            K152Ø-Bus-SMS
+                   +---+------+---+
+A17 AØ >-----------!DIØ! DS > !DOØ!--------------> A19      A12
+A18 A1 >-----------!DI1! 8282 !DO1!--------------> B19      A11
+A19 A2 >-----------!DI2!      !DO2!--------------> A1Ø      A1Ø
+A2Ø A3 >-----------!DI3!      !DO3!--------------> B13      A9
+A21 A4 >-----------!DI4!      !DO4!--------------> A17      B9
+A22 A5 >-----------!DI5!      !DO5!--------------> B17      B1Ø
+A23 A6 >-----------!DI6!      !DO6!--------------> A16      B11
+A24 A7 >-----------!DI7!      !DO7!--------------> B16      B12
+                   !---!      !---!
+              +----!OE !      !+5V!
+              !  +-!STB!      ! ØV!
+              !  ! +---+------+---+
+              !  !
+              !  ! +---+------+---+
+A25 A8 >------+--+-!DIØ! DS > !DOØ!--------------> A14      A16
+A26 A9 >------+--+-!DI1! 8282 !DO1!--------------> B14      A17
+A27 A1Ø>------+--+-!DI2!      !DO2!--------------> A13      A18
+B27 A11>------+--+-!DI3!      !DO3!--------------> B13      A19
+B26 A12>------+--+-!DI4!      !DO4!--------------> A12      B19
+B25 A13>------+--+-!DI5!      !DO5!--------------> B12      B18
+B24 A14>------+--+-!DI6!      !DO6!--------------> A11      B17
+B23 A15>------+--+-!DI7!      !DO7!--------------> B11      B16
+              !  ! !---!      !---!
+              o--+-!OE !      !+5V!
+              !  o-!STB!      ! ØV!
+     +-----+  !  ! +---+------+---+
++5V>-! 1 K !--+--+
+A/B  +-----+  !
+44/45         !
+              !    +---+------+---+
+B9  /MREQ>----+----!DIØ! DS <>!DBØ!--------------> A9       A6
+B8  /IORQ>----+----!DI1! 8216 !DB1!--------------> B24      B3
+A9  /WR  >----+----!DI2!      !DB2!--------------> A8       A3
+A8  /RD  >----+----!DI3!      !DB3!--------------> B8       B4
+              !    !---!      !---!
+              o----!CS !      !+5V!
+              !  +-!DIEN      ! ØV!
+              !  ! +---+------+---+
+BUSAK >-------+  !
+(vom Datenbus)   !
+                 !
+                 ! +---+------+---+
+A14 /M1   >------+-!DIØ! DS <>!DBØ!--------------> A26      A5
+A15 /RFSH >------+-!DI1! 8216 !DB1!--------------> A25      B5
+B1Ø /HALT >------+-!DI2!      !DB2!--------------> B26      B6
+A1Ø /BUSAK>------+-!DI3!      !DB3!-------------->          A4
+                 ! !---!      !---!
+                 o-!CS !      !+5V!
+                 o-!DIEN      ! ØV!
+                 ! +---+------+---+
+                 !
+                ===
+
+Beim AC1 ist die Verknüpfung der CS-Signale der Treiber mit dem
+Signal BUSAK nicht erforderlich, da er sowieso nicht  DMA-fähig
+ist. Sie können demzufolge mit an Masse gelegt werden. Für  den
+Steuerbus wäre also auch ein DS 8282 einsetzbar.
+
+
+.

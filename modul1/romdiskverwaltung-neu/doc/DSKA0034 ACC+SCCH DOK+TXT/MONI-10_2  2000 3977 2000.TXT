@@ -1,0 +1,229 @@
+F  aaaa  eeee  xx xx  xx    Finding String
+------------------------------------------
+Der Speicher wird von Adresse aaaa bis eeee nach der Byte-
+folge xx xx xx (Länge beliebig) durchsucht.Suche nach ASCII-
+Zeichen ist ebenfalls möglich,diesen ist ein Hochkomma vorzu-
+setzen.Wird für xx ein J = Joker eingesetzt,wird jedes Byte
+genommen.Es ist gestattet ASCII,HEX und Joker gemeinsam zu
+verwenden.
+
+
+G             Go On
+-------------------
+Start eines Programms ab Adresse PC,Siehe Befehl 'J'.
+
+
+
+H             I/O - Byte
+------------------------
+Angezeigt wird das Ein/Ausgabebyte,welches die Zuordnung
+der Ein- und Ausgabekanäle darstellt.Normal (nach Einschalten
+auch Taste BREAK/NMI ist der Wert 11,somit Eingabe Tastatur
+und Ausgabe Bildschirm.
+
+
+Bit - Zuordnung
+---------------
+bit Ø    Tastatur              bit 4    Bildschirm
+bit 1    V 24 (RS 232c)        bit 5    V 24 (RS 232c)
+bit 2    Reserve               bit 6    Reserve
+bit 3    User                  bit 7    User
+
+Bit Ø - 3  sind für Eingabe,bit 4 - 7  für Ausgabe zuständig.
+Zur Eingabe ist max. 1 Kanal zugelassen,Ausgabe beliebige
+Anzahl.
+Nach dem angezeigten kann ein neuer Wert eingegeben werden,
+Übernahme mit Taste 'CR'.Nur Taste  'CR' behält alten Wert.
+
+
+
+I             Initialize
+------------------------
+Löschen der RSA (RSA = Zwischenspeicher der CPU - Register
+für Anwenderprogramme.Die RSA wird genutzt bei Befehlen: B;
+E; G; J; R).
+Der Anwenderstack wird initialisiert,Adresse wird angezeigt
+(SP xxxx).
+
+
+
+J aaaa       Jump
+-----------------
+Sprung in Anwenderprogramm ab Adresse aaaa.Die CPU - Register
+werden mit den Werten der RSA geladen.Ein zuvor eingegebener
+Breakpoint wird aktiviert.Wird im Programmlauf ein Breakpoint
+erreicht,erfolgt Registeranzeige und der weitere Ablauf im
+Einzelschritt (siehe 'E').
+
+
+
+
+
+K aaaa bbbb ("name") Kassette bespielen Programm (Turbo)
+K aaaa bbbb * ("Name") Kassette bespielen Datei  (Turbo)
+--------------------------------------------------------
+Abspeichern eines Files von Adresse aaaa bis bbbb auf
+Kassette.Ein Name kann bis zu 16 Zeichen lang sein.Das
+Bandgerät ist mit akustischen Signal zu starten,bei weiteren
+ak.Signal wieder abzuschalten (Stellung Aufnahme).Bei Einsatz
+der elektronischen Start/Stop - Schaltung erfolgt der Start
+automatisch (siehe Schaltbild).
+Am Ende wird die CRC - Prüfsumme berechnet und ausgeschrieben
+Turbo - Tape lädt 1 kByte in ca.3 sec.bbbb bis max.FFCF
+zulässig.Autostart und Interrupt siehe 'L'.
+
+
+
+L  ("Name")      Laden Programm    (Turbo)
+L *("Name")      Laden Datei       (Turbo)
+------------------------------------------
+Der Computer lädt ein Programm oder Datei in den Speicher.
+Ein zuverlässiges Suchsystem ist Vorhanden.
+Ohne Namenangabe wird das nächste Programm geladen ('L'CR)).
+Mit Namensangabe wird das Programm gleichen Namens geladen,
+andere Programme werden aufgelistet (Found name).Der Name
+kann beliebig gekürzt werden,wenn Verwechslungen ausge-
+geschlossen sind,(z.B.'L'"BA (CR) für Laden BASIC - INTERPR.)
+Von jeden ladenden bzw.gefundenen Programm werden angezeigt:
+Name,Anfangsadresse,Endadresse,Filetyp (siehe Anhang).
+Nach dem Laden werden zusätzlich Ladefehler angezeigt (ERROR
+Blockendadressen) und Laden nach defekten RAM - Speicher
+(ERROR RAM Blockadressen).Werden mehr als 9 Blöcke fehlerhaft
+gelesen,erfolgt vorzeitiger Abbruch.Laden kann mit Taste
+BREAK/NMI abgebrochenwerden.Die Adressen werden nach arg.1+2
+übergeben,mit 'N:' kann die CRC - Prüfsumme angezeigt werden.
+
+Autostart: Nach dem Laden überprüft der Computer das Programm
+auf vorhandene Autostart - Sequenz.Ist diese vorhanden,er-
+folgt der Autostart auf entsprechender Adresse.Die Autostart-
+sequenz kann vor jedes Programm gesetzt werden (5 Byte) :
+53 43 48 xx xx ; xx xx = Startadresse.
+
+Interrupt: der Interrupt wird während Save ('K') und
+Load ('L') gesperrt.Somit brauchen Interruptprogramme
+(z.B. Uhr) nicht abgeschaltet werden.
+Akustische Signale und Start / Stop siehe 'K'.
+
+
+
+N  aaaa  bbbb        CRC - Prüfsumme
+------------------------------------
+Prüfsummenberechnung über Speicher von Adresse aaaa bis bbbb
+entsprechend dem CRC (SDLC) - Standard.
+
+
+
+O  aaaa              RAM - Test
+-------------------------------
+Ermitteln der höchsten verfügbaren RAM - Speicher - Adresse.
+aaaa entspricht dem RAM - Anfang (min.1ØØØ).Der Test ver-
+ändert den RAM - Inhalt nicht.
+p                    Pattern
+----------------------------
+RAM wird gelöscht und mit FF beschrieben.
+
+
+
+P  aaaa  bbbb  cc    Pattern
+----------------------------
+Speicherbereich von Adresse aaaa bis bbbb mit Datenbyte cc
+füllen.
+
+
+
+r                    BASIC   (Warmstart)
+----------------------------------------
+Warmstart des BASIC - Interpreter.Es muss breits ein Kalt-
+start ('b') erfolgt sein und man muss über 'BYE' in die
+Monitorebene zurückgesprungen sein.
+
+
+
+R  (aa)              Register
+-----------------------------
+Anzeige und ändern der CPU - Register (RSA).'R'CR erfolgt
+Anzeige des gesamten Registersatzes, des Breakpoint, Break-
+pointsequenz sowie gesetzte Flags anhand ihres Symbols.
+Zum Ändern einzelner Register ist für aa der Name des
+jeweiligen Registerpaares anzugeben: HL, DE, BC, AF, HL,
+DE, BC, AF, SP, IX, IY, PC. Der alte Inhalt wird angezeigt,
+gefolgt vom Promtsymbol.Ein neuer Wert ist anzugeben,Über-
+nahme mit 'CR'.
+
+
+
+T  aaaa  bbbb  cccc  TRANSFER
+-----------------------------
+Speicherbereich verschieben von Adresse aaaa nach bbbb.
+cccc ist die Länge.Überschneidung ist zulässig.
+
+
+
+U  xx                Port lesen
+-------------------------------
+Lesen auf,Portadresse xx.Ausgabe des gelesenen Bytes auf
+Bildschirm.Taste: Neu einlesen und Ausgabe.Mit 'Q' zurück
+in Monitor.
+
+
+
+W xx aa              Port ausgeben
+----------------------------------
+Auf Portadresse xx wird Byte aa ausgegeben (siehe Anhang).
+
+
+
+
+
+
+
+
+X                    Exit
+-------------------------
+Sprung in weiteres Betriebssystem X.Es wird Konfiguration
+Modul 1 eingestellt und nach Adresse EØØØ gesprungen
+(näheres siehe Bauanleitung Modul 1).
+
+
+
+Z  ("Name")          Verify    (Turbo)
+--------------------------------------
+Vergleich einer Bandaufzeichnung mit Speicherbereich,um
+Bandfehler festzustellen.Bei Verify Datei ist zusätzlich
+Stern (*) vor Name.
+
+
+
+?                    Help
+-------------------------
+Der Speicherbereich wird nach Startkommandos durchsucht und
+diese aufgelistet.Neben den Startbefehlen des Debuggers
+werden Startbefehle geladener Anwenderprogramme angezeigt.
+
+Startroutinen des Monitors:
+Diese werden anhand eines Kodemusters in Adressbereich
+4ØØ - FFFF gesucht.Jede Routine hat die Form: ØØ Ø9 xx ...
+Programm ... C9.
+xx ist der ASCII - Code des Start - Kennbuchstaben.Eigene
+Programme brauchen nur in diesen Rahmen gepackt zu werden
+und können über Kennbuchstaben (Zeichen/Ziffer) gestartet
+werden.
+
+
+
+: :                  Argumente
+------------------------------
+Mit Doppelpunkt,Doppelpunkt werden die zuletzt übernommenen
+Argumente angezeigt.
+
+
+
+=                    Bildschirminhalt ablegen
+---------------------------------------------
+Nach Eingabe des Gleichheitszeichen (=) blinkt der Kursor
+rechts oben,jetzt kann eine Ziffer von Ø bis 7 eingegeben
+werden.Mit der Ziffer Ø - 7 wird der Bildschirminhalt auf
+Adresse AØØØ - DFFF mit Seitenummer abgelegt.
+Mit Schrägstrich (/) und Seitenangabe (z.B. /Ø - /7)wir der
+abgelegte Bilschirminhalt wieder dargestellt.Seitenweises
+Umblättern mit den Kursortasten bzw.CTRL.+ K/J.

@@ -1,0 +1,97 @@
+
+
+         CW - Empfangs-und Sendeprogramm
+        ---------------------------------
+
+Das CW-Programm stellt eine Minimalvariante dar, die
+einen AC1 mit 32 Zeilen Bildschirm und 2kByte RAM (18ØØH-
+1FFFH) erfordert. Fuer den peripheren Anschluss eignet sich
+der RTTY-Koder/Dekoder nach: Roessel,G.:Ein einfacher
+Funkfernschreibzusatz fuer den Amateurcomputer "AC1",
+Funkamateur 35 (1986),H.2,S.98, aber auch jede andere
+Schaltung, die folgendes logisches Verhalten hat:
+Empfang: Signal = L-Pegel an PB1
+Senden :   "    =   "     an PB2 und PB3
+
+
+Programmstart: J18CØ oder Kennbuchstabe "W"
+
+Der Bildschirm wird unterteilt in Empfangs- und Sendeteil,
+diese Einteilung ist nicht "dynamisch" wie beim RTTY-Pro-
+gramm.
+Nach dem Start wird die Eingabe eines Sendetempos im
+Bereich von 3Ø-199 BpM erwartet. Dieser Wert wird auch
+als Startwert fuer die Empfangssynchronisation verwendet
+und der automatische Empfang gestartet. Auf im folgenden
+eintreffende Signale an PB1 synchronisiert sich das
+Programm selbststaendig ein, wenn das eingestellte Empfangs-
+tempo nicht zu stark vom tatsaechlichen Tempo abweicht
+(Fehler treten nur auf, wenn der eingestellte Wert erheblich
+unter dem tatsaechlichen Wert liegt, dann ist u.U. keine
+automatische Synchronisation moeglich. Prinzipiell erfolgt
+das Einstellen von einer hoeheren Geschwindigkeit "abwaerts"
+immer schneller als andersherum.)
+Empfangener Text wird in Kleinbuchstaben geschrieben und
+nach oben gerollt, fuer nicht erkannte Zeichen wird "*"
+geschrieben.
+
+Der Kursor steht im Sendepuffer, es kann ein Sendetext
+geschrieben werden.
+Die weitere Programmbedienung erfolgt durch Steuerkommandos:
+
+
+CTRL-A  :  Die Empfangsgeschwindigkeit wird kontinuierlich
+           erhoeht.
+CTRL-B  :  Die Empfangsgeschwindigkeit wird kontinuierlich
+           verringert. Mit diesen beiden Kommandos kann
+           die Synchronisation auf empfangene Zeichen unter-
+           stuetzt und beschleunigt werden.
+CTRL-C  :  Abbruch des Programms
+           nicht waehrend des Sendens
+CTRL-E  :  Abbruch des Sendens, der Text bleibt im Sende-
+           puffer stehen
+CTRL-G  :  Aenderung der Sendegeschwindigkeit
+           nicht waehrend des Sendens
+CTRL-H  :  'BS' Rueckwaertsbewegung des Kursors innerhalb
+           des Sendepuffers bzw. des Sendetempofeldes
+CTRL-I  :  'HT' Vorwaertsbewegung s.o.
+
+CTRL-K  :  'VT' Abbruch des Sendens mit Herausschieben
+           des bereits gesendeten Textes aus dem Sende-
+           puffer
+CTRL-S  :  Start Sendemode 1: beginnt auf 1.Position des
+           Sendepuffers, Senden erfolgt nur in der oberen
+           Zeile des Sendepuffers d.h. der Sendetext wird
+           staendig zeilenweise nach oben geschoben
+CTRL-T  :  Start Sendemode 2: beginnt auf 1.Position des
+           Sendepuffers, Sendetext bleibt im Puffer stehen,
+           kann also mehrmals gesendet werden
+CTRL-U  :  Start Sendemode 3: setzt das Senden auf der
+           Position,wo zuletzt mit CTRL-E abgebrochen wurde,
+           im alten Sendemode (also 1 oder 2) fort.
+
+
+Ausserdem ist teilweise eine direkte Steuerung durch
+Sonderzeichen im Sendetext moeglich:
+"^" (5EH) :  Neustart des Sendens auf Position 1
+"<" (3CH) :  entspricht CTRL-E
+
+Fuer einige Verkehrszeichen wurden Sonderzeichen des Zeichen-
+satzes vereinbart:
+@ : AR
+! : KN
+" : SK
+# : Irrung
+- : Trennung
+= : Bindestrich
+
+Sind im Zeichengenerator Umlaute vorhanden, so koennen
+diese in der Empfangstabelle eingetragen werden:
+ae : 1BB3H
+oe : 1BB6H
+ue : 1BB9H
+
+Selbstverstaendlich kann und soll das Programm nicht den
+Hoerempfang ersetzen, der Empfangsteil besitzt wohl mehr
+eine Demonstrationsfunktion bzw. Bedeutung fuer die
+Gebeausbildung als fuer den praktischen Amateurfunkbetrieb.

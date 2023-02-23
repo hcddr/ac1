@@ -1,0 +1,200 @@
+
+         Kurzbeschreibung  AC1-Schach
+        ------------------------------
+
+1. Vorbemerkungen
+
+Der vorliegenden Variante CM 4.1 lag das bereits fuer zwei
+andere Rechner (KC85/2,Z1Ø13) angepasste Programm des
+Schachcomputers "CHESS MASTER" zugrunde. Es wurden alle
+Funktionen des CM beibehalten bzw. erweitert. Das vereinzelte
+Auftreten von Fehlern kann in der vorliegenden Version
+leider noch nicht ausgeschlossen werden, da die Ueber-
+sichtlichkeit des Programms durch die mehrfachen Anpassungen
+sehr gelitten hat. In der Zugberechnung, und das duerfte das
+Wesentliche sein, traten keine Fehler auf.
+ as Programm erfordert ein Bidschirmformat mit 32 Zeilen und
+einen Zeichengenerator lt. FA 6/86, ausserdem eine 16 kByte
+Speichererweiterung. Es belegt den Bereich von 4ØØØH-73FFH
+und nutzt den darueberliegenden Speicher bis 7FFFH. Bei
+bereits erweitertem Zeichengenerator (2k) treten Probleme bei
+der Figurdarstellung auf, da bei deren Grafiksymbolen Bit7
+zur Unterscheidung von entsprechenden Steuerzeichen gesetzt
+ist (z.B.ØCH-->8CH).
+
+2. Programmstart und -ende
+
+Der Start des Programms erfolgt mit J4ØØØ bzw. mit Kenn-
+buchstaben "+". Ein evtl. Kopieren auf Kassette sollte vorher
+erfolgen. Nach dem Start erscheint in der linken Haelfte
+des BS das leere Schachbrett, rechts ein Anfangsmenue. Es
+wird eine Kommandoeingabe erwartet. Das Verlassen des
+Programms kann nur in dieser Grundstellung durch das Kommando
+Q(uit) CR erfolgen.
+
+3. Programmfunktionen
+
+Die jeweils moeglichen Funktionen werden in der rechten
+BS-Haelfte angezeigt. Die Kommandoeingabe erfolgt jeweils
+durch Eingabe der Kommandobuchstaben und CR (z.B. NECR).
+
+Funktionen:
+NE  (new game):Es wird die Ausgangsstellung (Figuren auf-
+               gestellt, Spielstaerke und Zufallsgenerator
+               Stufe Ø, Computer spielt schwarz) eingenommen
+               und eine Zugeingabe bzw. ein anderes Kommando
+               erwartet. Nochmalige Eingabe von NE bewirkt
+               den Uebergang in den Grundzustand.
+BO  (board):   Board ermoeglicht die Problemeingabe bzw.
+               Stellungsveraenderung waehrend des Spiels.
+               Ausgehend von der Grundstellung (leeres Feld)
+               erfolgt das Aufstellen von Figuren durch
+               Eingabe ihres Anfangsbuchstabens und des
+               Feldes. Dabei ist zu beachten, das schwarze
+               Figuren jeweils durch ein vorangestelltes
+               " - " zu kennzeichnen sind. Das Loeschen
+               von Figuren erfolgt durch Leerzeichen und
+               Feldbezeichnung. Die jeweils aufgestellte
+               Figur erscheint sofort nach Beendigung der
+               Eingabe mit CR. Die Problemeingabe wird durch
+               nochmalige Eingabe von BO beendet. Es ist zu
+               beachten, dass bei einer Stellungsveraenderung
+               nach BO nicht zwangslaeufig in der vorher
+               gewaehlten Betriebsart (z.B.self) weiter-
+               gespielt wird, sondern in der 'normalen'
+               Betriebsart (Computer spielt schwarz).
+               Bei Board erfolgt keine Kontrolle auf
+               "Unsinnigkeit" der Stellung wie z.B. ver-
+               gessener Koenig,1Ø Damen ...!
+CO  (color):   Color bewirkt den Spielfarbenwechsel. Nach
+               NE spielt der Computer jeweils mit schwarz.
+RE  (referee): Der Computer dient nur als Schiedsrichter,
+               es werden Zugeingaben fuer weiss und schwarz
+               erwartet.
+SE  (self):    Der Computer spielt gegen sich selbst, dabei
+               wird jeder beabsichtigte Zug angekuendigt
+               (durch + u.*) und muss durch CR bestaetigt
+               werden bzw. durch Eingabe eines Kommandos
+               eine neue Betriebsart gewaehlt werden.
+AU  (auto):    wie self aber ohne Bestaetigung durch CR,
+               waehrend des Spiels kann nur noch durch
+               RESET abgebrochen werden.
+LE  (level):   Wahl der Spielstaerke in 8 Stufen (Ø-7),
+               dabei ist Ø die niedrigste Stufe (Berechnung
+               eines Halbzuges), in Stufe 7 werden 8 Halb-
+               zuege berechnet.
+               Die aktuell eingestellte Stufe wird staendig
+               (ausser im Grundzustand, da ist sie immer Ø)
+               auf dem BS angezeigt. Dahinter erscheint
+               waehrend des SpielS der z.Z. berechnete
+               Halbzug.
+RA  (random):  Random realisiert einen Zufallsgenerator
+               (Ø-9). Dieser bewirkt, dass nicht der beste
+               Zug ausgegeben wird, sondern einer der (1-1Ø)
+               besten Zuege oder einfacher: Der Computer
+               spielt "schlechter".
+               Der eingestellte Wert fuer random wird
+               ebenfalls staendig angezeigt.
+H   (Halt):    Betaetigen der Taste H waehrend der Zugbe-
+               rechnung bewirkt eine Sofortausgabe des
+               bisher als besten berechneten Zuges. Damit
+               kann eine zu langwierige Berechnung abge-
+               brochen werden.
+?   (help):    Bei Eingabe des Kommandos Help bietet der
+               Computer dem Spieler einen Zugvorschlag
+               an (Kennzeichnung mit + u.*). Der Vorschlag
+               muss durch CR geloescht werden, danach
+               kann der Zug normal eingegeben werden.
+               Es wird aber jeweils nur ein Vorschlag
+               gemacht d.h. mehrmalige Eingabe von ? ergibt
+               immer denselben Zugvorschlag.
+
+
+4. Zugein- und -ausgabe
+
+Die Zuege werden in der Form: Ausgangsfeld Zielfeld
+eingegeben, also z.B. E2E4  B1C3 ... ,und jeweils durch
+CR bestaetigt. Rochaden werden als Koenigszug eingegeben
+also z.B. E1G1
+Ein eingegebener Zug wird sofort auf seine Richtigkeit
+ueberprueft, falsche Zuege werden mit "Err" gemeldet,
+daraufhin ist mit CR zu loeschen und ein neuer Zug ein-
+zugeben.
+Ein berechneter Zug wird jeweils durch "+ *" angekuendigt
+und ist mit CR zu bestaetigen. Danach erfolgt das "Setzen"
+der Figur. Matt und Patt werden erkannt (uebrigens auch
+im voraus, das ist dann daran zu erkennen, dass die aktuelle
+Spielstaerke den Vorgabewert nicht mehr erreicht) und
+angezeigt. Nicht angezeigt wird ein "Schach"! Das Programm
+erkennt auch keine eindeutigen Remis-Situationen.
+Neben der Zugausgabe auf dem Feld erfolgt noch eine Ausgabe
+in verkuerzter Notation, die jedoch noch nicht den An-
+forderungen entspricht (kein Erkennen von Mehrdeutigkeiten,
+keine Kennzeichnung von Schachgeboten). Die Zugnummerierung
+stimmt auch nur dann, wenn der Spielverlauf nicht z.B.
+durch Stellungsveraenderungen o.a. unterbrochen wurde und
+vor Beginn eines Spiels in den Grundzustand gegangen wird.
+
+5. Ergaenzungen
+
+Die pseudografische Darstellung der Figuren wirkt anfangs
+recht ungewohnt. Die Moeglichkeiten des KC85/2 werden
+natuerlich nicht erreicht werden, fuer Schachfreunde gibt
+es aber z.B. die Moeglichkeit spezielle Schachfiguren im
+Zeichengenerator zu programmieren (siehe Z1Ø13).
+Als ein weiteres, nicht zu unterschaetzendes Problem tritt
+die recht lange Rechenzeit auf, diese wird im Original
+dadurch herabgesetzt, dass Eingaben Interrupt-ausloesend
+wirken und im Prinzip bereits waehrend der "Bedenkzeit" des
+Spielers Zugaufstellung und Zugbewertung erfolgen.
+Als Anhaltspunkt Beispiele fuer die Rechenzeit (Eroeffnung):
+
+   level      Zeit
+      Ø         5s
+      1         3Øs
+      2         1.15min
+      3         4.3Ømin
+      4         15  min
+      5         1 h
+
+Die Spielstufen 5-7 haben damit hoechstens noch im End-
+spiel, wo sich diese Zeiten natuerlich betraechtlich ver-
+kuerzen, bzw. fuer die Problemanalyse Bedeutung.
+Das Programm verfuegt ueber eine Eroeffnungsbibliothek,
+deren Nutzung erkennt man waehrend des Spiels an der
+sofortigen Ausgabe eines Zuges und fehlender Angabe eines
+aktuellen Halbzuges. Leider tritt, wenn der Rechner mit
+weiss spielt (also NE,LE und danach CO), noch ein Fehler
+in der Nutzung der Bibliothek auf: Erster angebotener Zug
+ist e2e4, prinzipiell wuerde durch zweimalige Eingabe von
+CO anstatt der Bestaetigung durch CR die naechste Er-
+oeffnungsvariante angeboten (im Programm d2d4). Das
+funktioniert jedoch in dieser Variante noch nicht. Man kann
+sich aber durch die Funktion referee behelfen und bei
+Erreichen der gewuenschten Stellung durch Eingabe einer
+Spielstufe das normale Spiel starten.
+Das Programm realisiert weiterhin eine Tonausgabe ueber
+TB-Kanal und PIO-B5.
+
+Adressen fuer Verbesserungen/Erweiterungen:
+
+42ØØH - 5DFFH     eigentliches Schachprogramm
+59C1H             Beginn Eroeffnungsbibliothek
+41ØØH - 41FFH     Ein- und Ausgabesteuerung
+66ØØH - 73FFH     Anpassungsroutinen
+722ØH - 725FH     Grafiksymbole weisse Figuren
+732ØH - 735FH            "      schwarze  "
+66ØØH             Ausgabe Zugnotation
+77ØØH - 7778H     internes Hauptspielfeld
+ab 78ØØH          Aufstellung aller jeweils moeglichen Zuege
+                  und Antwortzuege (bezieht sich auf Haupt-
+                  spielfeld)
+Sprungverteiler in Anpassung:
+68ØØH             Programmstart
+68Ø3H             Eingaberoutine1
+68Ø6H                   "       2
+68Ø9H             Fehlermeldung
+68ØCH             Ausgabe Zugvorschlag
+68ØFH                "    Matt/Patt
+6812H             Figuren ruecken
+6815H             Tastaturabfrage H (Z-Flag gesetzt-->weiter)

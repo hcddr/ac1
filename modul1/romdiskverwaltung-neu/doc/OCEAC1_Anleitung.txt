@@ -1,0 +1,702 @@
+Minientwicklungssystem     --- OCEAC1 ---
+
+1. Uebersicht
+---------------
+
+Das System OCEAC1 besteht aus folgenden Komponenten:
+
+- Assembler  zum Uebersetzen  U880-Mnemonik  in Maschinencode
+- Reassembler zur Rueckuebersetzeung in die Mnemonik
+- Testsystem
+- Speichermodifikation
+
+Besonderheiten:
+
+- Jeder eingegebene  Befehl  wird sofort in den Maschinencode
+  uebersetzt.   Eine   Syntaxkontrolle   wird  durchgefuehrt.
+- Ausser dem Maschinencode  wird noch eine Markentabelle  ge-
+  speichert,  die Definitionen  und Referenzen fuer eine sym-
+  bolische Adressierung vermerkt.
+- Es wird  kein  Quellprogramm  gespeichert.  Der im Speicher
+  eingetragene  Maschinencode  wird zusammen mit den Informa-
+  tionen aus der Markentabelle  reassembliert  und als Quell-
+  text auf dem Bildschirm dargestellt.
+- Der Maschinencode kann sofort getestet werden.
+- Es kann kein Kommentar angegeben werden.
+- Der Reassembler  kann nicht zwischen Befehlen und Daten un-
+  terscheiden.  Daten werden genau wie Befehle reassembliert.
+  Daten- u. Befehlsbloecke  sollten  deshalb im Programm  ge-
+  trennt werden.
+
+Die Funktionen des OCEAC1 werden durch verschiedene Betriebs-
+arten realisiert.
+
+- Anzeigemodus
+- Quellkodemodifikation
+- Testmodus
+- Speichermodifikation (RAM)
+
+Alle Kommandos  sind Ein-Tasten-Kommandos  d.h. nach Betaeti-
+gung der Taste  wird das Kommando  sofort  ausgefuehrt.  Sind
+weitere Parameter notwendig,  werden diese ueber die Tastatur
+eingegeben und mit CR abgeschlossen. Fehlbedienungen  koennen
+korrigiert  werden.  Aus dem Anzeigemodus  werden die anderen
+Betriebsarten  aufgerufen. Die Rueckkehr erfolgt durch Betae-
+tigen der Taste OFF in den Anzeigemodus.  Zweimaliges  Betae-
+tigen der Taste OFF fuehrt in die Aufrufschleife des MONITOR.
+
+
+2. Aufruf des OCEAC1
+---------------------
+
+Startadresse   4000H. Soll ein vorhandenes  Programm  modifi-
+ziert werden,  so ist es vorher im Speicher  bereitzustellen.
+Das Programm   meldet sich mit OCE und der Adr. der Markenta-
+belle.
+
+OCE MTB#adr
+
+Die Adressangabe  kann mit CR bestaetigt  oder ueberschrieben
+werden,  falls  sich  die  Markentabelle  auf  einem  anderen
+Speicherplatz  befindet.  Danach erfolgt der Uebergang in den
+Anzeigemodus.
+Vor der Markentabelle  muessen  noch 20H Speicherplaetze  als
+Arbeitsbereich fuer OCEAC1 zur Verfuegung stehen.
+Wird im Laufe  der Quellcodeeingabe  eine  Marke  vereinbart,
+erfolgt  eine  Eintragung  in die  Markentabelle.  Es koennen
+max. 127 Marken vereinbart werden. Ein Ueberlaufen  der Mtab.
+in ein  anderes  Programm  oder  in einen nicht existierenden
+Speicherbereich wird nicht ueberwacht.
+Man kann sich aber jederzeit mit Hilfe der RAM-Funktion ueber
+die Belegung der Markentabelle informieren.
+
+3. Anzeigemodus
+---------------
+
+Im Anzeigemodus  wird der aktuelle  Speicherinhalt  reassemb-
+liert  und zur Anzeige  gebracht.  Die erste  Zeile  enthaelt
+neben dem Programmnamen  die hex. Adr.des  aktuellen  Befehls
+und die Angabe der voranstehenden  Globalmarke mit ihrer hex.
+Adresse. Die mit "*" gekennzeichnete Zeile enthaelt den aktu-
+ellen zur Bearbeitung anstehenden Befehl.
+
+3.1 Positionierkommandos
+-------------------------
+
+DOWN  - Uebergang zum naechsten Befehl.
+N     - 32-maliges Ausfuehren des Kommandos DOWN.
++     - Anzeige  ab naechster  Speicheradr.  Damit  kann  ein
+        Befehlsanfang  zwischen Datenbloecken gesucht werden.
+        Der erste Befehl eines Programmblocks  sollte mit ei-
+        ner Marke gekennzeichnet sein.
+UP    - Uebergang zum voranstehenden Befehl.
+Z     - 32-maliges Ausfuehren des Kommandos UP.
+-     - Anzeige ab voranstehender Speicheradresse. Damit kann
+        die Anzeige in Richtung niederer Adr. veraendert wer-
+        den, ohne dass eine voranstehende  Globalmarke erfor-
+        derlich ist .
+A     - Anzeige ab der davorstehenden Globalmarke.
+
+Als Globalmarke  wird eine Marke bezeichnet,  die als drittes
+Zeichen einen Buchstaben  enthaelt. Die Kommandos UP, Z,und A
+bewirken,  dass zuerst nach einer voranstehenden  Globalmarke
+gesucht wird. Von da ausgehend wird fortlaufend  der naechste
+Befehl ermittelt.  Ein Befehlsblock  benoetigt deshalb am An-
+fang immer  eine Globalmarke.  Existiert  im Bereich  von 255
+Byte  vor der aktuellen  Adresse  keine  Globalmarke,  werden
+die Kommandos UP und Z nicht ausgefuehrt.
+
+G      - Kommando zur direkten Positionierung.
+
+Durch Parameterangaben gibt es folgende Kommandomodifikation:
+       G CR        - Anzeige ab Programmende
+       G 0 CR      - Anzeige der mit EXT vereinbarten  Marken
+       G adr CR    - Anzeige ab adr
+
+L      - Anzeige  ab  Programmzaehlerstand  vor  dem  letzten
+         Schritt im Testmodus.
+
+3.2 Bindekommando
+-----------------
+
+B      - Kommando zum Programmbinden
+
+Die Bindeoperation   bezieht  sich  auf den gesamten 64K-Byte
+Adressraum. Alle symbolischen  Angaben werden anhand der Mar-
+kentabelle durch absolute (hexadezimal  angezeigte) Werte er-
+setzt und in den Maschinencode  eingetragen.  Danach  ist der
+Maschinencode lauffaehig.
+Nichtdefinierte  Symbole  werden  mit dem Namen und der Adr.,
+von wo ein  Zugriff  erfolgt,  auf dem Bildschirm  angezeigt.
+Ist bei relativen Sprungbefehlen  die Sprungdistanz zu gross,
+erfolgt die Anzeige der Adr. des Sprungbefehls. Nach den Aus-
+schriften muss die Taste CR betaetigt  werden, damit die Bin-
+deoperation weiter ausgefuehrt wird.
+
+Bindekommando  Varianten:
+
+B CR     - Binden des Programms auf den aktuellen Speicherbe-
+           reich,  d.h.  auf  den Bereich  ab Anzeigeadresse.
+B adr CR - Binden des Programms,  so dass der aktuelle Befehl
+           auf der angegebenen Adresse lauffaehig  ist.  Dazu
+           werden die Markenwerte verschoben.  Das gilt nicht
+           fuer mit EXT vereinbarte Marken.Sie behalten ihren
+           Wert (Externe  Eintrittsadr. aus anderen Programm-
+           moduln).Die Eintragungen der Markentabelle bleiben
+           erhalten.
+
+3.3 Korrektur und Verschiebekommandos
+-------------------------------------
+
+S  - Streichen (Loeschen) von Befehlen
+     S CR        - Streichen des aktuellen Befehls
+     S adr CR    - Streichen der Befehle ab aktueller Adresse
+                   bis ausschliesslich  adr. Wenn adr kleiner
+                   als die aktuelle   Adresse  ist , wird die
+                   Befehlsausfuehrung verweigert.
+E  - Einfuegekommando
+
+Der Bereich ab aktueller Adr. bis Programmende  wird mit Mar-
+ken in Richtung Speicherende verschoben. Damit steht ab aktu-
+eller Adr. ein Bereich fuer Eingaben zur Verfuegung.  Ab Pro-
+grammende muss freier Speicherraum vorhanden sein, sonst wird
+das Kommando nicht ausgefuehrt.
+
+      E CR       - Einfuegen eines Bytes (NOP-Befehl)
+      E adr  CR  - Einfuegen   ab aktueller   Adr.  bis  aus-
+                   schliesslich  adr , wenn adr groesser  als
+                   die aktuelle Adresse ist.
+
+M  -  Verschiebekommando  (Programmverschiebung  mit  Marken)
+
+Der angegebene  Programmbereich  wird auf den Bereich  ab An-
+zeigeadr.  verschoben.  Das  Kommando  wird  nur ausgefuehrt,
+wenn der Bereich  ab Anzeigeadr.  genuegend  gross  ist, d.h.
+mit 00H oder FFH belegt ist. Dadurch wird ein versehentliches
+Zerstoeren von Programmteilen  verhindert. Der ehemalige Pro-
+grammbereich wird mit FFH belegt.
+
+      M adr CR
+            CR   - Der  Programmbereich  ab adr bis Programm-
+                   ende   wird  auf den Bereich   ab Anzeige-
+                   adresse verschoben.
+      M adr1 CR
+        adr2 CR  - Der  Programmbereich   von  adr1  bis aus-
+                   schliesslich  adr2  wird  auf  den Bereich
+                   ab Anzeigeadresse verschoben.
+
+V  - Markenumrechnung
+
+Das Kommando  wird angewendet,  wenn eine Markentabelle  vor-
+handen ist, deren Eintragungen  sich auf einen anderen  Spei-
+cherbereich   beziehen.  Dies ist zum Beispiel der Fall, wenn
+das Programm  auf EPROM fixiert  und im Speicher  eingeordnet
+ist. Bei Positionierung  im Anzeigemodus auf die EPROM-Adres-
+se kann die Information aus der Markentabelle nicht verwendet
+werden. Sie bezieht sich auf den urspruenglichen  Speicherbe-
+reich und muss erst durch das Kommando V auf den neuen Anzei-
+gebereich umgerechnet werden.
+
+      V adr CR   - Umrechnen  der Marken  im Bereich  von adr
+                   bis Programmende auf den aktuellen
+                   Anzeigebereich.
+
+      V adr1 CR
+        adr2 CR  - Umrechnen  der Marken im Bereich  von adr1
+                   bis  ausschliesslich  adr2  auf den Breich
+                   ab Anzeigeadresse.
+
+
+
+                   adresse verschoben.
+      M adr1 CR
+        adr2 CR  - Der  Programmbereich   von  adr1  bis aus-
+                   schliesslich  adr2  wird  auf  den Bereich
+                   ab Anzeigeadresse verschoben.
+
+V  - Markenumrechnung
+
+Das Kommando  wird angewendet,  wenn eine Markentabelle  vor-
+handen ist, deren Eintragungen  sich auf einen anderen  Spei-
+cherbereich   beziehen.  Dies ist zum Beispiel der Fall, wenn
+das Programm  auf EPROM fixiert  und im Speicher  eingeordnet
+ist. Bei Positionierung  im Anzeigemodus auf die EPROM-Adres-
+se kann die Information aus der Markentabelle nicht verwendet
+werden. Sie bezieht sich auf den urspruenglichen  Speicherbe-
+reich und muss erst durch das Kommando V auf den neuen Anzei-
+gebereich umgerechnet werden.
+
+      V adr CR   - Umrechnen  der Marken  im Bereich  von adr
+                   bis Programmende auf den aktuellen
+                   Anzeigebereich.
+
+      V adr1 CR
+        adr2 CR  - Umrechnen  der Marken im Bereich  von adr1
+                   bis  ausschliesslich  adr2  auf den Breich
+                   ab Anzeigeadresse.
+
+
+                                     (Ende Textteil 1
+
+                                           Textteil 2  folgt)
+
+
+Beschreibung     -  OCEAC1  -                         Teil  2
+
+3.4 Programm als Quelle in den RAM auslagern
+--------------------------------------------
+
+O      - Kommando zur Quellprogrammausgabe
+
+Das Programm ab Anzeigeadr. bis Programmende  wird ab adr als
+Quellprogramm  in den RAM ausgegeben. Die Zeilen werden durch
+CR, LF getrennt. Der Abschluss des Quellprogramms erfolgt mit
+der Kodierung 0FFH.
+
+        O adr CR   - Das Programm  wird ab adr als Quelle  in
+                     den RAM geschrieben.
+
+3.5 Quellprogramm aus den RAM uebernehmen
+------------------------------------------
+
+I        Kommando zur Quellprogrammeingabe
+
+Das Quellprogramm  ab Adresse  adr im RAM wird in den Bereich
+ab Anzeigeadresse  uebernommen.  Die Quelle muss den gleichen
+Bedingungen wie im Quellkodeeingabemodus  genuegen. Das Pro-
+gramm wird zeilenweise  uebernommen.  Die Darstellung auf dem
+Bildschirm erfolgt parallel dazu.
+
+3.6 Reassemblerliste ausdrucken
+--------------------------------
+
+P      - Kommando zum Ausdruck der Reassemblerliste
+
+Ausgegeben wird die Speicheradr.,  gefolgt vom Maschinencode.
+Danach erscheint  der reassemblierte  Befehl  analog der Dar-
+stellung im Anzeigemodus  des Editors. Informationen  aus der
+Markentabelle  werden mit einbezogen.  Alle Zeilen werden pa-
+rallel  mit ueber  dem BS ausgegeben,  wobei  die gerade  zum
+Drucker  uebertragene  Zeile  mit  "*"  gekennzeichnet   ist.
+Waehrend  der Uebertragung  kann diese  mit CONTROL  S unter-
+brochen  werden.  Die  Fortsetzung  erfolgt  mit  CONTROL  Q.
+Abbruch  der  Druckerausgabe  ist nur durch  RESET  moeglich.
+Sind alle Zeilen  bis ausschliesslich  der Endadresse  ueber-
+tragen, wird vom Programm eine Angabe zum Seitenvorschub  er-
+wartet. Die Eingabe  von "F" loest einen Seitenvorschub  aus.
+Danach wird, wie bei der Eingabe  jedes anderen Zeichens,  in
+den Anzeigemodus des OCEAC1 zurueckgekehrt.
+
+           P adr  CR - Die Endadresse  adr ist absolut  oder
+                       symbolisch  anzugeben. Wird keine End-
+                       adresse angegeben,  gilt das Programm-
+                       ende (mindestens  4mal 0FFH)  als End-
+                       adresse.
+
+3.7 Anwahl  spezieller  Betriebsarten  oder  Sonderfunktionen
+----------------------------------------------------------
+
+Aus dem Anzeigemodus  werden  durch folgende  Ein-Tasten-Kom-
+mandos andere Betriebsarten aufgerufen:
+
+Q   - Kommando  zum  Eintritt  in den  Quellcodeeingabemodus.
+R   - Kommando  zum  Aufruf  der Speichermodifikation  (RAM).
+T   - Kommando zum Eintritt in den Testmodus.
+K   - Kommando fuer direkte Maschinencodeeingabe.
+H   - Definition  der  aktuellen  Adresse  als Haltepunkt  im
+      Testmodus
+
+4. Quellkodeeingabemodus
+------------------------
+
+Der Eingabebereich beginnt ab Kursorposition.Er zeigt auf das
+Markenfeld.  Eine Marke besteht  aus drei Zeichen,  wovon das
+erste Zeichen ein Buchstabe  sein muss. Die Trennung  Marken-
+feld - Operationsfeld  erfolgt durch mindestens  ein Leerzei-
+chen . Das Zeichen ":" als Trennzeichen  kann entfallen.  Das
+gleiche gilt wenn keine Marke verwendet  wird. Operationskode
+und Operanten duerfen nur durch ein Leerzeichen getrennt wer-
+den. Kommentare sind nicht moeglich.
+Der angezeigte  Befehl kann korrigiert  werden. Dabei ist ein
+Ueberschreiben von Befehlen unbedingt zu vermeiden.
+Anderenfalls werden der oder die folgenden Befehle zerstoert.
+Eintragungen in der Markentabelle  werden nicht geloescht und
+fuehren  beim  Binden  zur  Zerstoerung  von  Programmteilen.
+Es sollte immer in folgenden  Schritten  vorgegangen  werden:
+
+- Streichen des Befehls (Kommando S)
+- Schaffen eines genuegend grossen Freibereiches (Kommando E)
+- Eingabe des neuen Befehls
+
+Die Quellcodeeingabe  wird durch CR abgeschlossen. Der Befehl
+wird uebersetzt.  Liegt  ein Syntaxfehler  vor, wird dies vor
+dem Befehl wie folgt markiert:
+
+F    - Operations- oder Operandenfehler
+M    - Marke schon vorhanden
+O    - Offset bei relativen Spruengen zu gross (Tritt nur auf
+       wenn das Sprungziel absolut angegeben wird).
+
+Der Maschinencode  wird bei syntaktisch richtigen Befehlen ab
+Anzeigeadresse gespeichert. Die Speicherbelegung  und der re-
+assemblierte Befehl werden zur Kontrolle auf dem BS angezeigt
+Der aktuelle Befehl ist durch das Zeichen "+" markiert. Durch
+nochmaliges  Betaetigen der Taste CR wird das Programm ab dem
+folgenden Befehl angezeigt  und es kann eine Quellcodeeingabe
+oder eine Korrektur fuer diesen Befehl erfolgen. Das Betaeti-
+gen irgend  einer  anderen  Taste fuehrt  in den Anzeigemodus
+zurueck.
+Neben den U880-Mnemoniks  werden  folgende  Pseudooperationen
+verarbeitet:
+
+      DB n       - Definition  eines  Bytes mit dem Inhalt  n
+      DW nn      - Definition  eines  Wortes  (Doppelbyte)
+                   mit dem Wert nn
+      DM "text"  - Definition der Zeichenkette text
+ mar: EXT  adr   - Definition  der externen  Marke  mar mit
+                   der Adresse adr
+
+Pseudobefehle werden als solche nicht reassembliert.  Auf dem
+BS erscheint der entsprechende Maschinenbefehl.
+Zahlen koennen  dezimal oder hexadezimal  eingegeben  werden.
+Hexadezimalzahlen  muessen mit einer Ziffer beginnen  und mit
+H enden (zB. 0AF7H). Der Reassembler  verwendet fuer die Aus-
+schrift ein hexadezimales Standardformat.  Statt Zahlen koen-
+nen auch Marken angegeben  werden.  Nach einer Marke kann ein
+Offset im Bereich von -127 ... +127 angegeben werden.
+Das Zeichen  "#" (mit der wahlweisen  Angabe  eines  Offsets)
+kann fuer  den Wert des Speicherplatzzuweisungszaehlers  ste-
+hen. Bei der Assemblierung  wird  sofort  der Wert des Zuwei-
+sungszaehlers  eingetragen.  Eine Reassemblierung  der Angabe
+erfolgt nicht.
+
+K        - Direkte Maschinencodeeingabe
+
+Es besteht die Moeglichkeit  ohne Aufruf der RAM-Funktion di-
+rekt den Maschinencode  einzugeben oder zu modifizieren. Auch
+hier ist darauf zu achten,  dass Befehle nicht ueberschrieben
+werden. Auf jeder Zeile koennen  bis zu vier Byte hexadezimal
+eingegeben  werden. Dieses Kommando ermoeglicht  dem Program-
+mierer schnell geringfuegige  Aenderungen  im Programm vorzu-
+nehmen, ohne erst in den Quelleingabemodus zu gehen.
+Der Abschluss der Eingaben durch CR bewirkt das Eintragen der
+eingegebenen  Bytes ab aktueller Adresse und Rueckkehr in den
+Anzeigemodus.  Der Abschluss  durch die Taste OFF fuehrt ohne
+Aenderung in den Anzeigemodus zurueck.
+
+
+                                   (Ende Textteil 2
+
+                                       Textteil   3  folgt)
+
+
+Beschreibung   - OCEAC1 -                  Teil 3
+
+Speichermodifikation RAM
+
+1. Uebersicht  der Funktionen
+------------------------------
+
+- Anzeige der Speicherbelegung (hex oder als Zeichen)
+- Speichereingabe (hex)
+- Kopieren  eines Speicherbereiches  in einen anderen Bereich
+- Vergleich zweier Speicherbereiche
+- Suchen  nach einem oder mehreren  Byte in einem Speicherbe-
+  reich
+- Speicherbereich ausdrucken
+
+Alle Funktionen werden durch Ein-Tasten-Kommandos aufgerufen.
+Erforderliche  Parameter werden ueber die Tastatur eingegeben
+und mit CR abgeschlossen.
+
+Die Adressangabe auf dem BS links oben kennzeichnet die aktu-
+elle  Adresse  innerhalb  des angezeigten  Speicherbereiches,
+d.h. die durch den Kursor angewaehlte Adresse.
+
+2. Kommandouebersicht
+---------------------
+
+2.1. Wahl des Anzeigeformats
+-----------------------------
+
+H     - Speicherinhalte  werden als 2-stellige Hex-Zahl ange-
+        zeigt (Standard)
+        zeigt (Standard)
+S     - Speicherinhalte  werden als Zeichen (entsprechend des
+        Zeichensatzes des BS dargestellt)
+
+2.2  Positionierkommandos
+-------------------------
+
+RIGHT - Die aktuelle Adresse  wird um eins erhoeht.Wird dabei
+        der Bereich Grundadresse  + 255 ueberschritten,  wird
+        die Grundadresse um 16 erhoeht.
+LEFT  - Die aktuelle  Adresse  wird um eins vermindert.  Wird
+        dabei  die Grundadresse  unterschritten,  wird sie um
+        16 vermindert.
+DOWN  - Aktuelle  Adr.  und Grundadr.  werden  um 16 erhoeht.
+UP    - Aktuelle Adr. und Grundadr.  werden um 16 vermindert.
+N     - Anzeige naechster Seite
+Z     - Vorangehende Seite wird angezeigt
+G     - Kommando zur direkten Positionierung. Dieses Kommando
+        erfordert eine Adressangabe,  auf welche die aktuelle
+        Adr. und die Grundadr. eingestellt wird.
+
+        G adr CR
+
+2.3. Speichereingaben
+----------------------
+
+CR    - Die rechts  neben  der Angabe  der aktuellen  Adresse
+        stehende  2-stellige  Hex-Zahl  wird auf die aktuelle
+        Adresse eingetragen.
+T     - Der Code des naechsten  ueber die Tastatur eingegebe-
+        nen  Zeichens  wird  in das  Eingabefeld  uebernommen
+        (Texteingabemoeglichkeit).   Die  Eintragung  in  den
+        Speicher erfolgt mit CR .
+I     -  Fuellen  eines  Speicherbereiches.  Dieses  Kommando
+        erfordert eine Adressangabe. Der hex-Eingabewert wird
+        ab aktueller  Adr.  bis  ausschliesslich  adr  in den
+        Speicher  eingetragen.  Das Kommando  wird nur ausge-
+        fuehrt, wenn adr groesser  als die aktuelle Adr. ist.
+
+        I adr CR
+
+2.4. Speicherbereich kopieren
+-----------------------------
+
+M     - Kommando zum Kopieren eines Speicherbereiches
+
+        M adr1 CR
+          adr2 CR
+
+        Der Speicherbereich von adr1 bis ausschliesslich adr2
+        wird auf den Bereich ab Anzeigeadresse  kopiert.  Das
+        Kommando wird nur ausgefuehrt, wenn adr2 groesser als
+        adr1 ist.
+
+2.5. Speicherbereiche vergleichen
+---------------------------------
+
+V     - Kommando zum Vergleich von Speicherbereichen
+
+        V adr1 CR
+          adr2 CR
+
+        Der Speicherbereich von adr1 bis ausschliesslich adr2
+        wird mit dem Bereich ab Anzeigeadr.  verglichen.  Die
+        Anzahl  der Differenzen  wird  auf dem Display  ange-
+        zeigt. Die aktuelle  Adr. weist  auf die erste Nicht-
+        uebereinstimmung.  Im Eingabebereich  steht  der Wert
+        aus  dem  Vergleichsbereich   (Anzeige  durch  adr1).
+        Die Arbeit  kann durch eines der folgenden  Kommandos
+        fortgesetzt werden:
+
+        CR   Der im Eingabefeld  stehende  Wert  aus dem Ver-
+             gleichsbereich  wird auf die aktuelle  Adr. ein-
+             getragen  (dadurch wird die Anzahl der Differen-
+             zen um eine vermindert)  und der Vergleich  wird
+             fortgesetzt.
+        V    Fortsetzen des Speichervergleiches.
+        OFF  Abbruch des Vergleiches.
+
+Ist keine Differenz  zwischen  beiden Speicherbereichen  auf-
+getreten bzw. wurden der Vergleich vollstaendig durchgefuehrt
+gelangt  man durch Betaetigen  einer beliebigen  Taste in den
+Anzeigemodus.
+
+2.6. Suchen einer Datenfolge im Speicher
+----------------------------------------
+
+L     - Kommando  zur  Suche  einer  Datenfolge  im  Speicher
+        L adr1 CR
+          adr2 CR
+
+Die durch adr1 bis ausschliesslich  adr2 gekennzeichnete  Da-
+tenfolge wird im Speicher ab aktueller  Adresse bis Speicher-
+ende gesucht. Wird die Datenfolge gefunden, erscheint sie mit
+der aktuellen Anzeigeadresse.
+
+        CR   Der Suchvorgang wird fortgesetzt.
+        OFF  Der Suchvorgang  wird  abgebrochen  und es wird
+             der Bereich  vor  Ausfuehrung  des  L-Kommandos
+             angezeigt.
+
+2.7. Ausgabe der Speicherbelegung
+---------------------------------
+
+P      - Kommando zum Ausdrucken der Speicherbelegung
+         P adr CR
+
+Das Programm  gibt die Speicherbelegung  in hex-Form  und als
+KOI-7 Zeichen aus.
+Die Datenuebertragung  kann mit CONTROL  S und mit CONTROL  Q
+analog der Reassemlerausgabe  gesteuert  werden.  Abbruch der
+Druckerausgabe ist nur durch RESET moeglich.
+Sind alle Daten bis ausschliesslich  der Endadresse gedruckt,
+wird vom Programm  eine Angabe  zum Seitenvorschub  erwartet.
+Die Eingabe  von "F" loest  einen Seitenvorschub  aus. Danach
+wird, wie bei der Eingabe jedes anderen Zeichens,  zur Anzei-
+geadresse zurueckgekehrt.
+
+
+                                     (Textende Teil 3
+
+                                               Teil 4 folgt)
+
+Beschreibung    - OCEAC1 -                     Teil 4
+
+Testsystem  ODT
+
+1.Uebersicht
+------------
+ODT ermoeglicht  den schritt-  oder abschnittweisen  Test von
+Programmen oder den Test im Echtzeitlauf.  Im Haltepunkt wer-
+den die Registerinhalte  und der Befehl angezeigt. Eine Regi-
+stermodifikation ist moeglich.
+Der Aufruf des Testsystems  erfolgt mit dem Kommando  T .
+Durch Betaetigen  der Taste OFF wird  das Testsystem  verlas-
+sen  und  in  den  Anzeigemodus  von  OCEAC1  zurueckgekehrt.
+
+2. Kommandos
+------------
+
+2.1. Kommandos zur Programmabarbeitung
+--------------------------------------
+
+T   - Abarbeiten  des aktuellen  Befehls und  Protokollierung
+      der Registerinhalte  im Haltepunkt.  Der Haltepunkt ist
+      ueblicherweise der naechste vom Programm auszufuehrende
+      Befehl (Schrittbetrieb).  Wurde durch das Kommando H im
+      Anzeigemodus von OCEAC1 ein spezieller Haltepunkt defi-
+      niert, erfolgt  eine Programmabarbeitung  bis zu diesem
+      Haltepunkt. Dieser ist danach geloescht.
+
+N   - Abarbeiten  des aktuellen  Befehls und  Protokollierung
+      der Registerinhalte im Haltepunkt. Haltepunkt ist dabei
+      der im Programm auf dem naechsten Speicherplatz stehen-
+      de Befehl, der nicht mit dem naechsten  abzuarbeitenden
+      Befehl identisch sein muss. Dadurch ist ein abschnitts-
+      weiser Test von Unterprogrammen  oder Programmschleifen
+      moeglich.  Das abschnittsweise  Testen  kann durch  OFF
+      abgebrochen  werden. In diesem Fall wird der letzte be-
+      arbeitete  Befehl  protokolliert  und es kann mit einem
+      neuen Kommando fortgesetzt werden.
+
+L   - Direktes  Abarbeiten  des  Programms  (Echtzeitlauf).
+      Es erfolgt keine Protokollierung  waehrend der Abarbei-
+      tung.  Der Befehl  RST 7 (Code FFH) wirkt als Software-
+      haltepunkt.  Nach Abarbeitung  von RST 7 wird der Echt-
+      zeitlauf abgebrochen  und der naechste Befehl protokol-
+      liert. Soll mit Softwarehaltepunkten gearbeitet werden,
+      so sind diese zusaetzlich  in das Programm  einzufuegen
+      (RST 7) und anschliessend wieder zu streichen.
+
+2.2  Registermodifikation
+--------------------------
+
+R   - Aendern  der  Registerinhalte  durch  Ueberschreiben.
+      Das Kommando kann mit CR oder OFF abgeschlossen werden.
+      Mit CR werden  die neuen Inhalte  bestaetigt,  waehrend
+      der  Abschluss  mit OFF im Sinne  einer  Fehlerquittung
+      der  urspruengliche   Zustand  wiederhergestellt  wird.
+      Es koennen  nur die Register  AF,  BC, DE, HL, IX u. IY
+      modifiziert werden.
+
+X   - Registertausch                                            
+      Der Hauptregistersatz  wird gegen den Nebenregistersatz
+      ausgetauscht. Die Nebenregisterinhalte werden angezeigt
+      koennen  gegebenfalls  modifiziert  und  rueckgetauscht
+      werden  oder  es erfolgt  Weiterarbeit  mit dem nunmehr
+      aktuellen Registersatz.
+
+3. Besondere Hinweise
+---------------------
+
+Bei der Programmabarbeitung  unter  der Regie des Testsystems
+(Kommando  T und N) wird das Programm nach jedem Befehl durch
+einen vom Testsystem initialisierten  Interrupt unterbrochen,
+um in der Interruptserviceroutine  die Haltepunktbedingung zu
+ueberpruefen.  Dadurch wird das Programm  etwa 200 ...500 mal
+langsamer abgearbeitet als im Echtzeitlauf.
+Das zu testende Programm muss folgende Forderungen erfuellen:
+- Das I-Register darf nicht veraendert werden.
+- Der Interruptmodus IM2 darf nicht verlassen werden.
+- Der vom Testsystem  benutzte CTC-Kanal  2 und dessen Inter-
+  ruptverbindungsadresse(188CH) darf nicht veraendert werden.
+- Vom zu testenden Programm sollten der Bildschirminhalt  und
+  die  Arbeitszellen  des  Betriebssystems  nicht  veraendert
+  werden.
+- Nach einer Interruptannahme  oder nach dem Befehl DI laeuft
+  das zu testente  Programm im Echtzeitlauf  bis einschliess-
+  lich dem Befehl nach EI. Die abgearbeiteten  Befehle werden
+  nicht protokolliert.
+
+
+- Achtung ! :
+
+  Wird  mit dem Testsystem  gearbeitet,  ist eine  Verbindung
+  von M1 (Pin  14 CTC)  nach  CLK2  (Pin 21 CTC) zu schalten.
+
+
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+
+Wichtige Tastencodes:
+
+
+   Taste       hex-Code       Bemerkung
+  -----------------------------------------------------------
+
+    CR    (Ctr.M)  0D     Eingabeende
+    OFF   (Ctr.C)  03     Uebergang  in  den  Anzeigemodus
+                          Bei 2-maliger Betaetigung Rueckkehr
+                          zum Monitor
+    DOWN  (Ctr.J)  0A     Uebergang  zum  naechsten  Befehl
+                          (Kursor nach unten)
+    UP    (Ctr.K)  0B     Uebergang zum voranstehenden Befehl
+                          (Kursor nach oben)
+    LEFT  (Ctr.H)  08     Kursor nach links
+    RIGHT (Ctr.I)  09     Kursor nach rechts
+    INS   (Ctr.E)  05     Zeichen einfuegen
+    DEL   (Ctr.S)  13     Zeichen loeschen
+    Tab   (Ctr.W)  17     Tabulator
+
+
+Ausgabe auf Drucker:
+
+Das  Minientwicklungssystem  enthaelt  eine  eigene  Drucker-
+steuerung ueber einen zusaetzlichen PIO-Schaltkreis.
+Soll eine andere  Druckausgabe  (z.B. Fernschreiber)  benutzt
+werden, muss die Anschlussadresse des Treibers auf die Adres-
+sen 5D43H und 5D44H des Sprungverteilers von OCEAC1 eingetra-
+gen werden. Die Ausgabe erfolgt zeichenweise im Akku.
+
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+So, das  waers erst einmal !!!!!
+
+    Die Verfasser  hoffen  auf einen  guten  Start mit diesem
+
+       OCEAC1 - Minientwicklungssystem.
+
+
+Zugegeben die Beschreibung ist sehr umfangreich   ---
+Am bessten ist es, man druckt  sich den Text einmal aus  !!!!
+
+   ODER , wenn es notwendig, aber beim bessten  Willen  nicht
+moeglich  ist, setzt man sich mal mit den Verfassern  in Ver-
+bindung.
+
+
+Freiberg,  Jan.87 * Klaus Schneider   , Gunter Roessel  Y59ON
+
+
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+
+                                      =======================
+                                      =                     =
+                                      =  AC1-Computerdruck  =
+                                      =       Y59ON         =
+                                      =======================

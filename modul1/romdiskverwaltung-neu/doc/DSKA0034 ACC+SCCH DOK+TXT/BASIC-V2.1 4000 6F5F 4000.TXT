@@ -1,0 +1,426 @@
+         Kurzbeschreibung zum 12k-BASIC-Interpreter
+        --------------------------------------------
+
+1.Vorbemerkungen
+----------------
+Der vorliegende BASIC-Interpreter ist zum 8k-BASIC V 1.Ø
+des AC1 weitgehend aufwaertskompatibel. Programme, die fuer
+den 8k-Interpreter geschrieben wurden, sind i.a.mit nur
+geringfuegigen Aenderungen auch auf dem 12k-BASIC lauffaehig,
+bei umgekehrtem Austausch ist der etwas umfangreichere
+Befehlssatz des 12k-Interpreters zu beachten. Auf bestehende
+Unterschiede wird im folgenden ausfuehrlich eingegangen.
+Das Programm benoetigt eine 16kByte-Speichererweiterung
+ab 4ØØØH sowie das Betriebssystem lt.FA 1/85.
+Kaltstart und Warmstart erfolgen mit J4ØØØ, nach dem Kalt-
+start wird der hoechste Speicherplatz abgefragt, bei Eingabe
+von CR wird der gesamte freie Speicher genutzt.
+Ein Teil des Interpreters wird nach dem Kaltstart ueber-
+schrieben, Kopien muessen daher vorher angefertigt werden!
+
+2.Spezifische Programmanpassungen
+---------------------------------
+Bei unvollstaendiger Adressdekodierung (RAM erscheint
+doppelt) muss der Speichertest begrenzt werden :
+
+         Adresse    Byte       neu
+         4ØDFH      FFH        BFH    ;fuer Begrenzung
+                                       auf BFFFH
+Bei Vorhandensein eines Druckers kann auf Adresse 4ØØ3H ein
+Sprung zur Druckerinitialisierung und auf 4Ø17H zur Drucker-
+ausgabe eingetragen werden. Die Druckerinitialisierung
+erfolgt nur einmal nach einem Kaltstart und zwar bei der
+ersten Druckausgabe, das Zeichen wird in Reg.A uebergeben.
+
+3.Befehlsbeschreibung
+---------------------
+(Bemerkungen: In ÄÜ angegebene Werte sind optional.
+ Zahlen koennen immer auch als hexadezimale Zahlen angegeben
+ werden, es ist dann "&" voranzustellen.)
+
+a) Allgemeine Systembefehle
+---------------------------
+AUTO  ÄStartzeile Ä,SchrittweiteÜÜ
+                             -automatische Zeilennummerierung
+
+CLEAR ÄStringspeichergroesseÜ- Alle Variablen werden
+                               geloescht, Stringspeicher wird
+                               gesetzt.
+CONTINUE                     - Fortsetzung nach CTRL-C oder
+                               STOP
+DELETE                       - Loeschen einer Zeile oder
+                               eines Zeilenbereichs
+KILL                         - Zurueckgewinnung nicht mehr
+                               benoetigten Speicherplatzes
+                               von Matrizen  z.B. KILL A
+NEW                          - Loeschen des gesamten
+                               Arbeitsspeichers
+PRECISION Ä1...11Ü           - Anzahl der Digits Anzeige-
+                               genauigkeit, gerechnet wird
+                               immer mit 11 Stellen.
+RENUMBER ÄNeuzeile,Abstand,Startz.Ü
+                             - Neunummerierung der Zeilen
+                               RENUMBER ohne Werte beginnt
+                               ab Zeile 1Ø in 1Øer Schritten
+RUN ÄZeilennummerÜ           - Programmstart mit Loeschen der
+                               Variablen
+EDIT             - dient der Korrektur einer Zeile
+                   fuer EDIT gibt es weitere Befehle, die
+                   aus Buchstaben und Zahlen von 1...255
+                   bestehen:
+               A     - laedt den EDIT-Puffer vom Programm-
+                       speicher neu
+               nD    - n Zeichen werden geloescht
+               E     - beendet EDIT und ersetzt die Zeile
+               nFx   - setzt den Kursor vor das n-te Zeichenx
+               H     - loescht alles rechts des Kursors
+                       und geht in den INSERT-Modus
+               I     - fuegt alle Zeichen ein bis CR oder ESC
+               nKx   - loescht Zeichen vom Kursor bis zum
+                       n-ten Zeichen x
+               L     - Ausgabe der Zeile
+               Q     - verlaesst EDIT ohne Ersetzung
+               nR    - ersetzt die folgenden n Zeichen durch
+                       n vorhandene
+               X     - Kursor ans Zeilenende und INSERT
+               SPACE - Kursor nach rechts
+               DEL   -   "      "  links
+               ESCAPE- Ende des INSERT-Modus
+
+
+b) Befehle fuer die Konsole
+---------------------------
+LIST ÄStartzeile-ÄEndzeileÜÜ - Auflisten des Programms
+LVAR                         - Ausgabe aller aktuellen
+                               Variablen und deren Belegung
+NULL a,b                     - nach jedem CR/LF werden a
+                               Zeichen b ausgegeben
+POS(A)                       - aktuelle Position in der
+                               Bildschirmzeile wird ueber-
+                               geben, A ist ein "Dummy"-Wert
+PRINT bzw. ?                 - Ausgabebefehl
+PRINT USING zeile;ausgabeliste
+       bzw. string;ausgabeliste
+                             - formatierte Ausgabe
+       Bei Angabe einer Zeile muss in dieser mit einem
+       "!" beginnend das Format abgelegt sein:
+
+            #     numerisches Feld
+            .     Dezimalpunkt-Position
+            +     kann am Anfang oder Ende eines Formats
+                  stehen, Vorzeichen wird immer ausgegeben
+            -     wie Pluszeichen, positive Zahlen werden
+                  mit fuehrendem Leerzeichen ausgegeben
+            **    leere Positionen werden mit "*" aufgefuellt
+            $$    $ wird unmittelbar vor die erste Ziffer
+                  gestellt
+            **$   Kombination beider Zeichen
+            ,     Komma links des Dezimalpunktes zeigt an,
+                  dass Kommas alle drei Stellen eingefuegt
+                  werden
+            ^^^^  Zahl wird in Exponentialschreibweise
+                  ausgegeben
+            Stringfelder werden mit "'" eingeleitet. Sie
+            koennen durch ein oder mehrere der folgenden
+            Zeichen gefolgt werden.
+            L     Linksangleich
+            R     Rechtsangleich
+            C     Zentrierung
+            E     Linksangleich mit Erweiterung
+
+SPC(a)                       - In Verbindung mit PRINT werden
+                               a Leerzeichen ausgegeben.
+TAB(a)                       - Damit kann direkt die Druck-
+                               position a erreicht werden.
+TRACE                        - TRACE 1 schaltet den TRACE-
+                               Modus ein, TRACE Ø  schaltet
+                               aus. Es werden alle ausge-
+                               fuehrten Zeilennummern in ÄÜ
+                               ausgegeben.
+WIDTH                        - Damit kann die Ausgabelaenge
+                               angegeben werden, bei der
+                               automatisch ein CR/LF
+                               eingefuegt wird.
+                               Minimum 15, Maximum 255
+
+Diese Befehle koennen auch auf den Drucker geschaltet werden,
+wenn folgende Befehle verwendet werden:
+LLIST, LLVAR, LNULL, LPRINT, LPRINT USING, LTRACE, LWIDTH,
+LPOS, SPC, TAB.
+
+SWITCH     - Dieser Befehl tauscht Druckerausgabe und Bild-
+             schirmausgabe aus, d.h. es werden alle Ausgaben
+             mit PRINT,..., alle eingegebenen Werte und
+             Meldungen des Interpreters auf den Drucker
+             und alle bisherigen Druckerausgaben (LPRINT...)
+             auf den Bildschirm geschaltet. Erneutes SWITCH
+             schaltet wieder zurueck. SWITCH wirkt nicht auf
+             die Pseudografikbefehle und auf SCREEN.
+
+c) Befehle fuer den Datentransport
+----------------------------------
+
+LET                          - Zuweisung eines Wertes
+                               (kann entfallen)
+DATA                         - Konstantenablage, die durch
+                               READ ausgelesen wird
+READ                         - Lesen der DATA-Liste
+RESTORE ÄZeilennummerÜ       - Ruecksetzen bzw. Setzen des
+                               Lesezeigers fuer READ
+LINE INPUT Ä"string";Ü       - Damit kann eine ganze Zeile in
+                               eine Stringvariable eingelesen
+                               werden.
+INPUT Ä"string";Ü            - Eingabe von Daten ueber die
+                               Konsole
+INP(port)                    - Lesen eines Ports
+OUT a,b                      - Ausgabe des Wertes b an das
+                               Port a
+DIM                          - Reservieren von Speicher fuer
+                               Matrizen. Diese koennen 1 bis
+                               255 Dimensionen haben.
+WAIT a,b,c                   - automatische Warteschleife
+                               fuer Ports
+                               Der Wert des Port a wird mit c
+                               Exklusiv-ODER sowie mit b
+                               UND-verknuepft, wenn das
+                               Ergebnis Ø ist, wird das
+                               Programm fortgesetzt.
+PEEK(a)                      - Direktspeicherzugriff (Lesen)
+POKE a,b                     - Der Wert b wird in die
+                               Speicherzelle a geschrieben.
+COPY neue zeile,schritt=zeilenbereich
+                             - Es koennen Teile des BASIC-
+                               Programms verschoben oder
+                               kopiert werden.
+EXCHANGE                     - Schneller Austausch von
+                               Variablenwerten
+                               z.B. EXCHANGE C,D(I,J)
+
+d) Befehle zur Steuerung des Programmflusses
+--------------------------------------------
+
+GOTO                         - Sprunganweisung
+GOSUB                        - Unterprogrammaufruf
+RETURN                       - Unterprogrammruecksprung
+ON a GOTO
+ON a GOSUB                   - Es wird auf die a-te Zeilen-
+                               nummer gesprungen. Ist a=Ø
+                               oder groesser als die Anzahl
+                               der Zeilennummern, so wird die
+                               naechste Zeile ausgefuehrt.
+CALL adresse,arg1,...,argn   - Maschinenunterprogrammaufruf
+                               Jedes der Argumente wird in
+                               eine 16-Bit-Zahl gewandelt
+                               und nach folgendem Schema
+                               uebergeben:
+                               SP -> argument n
+                               ...
+                               HL -> Return-Adresse
+                               BC -> Anzahl der Argumente
+                                     auf dem Stack
+FOR,TO,STEP,NEXT             - Schleifenanweisung
+IF,THEN,ELSE                 - bedingte Anweisung
+                               Als Vergleiche zugelassen:
+                               =,<>,<,>,<=,>=
+                               Logische Operationen:
+                               NOT,AND,OR
+
+e) Funktionen/Operatoren
+------------------------
+
+EXP                          - Exponentialfunktion
+FRE                          - Damit laesst sich der Rest-
+                               speicher fuer Variable und
+                               Programm, falls als Dummy-
+                               Parameter eine Variable
+                               bzw. der Restspeicher fuer
+                               Strings, falls eine String-
+                               variable eingesetzt wird,
+                               ermitteln.
+INT                          - Ermitteln des ganzzahligen
+                               Anteils von Zahlen
+LN                           - natuerlicher Logarithmus
+SGN                          - Ergibt +1, falls das Argument
+                               groesser als Ø ist, Ø, falls
+                               es gleich Ø ist und -1, falls
+                               es kleiner Ø ist.
+SQR                          - Quadratwurzel
+RND                          - Pseudozufallszahl zwischen
+                               Ø und 1
+RANDOMIZE                    - Damit kann ein zufaelliger
+                               Startpunkt einer Pseudo-
+                               Zufallszahlenfolge eingestellt
+                               werden.
+ABS                          - Absolutbetrag
+ATN                          - Arcustangens
+COS                          - Cosinusfunktion
+SIN                          - Sinusfunktion
+TAN                          - Tangensfunktion
+DEF FN        - Definition nutzereigener Funktionen. Eine
+                Funktion muss mit FN beginnen, gefolgt von
+                einem Variablennamen z.B.DEF FNQ(X)=X*B+3
+                Die Funktion kann sich auch ueber mehrere
+                Zeilen erstrecken und rekursiv sein.
+FNEND funktionswert          - schliesst mehrzeilige Fkt. ab
+FNRETURN funktionswert       - vorzeitiger Abbruch einer Fkt.
+
+Operatoren: (),^,*,/,+,-,=,<>,<,>,<=,>=,NOT,AND,OR
+
+f) Stringverarbeitung
+---------------------
+
+ASC(A$)                      - Der Dezimalwert eines ersten
+                               Zeichens in einem String
+                               wird uebergeben
+CHR$(A)                      - Es wird das Zeichen ueber-
+                               geben, das durch den dezimalen
+                               Wert des Arguments dargestellt
+                               wird.
+LEFT$                        - Enthaelt zwei Parameter. Der
+                               erste Parameter ist ein
+                               String, der zweite Parameter
+                               gibt die Anzahl der Zeichen
+                               an, die vom linken Rand des
+                               Strings an gezaehlt uebergeben
+                               werden sollen.
+LEN(A$)                      - Damit kann die Laenge eines
+                               Strings ermittelt werden.
+MID$                         - benoetigt drei Parameter
+                               Der erste gibt den String an,
+                               der zweite bestimmt die Start-
+                               position, der dritte die
+                               Anzahl der Zeichen.
+RIGHT$                       - analog LEFT$ aber vom rechten
+                               Rand beginnend
+STR$                         - Es wird der String uebergeben,
+                               dessen numerischer Wert als
+                               Argument steht
+                               z.B. A$=STR$(7.8)
+VAL                          - Gegenteil von STR$: Es wird
+                               der numerische Wert eines
+                               Strings uebergeben.
+INSTR                        - Dient zum Suchen von Teil-
+                               strings. Dazu wird als erster
+                               Parameter der String ange-
+                               geben, in dem der zweite
+                               Parameter, der Suchstring
+                               gefunden werden soll. Zusaetz-
+                               lich koennen noch eine Start-
+                               position und eine Laenge an-
+                               gegeben werden.
+
+g) pseudografische Befehle
+--------------------------
+
+Diese sind eine spezielle AC1-Anpassung und funktionieren
+wie im 8k-Interpreter.
+
+SET x,y                      - Setzen      des Pixels x,y
+RESET(x,y)                   - Ruecksetzen    - " -
+POINT(x,y)                   - Testen         - " -
+
+
+h) sonstige Befehle
+-------------------
+
+BEEP                         - Ausgabe eines Tones ueber
+                               PIO B5 und B6
+END                          - beendet die Programmaus-
+                               fuehrung
+STOP                         - wie END aber mit Ausschrift
+                               BREAK @ LINE...
+REM bzw. '                   - Kommentar
+SCREEN(x,y)                  - Positionierung des Kursors
+USR                          - Maschinenprogrammaufruf mit
+                               Argumentrueckgabe
+                               Es wird das Programm ueber
+                               die Sprungadresse USR: 43Ø6H
+                               (vorbelegt mit Fehlermeldung)
+                               aufgerufen. Um den Parameter
+                               zu erhalten muss das UP auf
+                               Adresse 4327H gerufen werden.
+                               Der hexadezimale Parameter
+                               steht dann in DE. Um die
+                               Information zurueck zu ueber-
+                               tragen wird das UP auf 432AH
+                               aufgerufen. Dazu muss das
+                               niederwertige Byte in B, das
+                               hoeherwertige in A stehen.
+                               Aufruf z.B.: 1Ø A=USR(B)
+CLOAD"name"                  - Einlesen von BASIC-Programmen
+                               von Kassette. Jedes in ""
+                               eingeschlossene Zeichen ist
+                               fuer die Suche signifikant,
+                               wird nur "" angegeben, so wird
+                               das naechste Programm geladen.
+                               (Achtung: nicht "? wie beim
+                                8k-Interpreter)
+CLOADGO"name"                - Laden wie CLOAD mit an-
+                               schliessendem Autostart
+CSAVE"name"                  - Retten von BASIC-Programmen
+                               auf Kassette. Der Name darf
+                               aus 6 Zeichen bestehen.
+
+
+i) Steuerzeichen
+----------------
+
+    ,    zur naechsten TAB-Position oder Trennzeichen
+    ;    nicht fortschreiten
+    :    mehrere Anweisungen in einer Zeile
+DEL(7FH) Loeschen des eingegebenen Zeichens in //
+CTRL-S   Anhalten der Ausgabe von Daten
+CTRL-Q   Fortfahren bei der Ausgabe
+CTRL-C   Beenden der Ausfuehrung des Basic-Programms
+CTRL-U   Loeschen der gerade eingegebenen Zeile
+CTRL-X   zum Monitor zurueck
+CTRL-O   Unterdruecken der Konsolausgabe
+CTRL-R   Ausgabe der aktuellen Zeile ohne Loeschzeichen
+CTRL-T   waehrend des Programmlaufs kann dadurch die gerade
+         abgearbeitete Zeilennummer ausgegeben werden
+
+4. Kompatibilitaet zum 8k-Interpreter
+-------------------------------------
+
+Der 12k-Interpreter rechnet vor CSAVE das BASIC- Programm
+in das Format des 8k-Interpreters um, sofort nach erfolgtem
+Abspeichern und nach CLOAD erfolgt wieder eine Umrechnung
+in das eigene Format. Bei sehr langen Programmen kann das
+u.U. einige Sekunden dauern. Damit sind jedoch alle Programme
+des 8k-Interpreters sofort ladbar und muessen nur in wenigen
+Faellen korrigiert werden. Wird nur der Befehlssatz des
+8k-Interpreters verwendet, gilt das auch andersherum.
+
+
+Nichtuebereinstimmung:
+
+             8k-BASIC         entspricht im 12k-BASIC
+
+             DEEK                 PRINT USING
+             DOKE                 BEEP
+             LINES                ?
+             BYE                  FNEND
+             TRON                 TRACE
+             TROFF                LTRACE
+
+DEEK und DOKE sind also im 12k-BASIC durch PEEK und POKE
+nachzubilden. Dabei ist unbedingt darauf zu achten, dass
+evtl. Aenderungen im BASIC-Interpreter mit POKE selbst-
+verstaendlich nicht kompatibel sind. Fuer LINES gibt es
+keinen Ersatz, BYE wird i.A. in Programmen nicht verwendet.
+Folgende Befehle des 12k-Interpreters sind nicht im 8k-
+BASIC vorhanden:
+BEEP, CLOADGO, ,COPY, DELETE, ELSE, EXCHANGE, FNEND,
+FNRETURN, INSTR, KILL, LINE INPUT, LVAR, PRECISION,
+PRINT USING, RANDOMIZE, SWITCH, LLIST, LLVAR, LNULL,
+LPRINT, LPRINT USING, LTRACE, LWIDTH, LPOS,! .
+Deren direkte Uebertragung in das 8k-BASIC fuehrt dort
+zu erheblichen Fehlern!
+
+
+                                Frank, Y56UL
+
+
+
+
+.

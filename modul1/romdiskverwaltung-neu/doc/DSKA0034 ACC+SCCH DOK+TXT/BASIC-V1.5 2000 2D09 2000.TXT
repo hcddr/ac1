@@ -1,0 +1,102 @@
+           Beschreibung JEC-Basic 1.5
+           ==========================
+
+Auf der  Grundlage  des von Y21SO  auf der Ac1 Musterkassette
+vertriebenen  Basic  entstand  die  im folgenden  verbesserte
+Version
+
+1. Neue Befehle
+
+LVAR        listet die Variablen und deren Belegung
+GET A$      Funktion analog INKEY$  A$ nur Bsp.
+CLOAD"?"    listet die Namen von Basicfiles  die nacheinander
+            auf der Kassette sind
+            Meldet  Found File "name  "ohne es jedoch  einzu-
+            lesen
+CLOAD"name" laedt das Programm "name" in den Speicher
+            name  kann  6 Buchstaben  lang sein.Bei  Erkennen
+            des richtigen  Files erfolgt  die Ausgabe von "L"
+            (loading).Fuer   eine  laengere   Ausgabe  reicht
+            die Zeit nicht aus.
+Die Fehlermeldungen sind jetzt in der Langform analog im 12k-
+basic.
+Das Basic belegt  den Speicher von 4иии-63FF.
+Die Merkzellen belegen den Speicher ab 64ии .
+Eine Basic-zeile kann 128 bytes lang sein.
+
+Der Befehl EDIT entfaellt!!!
+Statt dessen kann man jetzt auf dem gesamtem Bildschirm  edi-
+tieren.(Full-Screen-Editor)
+
+Folgende Funktionstasten sind belegt
+
+ctrl A      --> Cursor HOME
+ctrl B      --> Bilschirm ab Cursor loeschen
+ctrl C      --> Zeile ab Cursor loeschen
+ctrl D      --> Delete und nachruecken
+ctrl E      --> Einfuegen
+ctrl L      --> cls Cursor home
+ctrl S      --> streichen
+ctrl T      --> LIST
+ctrl U      --> RUN + иdh
+ctrl V      --> GOTO
+ctrl W      --> AUTO
+ctrl X      --> CSAVE
+ctrl Y      --> CLOAD
+ctrl Z      --> GOSUB
+ctrl Ф      --> RETURN
+ctrl ж      --> CALL*xxxx fuer xxxx muss Hexadresse eingetra-
+                gen werden
+ctrl м      --> ?FRE(и) + иdh
+ctrl ^      --> LVAR
+
+Selbstverstaendlich  sind die Tasten  left,right,up  und down
+wirksam. Backspace ist die Taste 5fh (cursor).
+
+2. Grafik-Funktionen
+
+Um im  Basic  die  Grafikzeichen  ab  8иh  nutzen  zu koennen
+wurde  der  sogenannte  'Gaensefuesschenmode'  implementiert.
+
+Durch Eingabe von " gelangt man in den 'Gaensefuesschenmode'.
+jetzt  kann  man jede  Tastenfunktion  eingeben  und sie wird
+in der Basiczeile  mit gespeichert,  gelangt  also  erst  bei
+Ausfuehrung der Zeile zur Wirkung.
+
+Den Tasten  ctrl O und ctrl R kommt  eine Sonderfunktion  zu.
+Durch Druecken  einer von beiden Tasten werden die 2 obersten
+Bildschirmzeilen  geloescht  und  die  Grafikzeichen  mit den
+dazugehoerigen  Tasten  abgebildet.Durch  Druecken  der  ent-
+sprechenden  Tasten  kann  man so die Grafikzeichen  in einer
+PRINT-Anweisung unterbringen.
+Durch  das alternierende  Schalten  der beiden  Tasten  kommt
+man an alle  Grafikzeichen,  entweder  mit SHIFT  oder  ohne.
+Das Abschalten des Grafikmodes erfolgt ebenso.
+Durch Eingabe  von " gelangt man wieder in normalen  Schreib-
+modus.(  aber erst Grafik  aus !!! , dabei werden die 2 ober-
+sten Zeilen wieder geloescht.
+Hat man sich  bei der Eingabe  im ""-mode  vertippt  muss man
+also erst falls aktiv den Grafikmode abschalten ctrl O oder R
+(oberste  2 Zeilen  leer ) und dann " eingeben  um wieder  in
+den EDIT-Mode zugelangen.
+Dies  mag  anfangs  etwas  gewoehnungsbeduerftig  sein,  aber
+man gewoehnt sich recht schnell daran.
+
+
+Alle anderen Befehle entsprechen  dem Standard  8K-Basic  und
+sind der entsprechenden Beschreibung zu entnehmen.
+
+Probleme
+--------
+Das Basic ist kompatibel zum 8K-Standard-Basic.
+Es ist jedoch bekannt  das die Programme  die unsinnigerweise
+das Basic  manipulieren  den  Absturz  des System  nach  sich
+ziehen,  ( PACMAN  usw ) da die Adressen  die gepokt  werden,
+nicht mehr die selben sind.
+
+
+   Viel Spass mit dem BASIC
+                            wuenscht Wolf-Ruediger
+                                      Y43-и2-G
+
+   Stassfurt den 9.9.1988

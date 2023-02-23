@@ -1,0 +1,150 @@
+Beschreibung     -  OCEAC1  -                         Teil  2
+
+3.4 Programm als Quelle in den RAM auslagern
+--------------------------------------------
+
+O      - Kommando zur Quellprogrammausgabe
+
+Das Programm ab Anzeigeadr. bis Programmende  wird ab adr als
+Quellprogramm  in den RAM ausgegeben. Die Zeilen werden durch
+CR, LF getrennt. Der Abschluss des Quellprogramms erfolgt mit
+der Kodierung ØFFH.
+
+        O adr CR   - Das Programm  wird ab adr als Quelle  in
+                     den RAM geschrieben.
+
+3.5 Quellprogramm aus den RAM uebernehmen
+------------------------------------------
+
+I        Kommando zur Quellprogrammeingabe
+
+Das Quellprogramm  ab Adresse  adr im RAM wird in den Bereich
+ab Anzeigeadresse  uebernommen.  Die Quelle muss den gleichen
+Bedingungen wie im Quellkodeeingabemodus  genuegen. Das Pro-
+gramm wird zeilenweise  uebernommen.  Die Darstellung auf dem
+Bildschirm erfolgt parallel dazu.
+
+3.6 Reassemblerliste ausdrucken
+--------------------------------
+
+P      - Kommando zum Ausdruck der Reassemblerliste
+
+Ausgegeben wird die Speicheradr.,  gefolgt vom Maschinencode.
+Danach erscheint  der reassemblierte  Befehl  analog der Dar-
+stellung im Anzeigemodus  des Editors. Informationen  aus der
+Markentabelle  werden mit einbezogen.  Alle Zeilen werden pa-
+rallel  mit ueber  dem BS ausgegeben,  wobei  die gerade  zum
+Drucker  uebertragene  Zeile  mit  "*"  gekennzeichnet   ist.
+Waehrend  der Uebertragung  kann diese  mit CONTROL  S unter-
+brochen  werden.  Die  Fortsetzung  erfolgt  mit  CONTROL  Q.
+Abbruch  der  Druckerausgabe  ist nur durch  RESET  moeglich.
+Sind alle Zeilen  bis ausschliesslich  der Endadresse  ueber-
+tragen, wird vom Programm eine Angabe zum Seitenvorschub  er-
+wartet. Die Eingabe  von "F" loest einen Seitenvorschub  aus.
+Danach wird, wie bei der Eingabe  jedes anderen Zeichens,  in
+den Anzeigemodus des OCEAC1 zurueckgekehrt.
+
+           P adr  CR - Die Endadresse  adr ist absolut  oder
+                       symbolisch  anzugeben. Wird keine End-
+                       adresse angegeben,  gilt das Programm-
+                       ende (mindestens  4mal ØFFH)  als End-
+                       adresse.
+
+3.7 Anwahl  spezieller  Betriebsarten  oder  Sonderfunktionen
+----------------------------------------------------------
+
+Aus dem Anzeigemodus  werden  durch folgende  Ein-Tasten-Kom-
+mandos andere Betriebsarten aufgerufen:
+
+Q   - Kommando  zum  Eintritt  in den  Quellcodeeingabemodus.
+R   - Kommando  zum  Aufruf  der Speichermodifikation  (RAM).
+T   - Kommando zum Eintritt in den Testmodus.
+K   - Kommando fuer direkte Maschinencodeeingabe.
+H   - Definition  der  aktuellen  Adresse  als Haltepunkt  im
+      Testmodus
+
+4. Quellkodeeingabemodus
+------------------------
+
+Der Eingabebereich beginnt ab Kursorposition.Er zeigt auf das
+Markenfeld.  Eine Marke besteht  aus drei Zeichen,  wovon das
+erste Zeichen ein Buchstabe  sein muss. Die Trennung  Marken-
+feld - Operationsfeld  erfolgt durch mindestens  ein Leerzei-
+chen . Das Zeichen ":" als Trennzeichen  kann entfallen.  Das
+gleiche gilt wenn keine Marke verwendet  wird. Operationskode
+und Operanten duerfen nur durch ein Leerzeichen getrennt wer-
+den. Kommentare sind nicht moeglich.
+Der angezeigte  Befehl kann korrigiert  werden. Dabei ist ein
+Ueberschreiben von Befehlen unbedingt zu vermeiden.
+Anderenfalls werden der oder die folgenden Befehle zerstoert.
+Eintragungen in der Markentabelle  werden nicht geloescht und
+fuehren  beim  Binden  zur  Zerstoerung  von  Programmteilen.
+Es sollte immer in folgenden  Schritten  vorgegangen  werden:
+
+- Streichen des Befehls (Kommando S)
+- Schaffen eines genuegend grossen Freibereiches (Kommando E)
+- Eingabe des neuen Befehls
+
+Die Quellcodeeingabe  wird durch CR abgeschlossen. Der Befehl
+wird uebersetzt.  Liegt  ein Syntaxfehler  vor, wird dies vor
+dem Befehl wie folgt markiert:
+
+F    - Operations- oder Operandenfehler
+M    - Marke schon vorhanden
+O    - Offset bei relativen Spruengen zu gross (Tritt nur auf
+       wenn das Sprungziel absolut angegeben wird).
+
+Der Maschinencode  wird bei syntaktisch richtigen Befehlen ab
+Anzeigeadresse gespeichert. Die Speicherbelegung  und der re-
+assemblierte Befehl werden zur Kontrolle auf dem BS angezeigt
+Der aktuelle Befehl ist durch das Zeichen "+" markiert. Durch
+nochmaliges  Betaetigen der Taste CR wird das Programm ab dem
+folgenden Befehl angezeigt  und es kann eine Quellcodeeingabe
+oder eine Korrektur fuer diesen Befehl erfolgen. Das Betaeti-
+gen irgend  einer  anderen  Taste fuehrt  in den Anzeigemodus
+zurueck.
+Neben den U88Ø-Mnemoniks  werden  folgende  Pseudooperationen
+verarbeitet:
+
+      DB n       - Definition  eines  Bytes mit dem Inhalt  n
+      DW nn      - Definition  eines  Wortes  (Doppelbyte)
+                   mit dem Wert nn
+      DM "text"  - Definition der Zeichenkette text
+ mar: EXT  adr   - Definition  der externen  Marke  mar mit
+                   der Adresse adr
+
+Pseudobefehle werden als solche nicht reassembliert.  Auf dem
+BS erscheint der entsprechende Maschinenbefehl.
+Zahlen koennen  dezimal oder hexadezimal  eingegeben  werden.
+Hexadezimalzahlen  muessen mit einer Ziffer beginnen  und mit
+H enden (zB. ØAF7H). Der Reassembler  verwendet fuer die Aus-
+schrift ein hexadezimales Standardformat.  Statt Zahlen koen-
+nen auch Marken angegeben  werden.  Nach einer Marke kann ein
+Offset im Bereich von -127 ... +127 angegeben werden.
+Das Zeichen  "#" (mit der wahlweisen  Angabe  eines  Offsets)
+kann fuer  den Wert des Speicherplatzzuweisungszaehlers  ste-
+hen. Bei der Assemblierung  wird  sofort  der Wert des Zuwei-
+sungszaehlers  eingetragen.  Eine Reassemblierung  der Angabe
+erfolgt nicht.
+
+K        - Direkte Maschinencodeeingabe
+
+Es besteht die Moeglichkeit  ohne Aufruf der RAM-Funktion di-
+rekt den Maschinencode  einzugeben oder zu modifizieren. Auch
+hier ist darauf zu achten,  dass Befehle nicht ueberschrieben
+werden. Auf jeder Zeile koennen  bis zu vier Byte hexadezimal
+eingegeben  werden. Dieses Kommando ermoeglicht  dem Program-
+mierer schnell geringfuegige  Aenderungen  im Programm vorzu-
+nehmen, ohne erst in den Quelleingabemodus zu gehen.
+Der Abschluss der Eingaben durch CR bewirkt das Eintragen der
+eingegebenen  Bytes ab aktueller Adresse und Rueckkehr in den
+Anzeigemodus.  Der Abschluss  durch die Taste OFF fuehrt ohne
+Aenderung in den Anzeigemodus zurueck.
+
+
+
+
+
+                                   (Ende Textteil 2
+
+                                       Textteil   3  folgt)

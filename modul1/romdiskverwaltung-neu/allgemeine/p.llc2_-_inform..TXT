@@ -1,0 +1,83 @@
+LLC 2 Computer-Service A.Schaudin 65ØØ Gera Str.d.Pariser
+Kommune 13Ø
+=========================================================
+
+               Informationsblatt 1
+               -------------------
+Seviceleistungen:
+1)Klärung von Sachverhalten betreffs Leiterplatten,Tastatur
+  Zubehör u.s.w. ...
+2)Aufbauhinweise,Fehlerbeschreibung,-suche bis zum lauf-
+  fähigen Computer
+3)Erweiterung des Computers mit Vollgrafik,Farbe,Speicher-
+  erweiterung u.s.w. ...
+4)kostenloser Softwareaustausch,Vermittlung von Bezugs-
+  möglichkeiten
+5)Vermittlung von Hardwareangeboten,Vermittlung von Bezugs-
+  möglichkeiten
+6)Bildung von territorialen Intressengemeinschaften.Wenn Sie
+  gewisse Erfahrungen mit  dem LLC 2 haben und Interesse
+  daran haben,als Erfahrungsträger anderen Bastlern mit Rat
+  und Tat zur Seite zu stehen,teile ich Ihnen ihre Adresse
+  anderen interessierten Bastlern in ihrer Umgebung mit.
+  Sollten Sie Hilfe brauchen,bekommen Sie eine Liste aller
+  Erfahrungsträger in ihrer Umgebung.
+  Weiterhin wäre es gut,wenn sich Computerclubs dem LLC 2
+  widmen.Die Gründung von LLC 2 Computerclubs wäre denkbar.
+7)Klärung von Hard-und Softwareproblemen,Erweiterungen,
+  Interface,Netzteil,Fernseher,Diskettenlaufwerke,Drucker,
+  Schreibmaschinen u.s.w. ...
+8)Hinweise bei Problemen der Handhabung und Funktion der
+  Hard-und Software
+9)Klärung von Kompatibilitätsfragen zu anderen Computern
+  (KC 85/1 bis 3,Z 1Ø13,MC 8Ø,ZX Spectrum,PC 1715,AC 1 ...
+1Ø)Klärung von Kompatibilitätsfragen bei höheren Program-
+   miersprachen
+
+ - sämtliche Informationen sind völlig kostenlos.Es werden
+   nur Hard-und Softwareangebote weitervermittelt,die eine
+   Geschäftemacherei ausschließen (entweder kostenlos oder
+   zu einem niedrigen Preis).
+ - alle Erweiterungen inbezug auf Hard-und Software be-
+   ziehen sich vorrangig auf das Betriebssystem MONITOR SCCH
+   (E.Ludwig Str.d.Befr. 8 Halle 4Ø7Ø)
+ - weiterhin werden Informationen nur für die 64 K-Variante
+   bearbeitet.Die 16 K-Variante kann nicht mehr berücksich-
+   tigt werden.
+ - ausführliche Informationen können nur als Textfile auf
+   Kassette ausgeführt werden (Textverarbeitungsprogramm
+   oder Basic).
+ - um ihnen zu jedem Problem genaueste und ausreichende In-
+   formationen zu übermitteln,teilen Sie mir bitte folgendes
+   mit:Leiterplattenstand,Bauteile,ausgeführte Änderungen,
+   vorhandene Software,Erkenntnisse über Probleme mit Hard-
+   und Software,vorhandene Literatur,Verbesserungsvorschläge
+   u.s.w. ...
+ - weiterhin bin ich sehr an ihren eigenen Softwareangeboten
+   interessiert,auch wenn noch nicht 1ØØ% lauffähig.Unab-
+   hängig von ihren Leistungen erhalten Sie bei Zuschicken
+   einer Kassette die wichtigsten neuesten Programme über-
+   spielt (Dokumentation ebenfalls als Software).
+ - bitte geben Sie vorhandene Software an,da das Bespielen
+   sehr zeitaufwendig ist.
+ --> Eigene Softwareentwicklungen:Spracherkennung,Uhrenrouti<
+     u.a. ...
+  ** In Entwicklung:Programmierhilfsmittel PIO,CTC ...Inter-
+     face für andere Computer,Spracherzeugung u.a. ...
+   - unabhängig vom LLC 2 Computer bin ich auch bereit,über
+     andere Selbstbaucomputer in Erfahrungsaustausch zu tre-
+     ten (Jugend-und Technik-Computer mit EMR,ZX-Spectrum
+     (DDR-Nachbauvariante).
+   - Da ich momentan noch allein arbeite,ist mit einer längen
+     Wartezeit zu rechnen.Sie machen es mir einfach,wenn Sie
+     Ihre Probleme kurz und knapp halten.
+   - Um eine schnelle Bearbeitung zu ermöglichen,bitte ich
+     ihren Anfragen gleichzeitig einen adressierten Rückum-
+     schlag beizulegen.Beim Zuschicken von Kassetten 2,-M
+     in Form von Briefmarken beilegen(Porto,Unkosten).
+   - Suche:Nadeldrucker,Diskettenlaufwerk,Computerliteratur,
+     Schaltpläne von Computern
+
+                 Weiter viel Erfolg und Freude mit dem LLC 2
+
+                              A.Schaudin

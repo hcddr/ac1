@@ -1,0 +1,89 @@
+    Hinweise zu ZX-Monitorversionen
+    ===============================
+
+1.  ZX-MONITOR V:1.и
+--------------------
+Dieses 16K ZX-Betriebssystem unterstuetzt den Hadwareaufbau
+nach Variante 1: - maximale Nutzung der AC1-Hardware,d.h.
+                   AC1-Tastatur,2иmsec Interrupt durch CTC,
+                   TB-Interface und Tonausgang ueber AC1-PIO
+Diese Variante ist zum SPECTRUM auf BASIC-Ebene kompatibel.
+Sie ist gut geeignet zur Eigenprogrammierung grafischer
+Anwendungen in Basic. Unter dieser Variante sind aber fast
+alle "guten" Spectrum-Programme nicht lauffaehig, da diese
+meist nicht die Betriebssystemunterprogramme benutzen. Die
+Tastatur wird hier direkt ueber Port FEh abgefragt. Ebenso
+wird der Ton-Ausgang direkt angesteuert.
+
+2.  ZX-MONITOR V:2.и
+-------------------
+Entsprechend Bauanleitung sind hier alle E/A-Port's mit
+Orginaladressen vorhanden. Es ist eine separate Matrixtasta-
+tur notwendig. Diese Variante ist fast vollstaendig kompa-
+tibel zum ZX-Spectrum. Es laufen fast alle Programme.
+
+
+3.  ZX-ORIGINAL:2MHz
+--------------------
+Dies ist das Original-ZX-Betriebssystem. Einzige Aenderungen
+daran ist Umstellung der Zeitkonsanten fuer das Kassetten-
+Interface auf 2 MHz. Dieses Betriebssystem ist ebenfalls
+voll lauffaehig auf dem AC1.
+
+
+4. Gemeinsamkeiten der Systeme 1.и und 2.и
+------------------------------------------
+
+Zusaetzlich zum ZX sind die Kommandos TSAVE, TLOAD und BYE
+eingebaut worden.                                              .
+Die Monitorversionen sind alle auf die Taktfrequenz 2MHz des AC1
+abgestimmt. Der Start der Versionen 1.и und 2.и erfolgt nach dem
+Laden auf Adresse 8иииh durch Kennbuchstaben Y oder Jump B874h
+Nach verlassen des ZX-Systems kann mit 'y' ein Warmstart
+erfolgen.
+Mit den Kommandos TSAVE und TLOAD koennen ZX-Programme im TURBO-
+Format geladen bzw. gespeichert werden. Damit ist aber dann
+keine ZX-Kompatibilitaet mehr gegeben. TURBO bringt aber die
+bekannten Vorteile geringer Bandverbrauch und hohe Geschwindig-
+keit mit sich. Allerdings auch den Verzicht auf die komfor-
+tablen Selbstladeroutinen der meisten Spielprogramme nebst
+ordentlichem TitelBild.
+Bei den Kommandos TSAVE und TLOAD muss beachtet werden, dass
+zur Namensangabe auf den AC1-Bildschirm umgeschaltet werden
+muss. Bei allen geladenen Programmen, die nicht 5CCBh als
+Anfangsadresse haben, muss meist die Ladeadresse als Start-
+adresse angegeben werden. 5CCBh ist die Ladeadresse von
+Basicprogrammen.
+
+5. Zur Grafik-Hardware
+----------------------
+
+Fuer die Inbetriebnahme der Grafik-Schaltung sind die Titel-
+bilder einiger ZX-Programme aufgezeichnet. Diese muessen
+nach dem Laden und dem Einschalten des Grafikspeichers W14 8и
+mit T8иии 4иии 1Bии umgeladen werden. Ein Einlesen mit
+TurboTape direkt in den Grafik-RAM ist nicht moeglich, da
+die dort erzeugten WAIT-Zyklen zu Ladefehlern fuehren.
+Es sei darauf hingewiesen, dass fuer den Grafik-RAM der
+RAM-TEST (auch M1) fehlerfrei laufen muss, da ein Teil dieses
+RAM als Arbeitsspeicher benutzt wird (5bии...5bff).
+Ansonsten kommt es zu Abstuerzen im ZX-System.
+
+6. ZX-Programme
+---------------
+
+Die Vielfalt der vorhandenen Programme ist sehr gross.
+Es gibt da wohl keine offenen Probleme mehr. Eigentlich
+duerfte sich damit fuer die meisten AC1-Nutzer der AC1-Modus
+erledigt haben. Einige von hunderten Programmen sind  als
+Demonstration auf dieser Kassette:
+
+Programmname          Bemerkungen
+-------------------------------------------------------------
+WALL                  BASIC-Programm mit MC-Routinen
+JETSET                Spielprogramm
+ART STUDIO            hochwertiges Grafik-Programm
+ZOTYOCOPY             universelles Kopierprogramm
+MCOPY                 zum Kopieren von sehr langen Programmen
+DALEY                 Daley Thompsons Zehnkampf  1.Tag
+DALEY(2)                                         2.Tag

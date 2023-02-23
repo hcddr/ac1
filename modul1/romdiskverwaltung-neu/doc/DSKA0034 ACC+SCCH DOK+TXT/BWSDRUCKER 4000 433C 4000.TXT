@@ -1,0 +1,33 @@
+              Beschreibung BWS-DRUCKER
+              ------------------------
+
+
+  Bei diesem  Programm  handelt  es sich  um eine  Modifikation
+  des Programmes FSM-DRUCKER. Es ist lediglich ein spe-
+  zieller Zusatz zum Auslesen des Bildwiderholspeichers
+  angehaengt.  Somit  koennen  mittels  einer  FSM z.B.Listings
+  mit Pruefsumme  nach  dem Monitorbefehl  M aaaa  bbbb  direkt
+  abgenommen werden. Alle Adressen, Zellen, Ausgabeport
+  wurden beibehalten (siehe ANL.FSM-DRUCK). Die letzten
+  2 Zeilen  werden  nicht  abgeschrieben.  Hier kann man Befeh-
+  le erteilen,  die  nicht  unbedingt  auf  dem  Papier  sicht-
+  bar sein sollen.
+
+
+  Start mit 'p'
+
+
+
+  Weitergabe an AC1-Freunde erwuenscht.
+
+  Anfragen und Hinweise bitte an:
+
+
+               B. Lindner
+               PF 18185/D
+               Perleberg
+               2913
+
+
+
+                   Viel Spasz!

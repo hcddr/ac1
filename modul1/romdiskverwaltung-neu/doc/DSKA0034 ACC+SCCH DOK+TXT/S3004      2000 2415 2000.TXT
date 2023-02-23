@@ -1,0 +1,35 @@
+ Kurzbeschreibung Druckprogramm S3ии4
+ ------------------------------------
+
+ Das Programm realisiert eine Ankopplung der Schreibmaschine
+ S 3ии4 an den seriellen Kanal des AC1 ohne V24-Modul der
+ Schreibmaschine. Die Kopplung erfolgt AC1-seitig ueber den
+ seriellen Ausgabekanal + Handshake, 12ии bit/s, 8 bit ohne
+ Paritaet. Der Code ist nicht ASCII-kompatibel.
+
+ Verbindungen:
+
+               S 3ии4         AC1
+
+ Sendedaten    A 11           PIO 2 A1
+ Handshake     A 12           PIO 2 A2
+ Masse         A 13           Rechnermasse
+
+
+ Der Aufruf erfolgt ueber Call 19ии, Ausgabebyte in A.
+ Die Initialisierung erfolgt ueber Call 19и3.
+ Die Zeilenlaenge wird ueber Zelle 19и6 bestimmt und die
+ Zeilenanzahl ueber Zelle 19и7.
+ Die aktuellen Positionen befinden sich in 19и9 bzw. 19иA.
+ Die Steuerzeichen entsprechen dem Code aus FA 9/88.
+ Eine Hardcopy ist ueber Eintrag Adresse 18F3 "C3 ии 19"
+ und H-Kommando "91" moeglich.
+
+
+ Wetere Auskuenfte ueber
+
+       Stefan Leissner
+       E.-Thaelmann-Str. 37
+       Plauen
+       99ии
+       Tel. 281497  (7-16 Uhr)

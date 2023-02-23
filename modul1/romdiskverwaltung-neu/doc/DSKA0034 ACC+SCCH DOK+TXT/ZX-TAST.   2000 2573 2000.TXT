@@ -1,0 +1,58 @@
+-------------------------------------------------------------
+! Befehl  K-Modus E-Modus   ! Befehl  K-Modus E-Modus       !
+!---------------------------!-------------------------------!
+!                           !                               !
+! ABS             G         ! LPRINT          C             !
+! ACS             sht+W     ! MERGE           sht+T         !
+! AND     Ä  A              ! NEW     A                     !
+! ASN             sht+Q     ! NEXT    N                     !
+! AT      ctl+U             ! NOT             Ö  O          !
+! ATN             sht+E     ! OPEN            $             !
+! ATTR            sht+L     ! OR      Ü  U                  !
+! BEEP            sht+Z     ! OUT             sht+O         !
+! BIN             B         ! OVER            sht+N         !
+! BORDER  B                 ! PAPER           ?             !
+! BRIGHT          sht+B     ! PAUSE   M                     !
+! BYE             )         ! PEEK            O             !
+! CHR$            U         ! PI              M             !
+! CIRCLE          sht+H     ! PLOT    Q                     !
+! CLEAR   X                 ! POINT           (             !
+! CLOSE           %         ! POKE    O                     !
+! CLS     V                 ! PRINT   P                     !
+! CODE            I         ! RANDOMIZE T                   !
+! CONTINUE C                ! READ            A             !
+! COPY    Z                 ! REM     E                     !
+! COS             W         ! RESTORE         S             !
+! DATA            D         ! RETURN  Y                     !
+! DEF FN          !         ! RND             T             !
+! DIM     D                 ! RUN     R                     !
+! DRAW    W                 ! SAVE    S                     !
+! EXP             X         ! SCREEN$         sht+K         !
+! FLASH           sht+V     ! SGN             F             !
+! FN              @         ! SIN             Q             !
+! FOR     F                 ! SQR             H             !
+! FORMAT        (unklar)    ! STEP    Ö  O                  !
+! GO SUB  H                 ! STOP            sht+^         !
+! GO TO   G                 ! STR$            Y             !
+! IF      U                 ! TAB             P             !
+! IN              sht+I     ! TAN             E             !
+! INK             sht+X     ! THEN            Ü  U          !
+! INKEY$          N         ! TLOAD           '             !
+! INPUT   I                 ! TO              Ä  A          !
+! INT             R         ! TSAV            &             !
+! INVERSE         sht+M     ! USR             L             !
+! LEN             K         ! VAL             J             !
+! LET     L                 ! VAL$            sht+J         !
+! LINE            #         ! VERIFY          sht+R         !
+! LIST    K                 ! <=      ctl+R                 !
+! LLIST           V         ! <>      ctl+P                 !
+! LN              Z         ! >=      ctl+Q                 !
+! LOAD    J                 !                               !
+!---------------------------!-------------------------------!
+
+ctl+A / ctl+C / ctl+C  = Umschaltung Kursormodus
+ctl+C   Break waehrend RUN
+ctl+F   EDIT
+Y       Kalt u. Warmstart nach BYE
+TLOAD   Turbotape (nach Namensangabe kein ")
+TSAVE     -"-

@@ -1,0 +1,230 @@
+
+       Beschreibung zum AC1-Texteditor V 4/1
+      ---------------------------------------
+
+
+Mit dem im folgenden vozustellenden Programm soll dem
+AC1- Benutzer eine Moeglichkeit der Textverarbeitung ge-
+geben werden. Bei der Erarbeitung wurde Wert auf einfache
+Bedienung und guten Komfort gelegt.
+
+Bei Verwendung eines geeigneten Druckers kann der AC1 als
+elektronische Schreibmaschine eingesetzt werden.
+
+Ein weiteres Einsatzgebiet ist die Erstellung von Texten,
+die als eigenstaendige Files auf Kassette abgespeichert
+werden koennen. Damit ist z.B. dem Programmierer eine
+Moeglichkeit gegeben, Programmbeschreibungen auf einfache
+Art und Weise vervielfaeltigen zu koennen.
+
+
+
+
+   * Hardwarevorausstzungen
+   ------------------------
+
+Der verwendete AC1 muss folgende Voraussetzungen er-
+fuellen:
+         - Speichererweiterung
+           (min. 16K RAM bei 4иииH beginnend)
+         - Zeichengenerator mit Kleinbuchstaben
+           (z.B. nach FA 1/86)
+         - 32- zeiliger Bildschirm
+
+
+
+
+ * Programmstart:   J6иии oder
+   -------------    Kennbuchstabe 'U'
+                    (nur bei geaendertem Monitor)
+
+ * Menufunktionen:  A-Start
+   --------------   -------
+                    Dabei handelt es sich um eine Art
+                    Kaltstart. Der Editierpuffer wird
+                    geloescht, der anschliessend zur An-
+                    zeige gelangt. In der letzten Zeile
+                    werden Statusinformationen angezeigt.
+                    Es kann mit der Texteingabe begonnen
+                    werden.
+
+                    B-Restart
+                    ---------
+                    Die Ablauefe entsprechen A.Der Puffer
+                    wird nicht geloescht.
+
+                    C-Komprimieren
+                    --------------
+                    Der geschriebene Text kann in einen
+                    frei waehlbaren RAM-Bereich unterhalb
+                    6иииH umgelagert werden.
+                    Eine Sonderstellung nehmen dabei
+                    Leerzeichen und Bindestrich ein. Auf-
+                    einanderfolgende Zeichen dieser Art
+                    werden zu einem Byte komprimiert.
+                    Dem Text wird ein Hilfsprogramm vor-
+                    angestellt, mit dem es moeglich ist,
+                    ihn auch ohne Editor zu lesen.
+                    Sollte der vorhandene RAM-Bereich
+                    ueberschritten bzw.6иииH erreicht
+                    werden, erfolgt eine Fehlermeldung.
+
+                    Die Argumentzellen des Monitors wer-
+                    den geladen, so dass ein Abspeichern
+                    mit S:Name erfolgen kann.
+
+                    D-Dekomprimieren
+                    ----------------
+                    Nach C komprimierte Texte koennen
+                    in den Puffer zurueck geladen werden.
+                    Wird eine falsche Anfangsadresse an-
+                    gegeben, wird der Befehl verweigert.
+
+                    E-Drucker
+                    ---------
+                    Der Puffer wird zeichenweise im Akku
+                    einer Druckerroutine uebergeben.
+                    HL, DE und BC duerfen dabei nicht
+                    veraendert werden.
+                    Die Ansprungadresse muss in die RAM-
+                    Zellen 6ии3-6ии4H eingetragen werden.
+
+                    F-Format
+                    --------
+                    Es kann eine maximale Zeichenanzahl
+                    je Zeile festgelegt werden. Die An-
+                    fangsinitialisierung betraegt 61
+                    Zeichen.
+                    Der Formatierungsraum ist der Be-
+                    reich, in dem beim Formatieren auf
+                    das Vorhandensein von Zeichen getes-
+                    tet wird.
+                    Wird и bzw. kein Wert eingegeben, so
+                    wird der Raum zu Format/1и+2 errech-
+                    net.Die Anfangsinitialisierung be-
+                    traegt 8.
+
+                    G-Formatieren
+                    -------------
+                    Auffuellen aller Zeilen, in denen im
+                    Formatirungsraum ein Zeichen steht,
+                    mit Leerzeichen, so dass ein rechts-
+                    buendiger Abschluss im Format ent-
+                    steht.
+
+                    H-Reformatieren
+                    ---------------
+                    Herstellen des Orginalzustandes nach
+                    Formatieren und Zentrieren.
+                    Der Befehl ist bei einem rekompri-
+                    mierten Text wirkungslos.
+
+                    I-Zentrieren
+                    ------------
+                    Der Text wird je nach Format in die
+                    Bildmitte geschoben.
+
+                    K-Kassette (save)
+                    -----------------
+                    Es werden Anfangs- und Endwert des
+                    Puffers in die Argumentzellen des
+                    Monitors geladen, so dass mit S:Name
+                    ein direktes Abspeichern des Puffers
+                    erfolgen kann.
+
+
+                    (CTRL. C)
+                    ---------
+                    Ruecksprung ins Betriebssystem
+
+
+
+
+
+
+ * Text schreiben
+   ---------------
+
+Das Programm enthaelt eine Reihe von Steuerbefehlen, die
+entsprechend der verwendeten Tastatur mit den nachfolgend
+angegebenen Codes belegt wurden.
+Da ein Aendern einfach moeglich ist, werden die entsprech-
+enden Adressen mit angegeben.
+
+-Cursorfunktionen: backspace      и8H (64AFH)
+                   horizontal tab.и9H (64B4H)
+                   line feed      иAH (64B9H)
+                   vertical tab.  иBH (64BEH)
+                   carriage ret.  14H (64C7H)
+
+                   carriage ret.
+                   +line feed     иDH (64AAH)
+
+                   vertical tab.  17H (64DCH)
+                   (zum naechsten
+                    Wort  in  der
+                    darueber lie-
+                    genden Zeile)
+
+
+-Zeichen           einfuegen      и5H (64E1H)
+                   loeschen       13H (64E6H)
+
+-Zeile             einfuegen      и1H (64D2H)
+                   loeschen       и2H (64CDH;6616H)
+
+-Bild rollen       nach oben      11H (64C3H)
+                   nach unten     15H (64C8H)
+
+-Ruecksprung ins   Menu           и3H (64EBH;6457H)
+                                            (+BIT7)
+
+-Shiftarretierung                 12H (6445H;6453H)
+                                      (  +Bit 7   )
+
+Die entsprechenden CTRL.-Funktionen koennen FA 4/84 ent-
+nommen werden.
+
+Alle anderen ASCII- Zeichen werden entweder auf dem Bild-
+schirm dargestellt oder unterdrueckt.
+Die Tastaturroutine enthaelt eine Autorepeatfunktion,d.h.
+nach laengerem Druecken wird eine Taste automatisch
+wiederholt.
+Es besteht zu den bereits genannten Aenderungen noch die
+Moeglichkeit, das Cursorzeichen zu aendern.
+Dazu ist in den RAM-Zellen 6419H und 6431H an Stelle von
+9FH das gewuenschte ASCII- Zeichen einzutragen.
+
+
+
+
+  * Text lesen
+    ----------
+
+Ein mit der Menufunktion 'Komprimieren' bearbeiteter
+Text steht als eigenstaendiges Programm im RAM. Es ist
+nicht an eine feste Adresse gebunden, d.h. es kann in
+einen beliebigen RAM-Bereich verschoben werden.
+Angespungen wird das Programm mit J:(nach Laden von Kas-
+sette in den Orginalbereich), sonst mit J aaaa.
+
+Der Text wird sofort auf dem Bildschirm geschrieben.
+Die einzelnen Zeichen werden mit 3иms Verzoegerung ueber
+den RST 1и des Monitors ausgegeben.
+Durch Druecken einer beliebigen Taste (ausser CR) kann
+der Text angehalten werden.
+Mit CR wird fortgesetzt.
+Festhalten von CR bewirkt die Ausgabe mit doppelter Ver-
+zoegerung.
+CTRL.C bei bricht bei laufendem Text ab.
+
+Ein Drucken dieser Texte ist nur auf Umwegen moeglich,
+da immer bis zum Zeilenende geschrieben wird und keine
+Wagenruecklauefe enthalten sind.
+
+
+
+                                    vy 73 de Y27XO
+
+
+------------------------E N D E--------------------------

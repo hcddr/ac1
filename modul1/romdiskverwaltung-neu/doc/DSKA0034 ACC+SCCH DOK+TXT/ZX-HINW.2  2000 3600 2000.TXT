@@ -1,0 +1,159 @@
+                                Karl-Marx-Stadt, den 13.1.89
+
+Gruesz Dich, Juergen !
+
+Wie ich Dir ja bereits am Telefon sagte, habe ich das Modul 2
+vom AC1 wieder getrennt und einen eigenstaendigen Rechner damit
+aufgebaut. Fuer meine Begriffe ist die AC1-Taktfrequenz fuer
+den Spectrum doch eine erhebliche Einschraenkung. Bei der
+Inbetriebnahme konnte ich noch einige Fehler beseitigen, die
+ich Dir im Folgendem genauer beschreiben moechte. Vielleicht
+hilft es Dir oder anderen AC1-Freunden beim Aufbau weiter. Zur
+Fehlersuche stand mir zeitweise ein Logikanalysator zur Ver-
+fuegung, was die Suche natuerlich sehr erleichterte bzw. erst
+ermoeglichte.
+Zunaechst etwas zu den Schaltungsaenderungen, die Du mir am
+Telefon mitteiltest:
+
+Joystickanschlusz
+-----------------
+
+Mit der Aenderung, alle Signale am Tastatur '8286 auf "и" zu
+legen, laufen jetzt alle Programme mit Joysticksteuerung. Das
+Bit 6 (Tonbandeingang) habe ich mit einem Transistor nach Masse
+gezogen. Dieser wird parallel zum "Joysticktransistor" ange-
+steuert. Bei mir war das auf diese Art und Weise moeglich, da
+ich im Tonbandinterface einen B 761 eingesetzt habe (open
+collektor).
+
+/WAIT-Verlaengerung
+-------------------
+
+Die von Dir angefuehrte Aenderung war bei mir nicht er-
+forderlich, da ich fuer den Rechner die Taktfrequenz von
+3,5 MHz benutze. Die AC1-Taktfrequenz von 2 MHz musz bei Dir
+unweigerlich zu Fehlern fuehren. Der Zugriff auf den Bild-
+wiederholspeicher erfolgt ja beim Spectrum nicht blosz waehrend
+des Bild- und Zeilenruecklaufes, sondern auch nach der Ueber-
+nahme der aktuellen 8 Bit in das Schieberegister D15/D16. Also
+bei den Zaehlerstaenden и bis 4 von D3. Es stehen also dem
+Rechner genau 5 Taktperioden zur Verfuegung, um den ange-
+meldeten Speicherzugriff auch im Bild durchzufuehren, was unter
+der Voraussetzung der 3,5 MHz Rechnertaktfrequenz auch aus-
+reicht. 2 MHz Rechnertaktfrequenz, die zudem nicht einmal
+synchron zum Zaehler laufen koennen reichen allerdings nicht
+mehr zum ordnungsgemaeszen Abschlusz des Speicherzugriffes.
+Du hast, indem Du das /WAIT verlaengert hast, Zugriffe inner-
+halb des Bildes generell ausgeschlossen. Daher kommt es jetzt
+bei Dir wahrscheinlich zu keinen RAM-Fehlern mehr. Allerdings
+bueszt Du dadurch auch etwas Zeit zum Bildaufbau ein.
+Nutzt man die Moeglichkeit des Zugriffes im Bild duerften rein
+rechnerisch auch nur RAM's vom Typ U 214 D2и eingesetzt werden.
+Die Umschaltung der Multiplexer und das Aufheben von /WAIT ge-
+schieht abgesehen von Gatterlaufzeiten etwa gleichzeitig. Vom
+Umschalten bis zum Einschreiben bzw. Lesen der Daten steht eine
+Taktperiode zur Verfuegung, also etwa 286 ns.
+
+
+
+Nun zu meinen Aenderungen und Fehlern:
+
+Einsparung von D33 (DL 257 D)
+-----------------------------
+
+Die Ausgangssignale mit der Bezeichnung 15 und 16 wurden auf
+die noch freien Multiplexer im Schaltkreis D23 verschaltet.
+Das Ausgangssignal 8 wurde wie folgt verschaltet:
+
+
+
+                               ----
+               /CS 58ии H   ---! &!
+                               !  !--- /CS Farbargumentspeicher
+               WS - MX      ---!  !
+                               ----
+
+                             DL ии8 D
+
+
+32 vertikale duenne schwarze Striche auf Bildschirm bei
+schwarzer Schrift auf weiszem Grund
+-------------------------------------------------------
+
+
+Dieser Fehler war auf den Schaltkreis D31 (DS 8282 D) zurueck-
+zufuehren. Eingesetzt wurde ein Typ der Firma Siemens. Dieser
+zeigte aehnliche Effekte wie in der RFE 4/88 fuer den DS 8283 D
+beschrieben. Bei aktiven /CS und den Eingaengen fest auf "1"
+zeigten sich am Ausgang bei der и/1 Flanke an /STB kurze
+negative Nadeln. Wurden Eingaenge auf "и" gelegt, konnte
+aehnliches am entsprechendem Ausgang nicht beobachtet werden.
+Mit dem Einsatz eines sowjet. 8282 war der Fehler beseitigt.
+
+
+1 duenne schwarze Linie am aeuszerstem linken Rand des Bild-
+ausschnittes
+------------------------------------------------------------
+
+Als Fehler wurden die beiden Multiplexer DL 253 D ermittelt.
+Obwohl die Eingaenge mit festem Potential belegt waren, zeigte
+sich beim Umschalten durch das Signal /AST eine kurze negative
+Nadel am Ausgang.
+Auch hier brachte der Einsatz der sowjet. IC's Abhilfe.
+
+
+Vertikale Striche in farbigen Bildern an Stellen, wo die
+Hintergrundfarbe geaendert wird
+--------------------------------------------------------
+
+Dieser Fehler duerfte generell bei allen Nachbauten des Moduls
+2 auftreten. Grund dafuer sind zeitliche Probleme der Ueber-
+nahme mittels des Signales /ZUET.
+Das Signal /ZUET wird aller 8 Bildpunkte gebildet. Dazu dient
+der Zaehler D3 und der Dekoder D26. Nach jeweils 7 Impulsen
+schaltet D3 mit der naechsten и/1-Flanke des Taktes auf den
+Zaehlerstand 7 bzw. 15. Nach den Gatterlaufzeiten durch D26 und
+D7 schaltet das Signal /ZUET sofort die neuen Farbargumente
+durch D31. Gleichzeitig wird D15/D16 auf parallel Laden ge-
+schalten. Die parallele Uebernahme der neuen Videoinformation
+erfolgt mit der naechsten 1/и-Flanke von BPT. Damit wird die
+Videoinformation ordnungsgemaesz zum Zaehlerstand 8 bzw. и von
+D3 neu gesetzt, waehrend das Farbargumentregister D31 infolge
+des statischen Setzens genau einen Takt zu frueh seine neue
+Information erhaelt. Das zeigt sich in den oben genannten Bild-
+fehlern. Zur Beseitigung schlage ich folgende Schaltung vor:
+
+
+
+
+
+                      TKT
+                  (D3 Pin 5)
+                       V
+           -------     !  -------
+           !S! !Q!     !  !S! !Q!---o--->D31/Pin 11
+BPT      --!C! ! !     !--!C! ! !   !
+D26/Pin 9--!D! ! !    +---!D! ! !   !
+           !R! !Qo----o---!R! !Qo  ---  68и pF *
+           -------    !   -------  ---  *Abgleich auf beste
+           DL и74 D   !             !    Bildqualitaet
+                      !             !
+                      V            ---
+                D15,D16 Pin 6
+
+
+Das Gatter D7/Pin 5 und 6 entfaellt.
+
+
+So, das war es von mir. Ich hoffe, meine Informationen nuetzen
+Dir oder anderen AC1-Freunden etwas. Mein Spectrum arbeitet
+jetzt ohne Fehler. Es ist schon manchmal phantastisch,was
+auf einem doch recht einfachem Rechner, wie der  Spectrum nun
+einmal einer ist, fuer anspruchsvolle bewegte  Farbgraphiken
+erzeugt werden koennen.
+
+
+
+                                     Viele Gruesze!
+
+                                     Hendrik F e y

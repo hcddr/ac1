@@ -1,0 +1,28 @@
+Check CP/M Umgebung				Stand 30.03.2011
+
+Dieses Tool überprüft die CPM Umgebung vom AC1 und testet ob die Umschaltung
+zwischen AC1 Modus und CP/M-Modus korrekt funktioniert. Das gilt sowohl für
+die SCCH Version (Bit2 IO14H), als auch die FA-Version (Bit0 IO1EH).
+
+Die IO-Adresse, das Byte zum ein- und ausschalten vom CP/M Modus kann direkt
+am Programmanfang individuell eingestellt werden !
+
+Byte 1 IO Adresse SCCH Mode		Byte 4	IO Adresse FA Mode
+Byte 2 Byte für CP/M ein SCCH Mode	Byte 5	Byte für CP/M ein FA Mode
+Byte 3 Byte für CP/M aus SCCH Mode	Byte 6  Byte für CP/M aus FA Mode
+
+
+Weiterhin wird überprüft ob alle Speicherbereiche korrekt getrennt sind und 
+das vom Modul 1 bekannte "Durchschreiben" unter EPROMS funktioniert.
+Das Tool wird mit "t" gestartet und dann laufen alle Tests durch. 
+Es ist jedoch auch möglich gezielt einzeln Tests mit der Testnummer (Achtung HEX!!)
+aufzurufen. z.B. "t B CR" startet den Test 11..
+
+Ein mögliche Fehlermeldung beim Test B (Durchschreiben) ist für AC1 2010 User 
+ohne Modul 1 normal und beeinträchtigt das korrekte Funktionieren von CP/M nicht!
+
+Viel Erfolg beim Testen wünscht Euch 
+
+Ralph Hänsel
+
+PS: Fragen und ggf. Bugs bitte via Mail an ralphhaensel@gmx.de

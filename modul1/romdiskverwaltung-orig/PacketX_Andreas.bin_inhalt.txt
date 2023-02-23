@@ -1,0 +1,14 @@
+Basic		4000-5FFF	b,r                     4000-5FFF (02) => RAM: 4000, start at 5FCC 
+HRDOS-12		D000-FEFF	JE600                8000-AEFF (08) => RAM: D000, start at E600 
+HRCPM-12		D000-FEFF	JE600                8000-AEFF (18) => RAM: D000, start at E600 
+DVU-21		4000-531F	d                      8000-931F (28) => RAM: 4000, start at 4000 
+DVHD-31		4000-57EB	d                     8000-97EB (38) => RAM: 4000, start at 4000 
+Gide-Check	2000-2FE7	g                   8000-8FE7 (48) => RAM: 2000, start at 2000 
+EDAS-4		4000-54FF	J4000                  8000-944F (58) => RAM: 4000, start at 4000 
+ASSEMBLER		4000-5447	a                   8000-9447 (68) => RAM: 4000, start at 4000 
+COMPILER		5600-6000	8                    8000-8A00 (78) => RAM: 5600, start at 5600 
+DEBUGGER		4000-5861	J4000                8000-9861 (88) => RAM: 4000, start at 4000 
+DIASSEMBLER-3	5800-5FFF	J5800            8000-87FF (98) => RAM: 5800, start at 5800 
+RAM-TEST		2000-26BF	g                    8000-86BF (A8) => RAM: 2000, start at 2000 
+DISK-1F		3000-3BF1	d                     8000-8BF1 (B8) => RAM: 3000, start at 3000 
+OCEAC1		4000-5D44	J4000                  8000-9D44 (C8) => RAM: 4000, start at 4000 

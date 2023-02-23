@@ -1,0 +1,362 @@
+  STUDIO  COMPUTER  CLUB  HALLE   * SOFTWAREINFO *
+-------------------------------------------------------------
+G R A F I K  B A S I C   V.3.2    *  ANLEITUNG   *
+-------------------------------------------------------------
+
+Der Basic Interpreter V.3.2 belegt den Adressbereich 4ØØØ-
+5FFFH, Speicher ab 6ØF7H max. 4Ø646 Bytes free. Version 3.2
+wird von Kassette geladen oder kann als EPROM eingesetzt
+werden (Modul 1). Betriebssystem ist Monitor V.8/9.
+
+
+ELEMENTE VON BASIC
+
+Einfache Variable :
+ Gleitkomma    XY    +-9.4Ø396 E-39 bis +-1.7Ø141 E+38 und Ø
+ Zeichenkette  XY$   Ø bis 255 Zeichen
+X ist ein Buchstabe (A bis Z), Y Buchstabe oder Ziffer (Ø
+bis 9). Variablennamen können auch länger als 2 Zeichen sein,
+es werden nur die 2 ersten bewertet! Variablennamen dürfen
+keine Kommandonamen enthalten, z.B. TOR=1 ergibt SN-ERROR
+(enthält OR und TO).
+
+Felder :
+Dimension      numerisches Feld     Zeichenkettenfeld
+ 1              XY(5)                XY$(6)
+ 2              XY(7,8)              XY$(2,8)
+Felder bis 11 Elemente können ohne Dimensionierung verwendet
+werden, größere Felder am Anfang Mit DIM dimensionieren.
+
+Operatoren :
+ +             Addition oder Verknüpfung von Zeichenketten
+ -             Subtraktion oder Vorzeichen
+ *             Multiplikation
+ /             Division
+ ^             Potenzierung
+
+Logische und Vergleichsoperatoren :
+ =             gleich
+ <>            ungleich
+ <             kleiner als
+ >             größer als
+ <=            kleiner oder gleich
+ >=            größer oder gleich
+ NOT           logische Negation
+ AND           logisch UND
+ OR            logisch ODER
+Die logischen Operationen wirken bitweise auf 16-Bit-Integer-
+zahlen, Zahlenbereich von 32768 bis -32767
+
+Kommandos :
+ (Die Kommandos werden anhand von Beispielen erläutert)
+
+
+ G R A F I K
+
+Raster - Grafik :
+Der Bildschirm wird in 8192 Bildpunkte unter teilt (128 x 64)
+Jeder Bildpunkt kann gesetzt, rückgesetzt und getestet wer-
+den.
+ SET (x,y)     SET (63,31)     setzt Punkt in Bildmitte
+ RESET (x,y)   RESET (A,B)
+ POINT (x,y)   POINT (Ø,Ø)     testet links oben
+        x=Ø Bis 127; y=Ø bis 63
+
+Pseudo - Grafik :
+Die 128 Grafikzeichen (2K-ZG) können verschieden eingesetzt
+werden. Innerhalb von Zeichenketten entsprechend der Zeichen
+(Grafik-Taste drücken). Weiterhin mittels CHR$(x) (x=128 bis
+255) oder über POKE.
+
+Start Beenden BASIC :
+Neustart über # b (CR); Warmstart(Programme bleiben erhalten)
+über # r (CR). Bei Neustart wird der freie Speicherbereich
+ermittelt und angezeigt.
+ BYE           Sprung in den Monitor
+
+Programmeingabe und Änderung :
+ NEW            Basicprogramm löschen
+ AUTO           automatische Erzeugung der Zeilennummern
+ RENUMBER1Ø,5Ø, Nummeriert die Zeilen 1Ø bis 5Ø neu, neue
+         2ØØ,5  Zeile 2ØØ Abstand 5
+ LIST 2ØØ       Listet Programm ab Zeile 2ØØ, Abbruch LIST
+                mit STOP (Ctl.+R)
+ LINES 5        Ausgabe von jeweils 5 Basiczeilen des LIST-
+                Kommandos
+
+Programmänderungen (Editieren) :
+Der komfortable Bildschirmeditor erfordert kein spezielles
+Kommando. Programmänderungen / Korrekturen können beliebig
+vorgenommen werden, indem nach LIST der Kursor an die betref-
+fende Stelle bewegt wird (Kursortasten) und anschließend
+editiert wird (Editiertasten). Übernahme der neuen Zeile
+mit (CR).
+Editier-/Kursortasten siehe Monitoranleitung Seite 1.
+
+Zusätzliche Tastenfunktionen :
+ Ctl.+R     STOP    Laufendes Programm unterbrechen
+ Ctl.+S     BREAK   Abbruch
+ BREAK/NMI  BREAK   Break/Abbruch auch in MODE1 und bei
+                    CSAVE/CLOAD wirksam
+
+Funktionstasten :
+ Ctl.+ T     LIST + (CR)
+ Ctl.+ U     RUN  + (CR)
+ Ctl.+ V     CLOAD" " + (CR)
+ Ctl.+ W     CSAVE
+4 weitere Funktionstasten (Ctl.+X - Ctl.+Ä) werden mit Pro-
+gramm 'F1-F8 KEY' belegt. Siehe Befehl KEY.
+Bei der K7659-Tastatur liegen STOP,BREAK und die 8 Funktions-
+tasten in der oberen Reihe (F1-F1Ø).
+
+
+Programmstart und Fortsetzung :
+ RUN  RUN 5Ø   Start eines Basicprogrammes, ab Zeile 5Ø
+ CONT          Unterbrochenes Programm fortsetzen (nach STOP)
+
+
+Externspeicherung Programm :
+ CSAVE"Name"   Speichert das Basicprogramm auf Kassette,
+               Name 1-16 Zeichen
+ CLOAD"Name"   Lädt ein Programm von Kassette
+
+
+Spezielle Kommandos :
+CLEAR 5ØØ,-16384 Reserviert 5ØØ Byte für Strings, obere RAM-
+                 Grenze 49152
+CLEAR            Löscht Variablenspeicher
+NULL 6Ø          Ausgabe von 6Ø Dummyzeichen nach jeder
+                 Zeile (Syncronis.)
+WIDTH 16         Länge der Ausgabezeile (Standart 255)
+TRON             Einschalten Kontrollmodus (Auflistung PZ)
+TROFF            Ausschalten Kontrollmodus
+
+Anweisungen :
+LET XY=Austruck  Wertzuweisung, LET kann entfallen
+
+Eingabe :
+INPUT"Text";X,X$ Schreibt Text und wartet Eingabe Zahl,
+                 Zeichenkette. "Text"
+DATA 88,OHM,"A B"Wertliste für READ, Wert mit Leerzeichen
+                 in Anführungszeichen!
+READ X,X$        Zuordnung der DATA-Werte zu X,X$
+RESTORE 1ØØ      DATA-Zeiger auf Zeile 1ØØ setzen
+INKEY X$         Tastaturabfrage (ohne ENTER)
+
+Programmablauf :
+GOTO 2ØØ         Unbedingter Sprung PZ 2ØØ
+ON K GOTO 1ØØ,1Ø Sprung nach K-ter Stelle
+GOSUB 4ØØØ       Sprung in UP
+RETURN           Rückkehr aus UP
+ON K GOSUB 2Ø,3Ø Sprung in UP an K-ter Stelle
+IF B=4 THEN X=3  Wenn Bedingung erfüllt, werden Anweisungen
+                 hinter THEN ausgeführt
+FOR I=A TO B     Schleifenanweisung von A bi B, Schrittweite
+        STEP 2   nach STEP
+NEXT I           Ende der Programmschleife
+STOP             Unterbricht Programm
+
+Ausgabe :
+CLS              Löscht Bildschirm
+PRINT"A=";A      Gibt "A=" und den Wert von A auf Schirm aus,
+                 Semikolon als Trennzeichen fortlaufende Aus-
+                 gabe, Komma Tabellierung
+TAB(N)           Fortsetzung Ausgabe ab N
+SPC(N)           gibt N Leerzeichen aus
+POS(Ø)           liefert aktuelle Kursorposition
+LOCATE (S,Z)     Kursor nach Spalte S, Zeile Z
+SOUND X,Y        Tonausgabe X= Tonlänge, Y= Tonhöhe
+
+Externspeicherung Daten :
+CSAVE*"Name"     Speichert Feld unter Name auf Kassette
+CLOAD* A$        Lädt Feld mit übereinstimmenden Namen in A$
+                 von Kassette. Programm muß identisch sein
+                 zu SAVE (nicht editieren)
+
+Kommentar :
+REM 'Kommentar'  Erläuterungen zu Programmen
+
+Hartwareorientierte Anweisungen/Funktionen :
+PEEK (A)         Liest ein Byte von Adresse A
+POKE A,B         schreibt B nach Speicherplatz A
+DEEK (A)         Liest Speicherplatz A und A+1
+DOKE A,I         schreibt I nach Speicherplätze A und A+1
+CALL A           Ruft Maschinenunterprogramm ab Adresse A
+CALL* 1FØØ       dto. ab Adresse $1FØØ Hexadezimal
+USR (B)          Maschinenunterprogramm mit Wertübergabe,
+                 Adresse nach $6ØØ4/Ø5
+INP (K)          Liest ein Byte von Port K
+OUT K,B          gibt Byte B über Port K aus
+WAIT K,B1,B2     Wartet auf aktuellen Wert an Port K
+
+
+F U K T I O N E N
+
+Numerische Funktionen :
+ABS (X)          absoluter Betrag
+INT (X)          ganzzahliger Anteil
+SGN (X)          Vorzeichenfunktion
+SQR (X)          Quadratwurzel
+EXP (X)          Exponentialfunktion
+LN (X)           Natürlicher Logarithmus
+RND (X)          Zufallszahl
+SIN (X)          Sinus (X im Bogenmaß)
+COS (X)          Cosinus     "
+TAN (X)          Tangens     "
+ATN (X)          Arcustangens "
+
+Zeichenkettenfunktionen :
+CHR$ (X)         Zeichen zu ASCII-Code X
+ASC (X$)         ASCII-Code zu ersten Zeichen von X$
+STR$ (X)         Formt X in Zeichenkette
+VAL (X$)         numerischer Wert von X$
+LEN (X$)         Anzahl der Zeichen in X$
+LEFT$ (A$,X)     ersten X Zeichen von A$
+RIGHT$ (A$,X)    letzten X Zeichen von A$
+MID$ (A$,X,Y)    Y Zeichen von A$ ab X
+
+Nutzerfunktionen :
+DEF FN Y (X)     Definiert Nutzerfunktion Y(X)
+          =X-4*X
+FN Y(A)          liefert Funktionswert Nutzerf. Y(X)
+                 Argument X=A
+
+Spezielle Funktionen :
+FRE (Ø)          Freier Arbeitsspeicher in Byte
+FRE ("")         Freier Zeichenkettenspeicherbereich
+KEY              Aktuelle Belegung der Funktionstasten
+MODE             Wechselt Zeichensatz ZG  (GRAFIK-C64)
+MODE Ø           Zeichensatz 1 Grafikmodus
+                 Befehle wirken auf Hardwareerweiterung
+                 4/8K ZG, ohne Erweiterung ist ständig
+                 Grafikmodus, MODE und MODE Ø ohne Wirkung.
+MODE 1           FAST-Modus des Basicinterpreter, Arbeits-
+                 geschwindigkeit des nachfolgenden Programm
+                 ca. doppelt
+MODE 2           SLOW-Modus, normale Arbeitsgeschwindigkeit
+
+1Ø INKEY A$ : IF A$=""TEN 1Ø   Abfrageschleife Tastatur
+
+
+Anführungszeichenmodus :
+Das Eintippen von Anführungszeichen bewirkt abwechsendes Ein-
+bzw. Ausschalten des Anführungszeichenmodus. Im Anführungs-
+zeichenmodus werden die Funktionen der Kursor- und Steuer-
+tasten (Siehe Monitoranleitung Tabelle Seite 1) nicht ausge-
+führt, sondern als Grafiksymbole in der Zeile dargestellt.
+Die Nutzung des Anführungszeichenmodus in Bildschirmausgabe-
+anweisungen (PRINT) ermöglicht somit die Aufnahme von Steuer-
+zeichen in die Zeichenkette. Diese Steuerzeichen werden erst
+mit RUN ausgeführt. Somit ist eine weitere wirkungsvolle Bil-
+schirmgestaltung gegeben!
+
+Verknüpfung von Basicprogrammen (Merge) :
+CLOAD lädt Basicprogramme hinter bereits im Speicher stehende
+Programme, somit ist vor jedem neuen Laden NEW einzugeben.
+Sollen mehrere Basicprogramme eingegeben werden,ist das nach-
+folgende Programm mit höheren Zeilennummern zu versehen (Um-
+numerieren mit RENUMBER). Nach dem Laden eines weiteren Pro-
+gramm ist Ø REM einzugeben, damit die Basiczeiger gesetzt
+werden. Anschließend ist LIST und RUN möglich.
+
+Laden Programme anderer Basicinterpreter :
+Programme der Basic-Interpreter V.1.1 bis V.2.Ø können über
+das  Programm  ACLOADER  geladen  werden  und  sind  sofort
+lauffähig.
+Programme der KC85/87 und 1ØK-Z1Ø13-Interpreter können über
+KC SAVE/LOAD V.2 geladen werden (Frage Compiler mit J be-
+stätigen, nach Laden von Z 1Ø13 Zeiger über ØREM setzen).
+Abweichende Token können über TOKEN-COMPILER geändert werden.
+
+CLOAD/CLOAD* :
+Über CLOAD sind weiterhin auch Maschinenprogramme, über
+CLOAD* Maschinendateien ladbar (Turbo-Tape). Diese werden
+im Gegensatz zu Basicprogrammen an ihren originalen Adress-
+bereich geladen. Namen auch als String: CSAVE A$;CLOAD A$.
+
+RS234/V.24 :
+Die V.24 Schnittstelle ermöglicht u.a. die Ansteuerung eines
+Druckers und die Kopplung mit weiteren Computern zwecks dir-
+ekter Übernahme von Basicprogrammen.
+Über POKE S nach Adresse 6176 sind die Übertragungswerte
+einzustellen (Baudrate,Stopbits,Parität. Siehe Monitoranlei-
+tung Seite 8).
+Drucker ein: PRINT CHR$(24)     Drucker aus: PRINT CHR$(25)
+Einlesen z.B. eines Basicprogramm über V.24 von anderen Com-
+puter: POKE 6177,18. Die Eingabe erfolgt jetzt statt Tastatur
+über V.24 Eingabe. Abschluß vom externen Gerät mit Wert 25
+(Schaltet zurück auf Tastatur) oder Taste BREAK/NMI betätigen
+
+Joystik-Abfrage :
+Die Spielhebelabfrage erfordert ein kurzes Maschinencode-
+Unterprogramm, welches am Anfang des betreffenden Programm
+in den Speicher gepokt wird.
+1Ø DATA 2Ø5,18Ø,14,5Ø,255,24,2Ø1
+2Ø FOR I=6392 to 6398: READ A: POKE I,A: NEXT
+Beisp. Spielhebelabfrage : 2ØØ CALL*18F8: A=PEEK(6399)
+Der erhaltene Funktionswert in A ist von der Stellung des
+Spielhebels abhängig:
+Ruhestellung A=Ø, oben A=1, unten A=2, links A=4, rechts A=8
+Feuerknopf A=16.
+
+SOUND :    SOUND X,Y     (X,Y Ø...255)
+Ermöglicht die Tonerzeugung über 7 Oktaven (ca.24Ø Hz bis 2Ø
+KHz). Tonlänge ca.1 sec bei X=3Ø, 35 msec X=Ø. Ohne Parameter
+akustisches Klingelsignal. Tonausgabe über Hörkapsel Tasten-
+piep (AC1 PIO/BØ  LLC2 PIO1/B6).
+      a=44Ø,4 h=494,4 c=522,7 d=588,7 e=658,7 f=699,Ø g=782,Ø
+Y AC1  :14Ø     125     118     1Ø4      93      87      78
+Y LLC2 :21Ø     187     176     156     139     131     116
+
+Funktionstasten :
+Die Belegung aller 8 Funktionstasten erfolgt am einfachsten
+über Programm 'Funktionstasten'. Kann aber auch über Monitor
+erfolgen, die Tabelle steht im RAM ab Adresse $1F81. ASCII-
+Code der Funktion mit ØØ abschließen, max. 64 Zeichen pro
+Taste.
+
+Codierung der Zeichen :
+Steuerzeichen :  Siehe Monitoranleitung Seite 1
+Alphanumerische Zeichen entsprechend dem ASCII-Code
+Weitere Sonderzeichen :
+$5B Ä, $5C Ö, $5D Ü, $5E Pfeil oben(Potenz), $7B ä, $7C ö,
+$7D ü, $7E ß, $7F Kursorsymbol
+Grafikzeichen :
+Die Codierung und Darstellung entspricht KC87 und Z1Ø13. Eine
+Bildschirmdarstellung in Tabellenform, Zuordnung Taste-Grafik
+ermöglicht das Programm GRAFIK-TASTATUR.
+
+
+Fehlermeldungen :
+ ?xx Error (in Zeile nn)
+ BS Feldelement außerhalb dimensionierten Bereich aufgerufen
+ DD Feld mehrfach dimmensioniert
+ FC unzulässiger Funktionsaufruf
+ ID Fehlerhafte Direkteingabe
+ MO Operant fehlt
+ NF Variablen in FOR NEXT Schleife fehlerhaft
+ OD zu wenig Daten für READ
+ OM Basicspeicher zu klein für nächste Operation
+ OV Überlauf Ergebnis größer 1.7Ø141E38
+ SN Syntax Fehler
+ RG RETURN ohne GOSUB
+ UL Zeilennummer existiert nicht
+ /Ø unzulässige Division durch Ø
+ CN Programmfortsetzung mittels CONT war nicht möglich
+ LS String länger als 255 Zeichen
+ OS Stringspeicher zu klein
+ ST String zu lang oder zu komplex
+ TM Typenunverträglichkeit (String - Zahl)
+ UF Funktion nicht definiert
+ LD Load Fehler infolge RAM-Fehler
+ xxLD Load-Fehler infolge Bandfehler, xx Anzahl der fehler-
+      haften Blöcke
+ ?Redo from start  Fehlerhafte INPUT - Eingabe
+ Extra ignored     Zu viele Werte zu INPUT, zulässige
+                   Werte ignoriert
+
+
+C O P Y R I G H T  :
+Grafik-Basic-Interpreter V.3.2 wurde unter Verwendung des
+Standartkern des Nascom-8K-Basic (C)1978 Microsoft entwickelt
+(C) 1988 by E.Ludwig, Str.d.Befreiung 8, Halle, 4Ø7Ø

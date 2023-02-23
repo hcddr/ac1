@@ -19,3 +19,7 @@ Es gibt Quellcodes der SCCH-Monitore V8, 10/88 und der angepassten Version für 
 - basic/grafikbasic-v3-2.asm:	SCCH-Grafic-BASIC V3.2 + Patch f. Modul 1/Paket X
 - minibasic/minibasic_4000.asm:	gelinkt auf Adr. 4000h, so dass auch mit einem 4K-Monitor die alten Programme direkt geladen werden können. RAM-Bereich bleibt 1800h ff !
 - cpm/v15-funkamateur:	Das CP/M aus dem Funkamateur 04/89. Ein Mini-CPM mit Kassette und RAM-Disk. BDOS ist von CP/A, CCP von DR (modifiziert), BIOS nach Kramer
+- monitor/ac1-2010.asm: Include-Datei
+- monitor/ac1-turbo.asm: TURBO LOAD/COPY V.1 
+- monitor/mon_v8-fdc-rfl.asm: AC1-MONITOR V8 E. Ludwig SCCH, Monitor Version Nov. 1987, Version AC1-2010 * FARBMONITOR * FDC/RFL (jkcemu-Version)
+- monitor/mon-10122011.asm: mon_v8-fdc-rfl.asm, verändert auf Version "AC1-2010 * MONITOR * 12/2011"

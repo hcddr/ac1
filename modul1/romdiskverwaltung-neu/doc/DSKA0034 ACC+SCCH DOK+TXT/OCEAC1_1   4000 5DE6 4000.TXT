@@ -1,0 +1,212 @@
+Minientwicklungssystem     --- OCEAC1 ---
+
+1. Uebersicht
+---------------
+
+Das System OCEAC1 besteht aus folgenden Komponenten:
+
+- Assembler  zum Uebersetzen  U88и-Mnemonik  in Maschinencode
+- Reassembler zur Rueckuebersetzeung in die Mnemonik
+- Testsystem
+- Speichermodifikation
+
+Besonderheiten:
+
+- Jeder eingegebene  Befehl  wird sofort in den Maschinencode
+  uebersetzt.   Eine   Syntaxkontrolle   wird  durchgefuehrt.
+- Ausser dem Maschinencode  wird noch eine Markentabelle  ge-
+  speichert,  die Definitionen  und Referenzen fuer eine sym-
+  bolische Adressierung vermerkt.
+- Es wird  kein  Quellprogramm  gespeichert.  Der im Speicher
+  eingetragene  Maschinencode  wird zusammen mit den Informa-
+  tionen aus der Markentabelle  reassembliert  und als Quell-
+  text auf dem Bildschirm dargestellt.
+- Der Maschinencode kann sofort getestet werden.
+- Es kann kein Kommentar angegeben werden.
+- Der Reassembler  kann nicht zwischen Befehlen und Daten un-
+  terscheiden.  Daten werden genau wie Befehle reassembliert.
+  Daten- u. Befehlsbloecke  sollten  deshalb im Programm  ge-
+  trennt werden.
+
+Die Funktionen des OCEAC1 werden durch verschiedene Betriebs-
+arten realisiert.
+
+- Anzeigemodus
+- Quellkodemodifikation
+- Testmodus
+- Speichermodifikation (RAM)
+
+Alle Kommandos  sind Ein-Tasten-Kommandos  d.h. nach Betaeti-
+gung der Taste  wird das Kommando  sofort  ausgefuehrt.  Sind
+weitere Parameter notwendig,  werden diese ueber die Tastatur
+eingegeben und mit CR abgeschlossen. Fehlbedienungen  koennen
+korrigiert  werden.  Aus dem Anzeigemodus  werden die anderen
+Betriebsarten  aufgerufen. Die Rueckkehr erfolgt durch Betae-
+tigen der Taste OFF in den Anzeigemodus.  Zweimaliges  Betae-
+tigen der Taste OFF fuehrt in die Aufrufschleife des MONITOR.
+
+
+2. Aufruf des OCEAC1
+---------------------
+
+Startadresse   4иииH. Soll ein vorhandenes  Programm  modifi-
+ziert werden,  so ist es vorher im Speicher  bereitzustellen.
+Das Programm   meldet sich mit OCE und der Adr. der Markenta-
+belle.
+
+OCE MTB#adr
+
+Die Adressangabe  kann mit CR bestaetigt  oder ueberschrieben
+werden,  falls  sich  die  Markentabelle  auf  einem  anderen
+Speicherplatz  befindet.  Danach erfolgt der Uebergang in den
+Anzeigemodus.
+Vor der Markentabelle  muessen  noch 2иH Speicherplaetze  als
+Arbeitsbereich fuer OCEAC1 zur Verfuegung stehen.
+Wird im Laufe  der Quellcodeeingabe  eine  Marke  vereinbart,
+erfolgt  eine  Eintragung  in die  Markentabelle.  Es koennen
+max. 127 Marken vereinbart werden. Ein Ueberlaufen  der Mtab.
+in ein  anderes  Programm  oder  in einen nicht existierenden
+Speicherbereich wird nicht ueberwacht.
+Man kann sich aber jederzeit mit Hilfe der RAM-Funktion ueber
+die Belegung der Markentabelle informieren.
+
+3. Anzeigemodus
+---------------
+
+Im Anzeigemodus  wird der aktuelle  Speicherinhalt  reassemb-
+liert  und zur Anzeige  gebracht.  Die erste  Zeile  enthaelt
+neben dem Programmnamen  die hex. Adr.des  aktuellen  Befehls
+und die Angabe der voranstehenden  Globalmarke mit ihrer hex.
+Adresse. Die mit "*" gekennzeichnete Zeile enthaelt den aktu-
+ellen zur Bearbeitung anstehenden Befehl.
+
+3.1 Positionierkommandos
+-------------------------
+
+DOWN  - Uebergang zum naechsten Befehl.
+N     - 32-maliges Ausfuehren des Kommandos DOWN.
++     - Anzeige  ab naechster  Speicheradr.  Damit  kann  ein
+        Befehlsanfang  zwischen Datenbloecken gesucht werden.
+        Der erste Befehl eines Programmblocks  sollte mit ei-
+        ner Marke gekennzeichnet sein.
+UP    - Uebergang zum voranstehenden Befehl.
+Z     - 32-maliges Ausfuehren des Kommandos UP.
+-     - Anzeige ab voranstehender Speicheradresse. Damit kann
+        die Anzeige in Richtung niederer Adr. veraendert wer-
+        den, ohne dass eine voranstehende  Globalmarke erfor-
+        derlich ist .
+A     - Anzeige ab der davorstehenden Globalmarke.
+
+Als Globalmarke  wird eine Marke bezeichnet,  die als drittes
+Zeichen einen Buchstaben  enthaelt. Die Kommandos UP, Z,und A
+bewirken,  dass zuerst nach einer voranstehenden  Globalmarke
+gesucht wird. Von da ausgehend wird fortlaufend  der naechste
+Befehl ermittelt.  Ein Befehlsblock  benoetigt deshalb am An-
+fang immer  eine Globalmarke.  Existiert  im Bereich  von 255
+Byte  vor der aktuellen  Adresse  keine  Globalmarke,  werden
+die Kommandos UP und Z nicht ausgefuehrt.
+
+G      - Kommando zur direkten Positionierung.
+
+Durch Parameterangaben gibt es folgende Kommandomodifikation:
+       G CR        - Anzeige ab Programmende
+       G и CR      - Anzeige der mit EXT vereinbarten  Marken
+       G adr CR    - Anzeige ab adr
+
+L      - Anzeige  ab  Programmzaehlerstand  vor  dem  letzten
+         Schritt im Testmodus.
+
+3.2 Bindekommando
+-----------------
+
+B      - Kommando zum Programmbinden
+
+Die Bindeoperation   bezieht  sich  auf den gesamten 64K-Byte
+Adressraum. Alle symbolischen  Angaben werden anhand der Mar-
+kentabelle durch absolute (hexadezimal  angezeigte) Werte er-
+setzt und in den Maschinencode  eingetragen.  Danach  ist der
+Maschinencode lauffaehig.
+Nichtdefinierte  Symbole  werden  mit dem Namen und der Adr.,
+von wo ein  Zugriff  erfolgt,  auf dem Bildschirm  angezeigt.
+Ist bei relativen Sprungbefehlen  die Sprungdistanz zu gross,
+erfolgt die Anzeige der Adr. des Sprungbefehls. Nach den Aus-
+schriften muss die Taste CR betaetigt  werden, damit die Bin-
+deoperation weiter ausgefuehrt wird.
+
+Bindekommando  Varianten:
+
+B CR     - Binden des Programms auf den aktuellen Speicherbe-
+           reich,  d.h.  auf  den Bereich  ab Anzeigeadresse.
+B adr CR - Binden des Programms,  so dass der aktuelle Befehl
+           auf der angegebenen Adresse lauffaehig  ist.  Dazu
+           werden die Markenwerte verschoben.  Das gilt nicht
+           fuer mit EXT vereinbarte Marken.Sie behalten ihren
+           Wert (Externe  Eintrittsadr. aus anderen Programm-
+           moduln).Die Eintragungen der Markentabelle bleiben
+           erhalten.
+
+3.3 Korrektur und Verschiebekommandos
+-------------------------------------
+
+S  - Streichen (Loeschen) von Befehlen
+     S CR        - Streichen des aktuellen Befehls
+     S adr CR    - Streichen der Befehle ab aktueller Adresse
+                   bis ausschliesslich  adr. Wenn adr kleiner
+                   als die aktuelle   Adresse  ist , wird die
+                   Befehlsausfuehrung verweigert.
+E  - Einfuegekommando
+
+Der Bereich ab aktueller Adr. bis Programmende  wird mit Mar-
+ken in Richtung Speicherende verschoben. Damit steht ab aktu-
+eller Adr. ein Bereich fuer Eingaben zur Verfuegung.  Ab Pro-
+grammende muss freier Speicherraum vorhanden sein, sonst wird
+das Kommando nicht ausgefuehrt.
+
+      E CR       - Einfuegen eines Bytes (NOP-Befehl)
+      E adr  CR  - Einfuegen   ab aktueller   Adr.  bis  aus-
+                   schliesslich  adr , wenn adr groesser  als
+                   die aktuelle Adresse ist.
+
+M  -  Verschiebekommando  (Programmverschiebung  mit  Marken)
+
+Der angegebene  Programmbereich  wird auf den Bereich  ab An-
+zeigeadr.  verschoben.  Das  Kommando  wird  nur ausgefuehrt,
+wenn der Bereich  ab Anzeigeadr.  genuegend  gross  ist, d.h.
+mit ииH oder FFH belegt ist. Dadurch wird ein versehentliches
+Zerstoeren von Programmteilen  verhindert. Der ehemalige Pro-
+grammbereich wird mit FFH belegt.
+
+      M adr CR
+            CR   - Der  Programmbereich  ab adr bis Programm-
+                   ende   wird  auf den Bereich   ab Anzeige-
+                   adresse verschoben.
+      M adr1 CR
+        adr2 CR  - Der  Programmbereich   von  adr1  bis aus-
+                   schliesslich  adr2  wird  auf  den Bereich
+                   ab Anzeigeadresse verschoben.
+
+V  - Markenumrechnung
+
+Das Kommando  wird angewendet,  wenn eine Markentabelle  vor-
+handen ist, deren Eintragungen  sich auf einen anderen  Spei-
+cherbereich   beziehen.  Dies ist zum Beispiel der Fall, wenn
+das Programm  auf EPROM fixiert  und im Speicher  eingeordnet
+ist. Bei Positionierung  im Anzeigemodus auf die EPROM-Adres-
+se kann die Information aus der Markentabelle nicht verwendet
+werden. Sie bezieht sich auf den urspruenglichen  Speicherbe-
+reich und muss erst durch das Kommando V auf den neuen Anzei-
+gebereich umgerechnet werden.
+
+      V adr CR   - Umrechnen  der Marken  im Bereich  von adr
+                   bis Programmende auf den aktuellen
+                   Anzeigebereich.
+
+      V adr1 CR
+        adr2 CR  - Umrechnen  der Marken im Bereich  von adr1
+                   bis  ausschliesslich  adr2  auf den Breich
+                   ab Anzeigeadresse.
+
+
+
+                                     (Ende Textteil 1
+                                           Textteil 2  folgt)

@@ -1,0 +1,78 @@
+              Beschreibung TPGAC1
+            -----------------------
+
+Der im FuA H. 7 u. 8 1987 veroeffendlichte Texteditor
+wurde um nachstehende Funktionen erweitert. Alle
+bisher erstellten Textfiles sind nach wie vor ohne
+Einschraenkungen verwendbar. Das veraenderte Programm
+belegt jetzt den Bereich von 5иииH- 68ииH. Der Text-
+speicher beginnt ab 684иH und geht bis zum jeweiligen
+RAM-Ende. Alle Anpassungsadressen des Texteditors
+sind unveraendert.
+  Die folgende Beschreibung bezieht sich nur auf die
+neuen Funktionen.
+
+1. Programmstart: J 5иии oder "t" vom Monitor
+
+2. Wort suchen  : Es kann eine max. 2и Zeichen lange
+                  beliebige Zeichenkette im gesamten
+                  beschriebenen Textspeicher oder
+                  durch Seitenzahl begrenzten RAM
+                  gesucht werden. Zur Kontrolle
+                  wird die zu suchende Zeichenkette
+                  in der unteren Bildschirmzeile
+                  ausgegeben und das Suchergebnis
+                  dort angezeigt.
+
+3. Text anfuegen: Es wird ein beliebiger komprimierter
+                  Text ab aktueller Kursorposition
+                  an bzw. bei entsprechenden Frei-
+                  raum eingefuegt.
+
+4. Text trennen : Ein im Textspeicher stehender Text
+                  wird ab aktueller Kursoradresse
+                  bis zum Textende in einen frei-
+                  waehlbaren Speicherbereich umgelagert
+                  und steht dort als eigenstaendiges
+                  File (wie bei "Komprimieren".
+                  Die entsprechende Textstelle im
+                  RAM wird geloescht.
+
+
+Geaenderte Steuertastenfunktionen:
+----------------------------------
+
+CTRL (^) F      Shiftlook
+
+        ^X      Setzen bzw. Loeschen eines Tabulators (!)
+                auf der Trennlinie
+
+        ^W      Sprung bis zu gesetzten Tabulator
+
+      ^R^E      Einfuegen einer beliebig langen Zeichen-
+                kette. Bei Erreichen des eingestellten
+                Zeilenendes erfolgt ein automatischer
+                Zeilenumbruch. Alle bisherigen Zeichen
+                werden nach rechts verschoben.
+
+      ^R^S      Loeschen einer Zeichenkette bis zum
+                naechsten Leerzeichen. Es erfolgt
+                ebenfalls ein Zeilenumbruch.
+
+      ^R^U      Blaettern nach oben
+
+      ^R^Q      Blaettern nach unten
+
+
+
+
+  Auf Wunsch kann der Quelltext von mir auf Kassette
+geliefert werden. Zur Assemblierung ist jedoch ein
+mindestens 32 K-Byte RAM erforderlich.
+  Fuer Anregungen, Hinweise und Verbesserungen bin
+ich jederzeit dankbar.
+
+
+                         vy 73
+
+                      Rolf Y22MC

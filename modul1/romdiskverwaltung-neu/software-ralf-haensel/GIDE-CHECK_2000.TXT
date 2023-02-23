@@ -1,0 +1,42 @@
+Erläuterung GIDE-Check
+
+Das Programm läuft auf Adresse 2000H, wird mit "g" gestartet und ist zum Testen des 
+GIDE Moduls und der daran angeschlossenen Festplatten gedacht.
+Mit diesem recht mächtigem Tool können Festplatten gelesen, geschrieben und auch
+"formatiert" werden. Vor dem Einsatz der Festplatte im CP/M empfehle ich ausdrücklich
+die vom CP/M benutzten Spuren mit dem Byte E5H zu formatieren (-f)
+
+
+Standardmäßig ist GIDE auf IO-Port 80H und die HD als MASTER voreingestellt.
+
+Funktionen von GIDE-CHECK:
+
+-i Damit kann der IO-Port vom GIDE geändert werden, Achtung !! nur 10H Schritte, also 80H,90H..
+
+-m Umschaltung zwischen MASTER und SLAVE, es können also 2 HD genutzt werden
+
+-k Hier wird die Plattenkennung ausgelesen und angezeigt. Diese Funktion sollte IMMER
+   als 1.Schritt vor anderen Aktionen gemacht werden, weil damit das GIDE erstmals
+   vom Programm angesprochen wird und die HD Daten auch übernommen werden.
+
+-l liest die aktuelle HD sektorweise nach 4000H aus und zeigt jeweils die ersten Bytes an.
+
+-f beschreibt die akt. HD mit einem beliebig wählbarem Byte. Es ist auch nur 1 Sector
+   beschreibbar !!! Der Vorgang kann jederzeit mit Ctrl-C abgebrochen werden.
+
+-r liest den RTC aus und kann auch Datum und Zeit ändern
+
+-y FormatSpezial schreibt in alle Sectoren der Spuren 1..4 00H, ABER !! trägt auch die 
+   "Adresse" des Sectors in die ersten Bytes ein. Das eignet sich zum Testen recht gut.
+   Die zu beschreibenden Spuren können am Programmanfang geändert werden. 
+   Adr. 2000H = StartSpur in 16Bit Hex, Adr. 2002H = EndSpur in 16Bit Hex
+
+-w Schreibt die 4k des akt. Monitors (0H..FFFH) in beliebige Spur !
+
+Achtung !!
+Du musst bei den meisten Eingaben selbst auf korrekte Werte achten. Insbesondere ist 
+die Zählweise bei CYL & Head bei 0 beginnend, wobei bei SEc erst ab 1 gezählt wird !!
+
+Hinweis: Für die Nutzung unter CP/M gibt es noch im CP/M Bereich, das Tool GIDETEST.COM.
+
+Fragen und Anregungen, natürlich auch Bugs bitte an ralphhaensel@gmx.de

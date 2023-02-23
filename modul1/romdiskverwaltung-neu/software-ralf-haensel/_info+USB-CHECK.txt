@@ -1,0 +1,13 @@
+USB_Check ist ein kleines Diagnosetool für den USB Aufbau
+
+Es zeigt deutlich mehr Statusmeldungen an und kann an der
+USB-PIO ein Testsignal zum Prüfen des Aufbaus senden. 
+Das ist nützlich, um die richtige PIO Verdrahtung zu prüfen.
+
+USB-Check zeigt die Firmewareversion an und kann die Files
+und Verzeichnisse im Hauptverzeichnis ebenfalls anzeigen.
+
+Die USB-PIO Adresse frei änderbar !
+
+
+Viel Erfolg wünscht Ralph Hänsel (ralphhaensel@gmx.de)

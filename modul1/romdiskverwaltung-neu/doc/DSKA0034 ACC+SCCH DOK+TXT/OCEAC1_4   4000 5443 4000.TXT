@@ -1,0 +1,163 @@
+Beschreibung    - OCEAC1 -                     Teil 4
+
+Testsystem  ODT
+
+1.Uebersicht
+------------
+ODT ermoeglicht  den schritt-  oder abschnittweisen  Test von
+Programmen oder den Test im Echtzeitlauf.  Im Haltepunkt wer-
+den die Registerinhalte  und der Befehl angezeigt. Eine Regi-
+stermodifikation ist moeglich.
+Der Aufruf des Testsystems  erfolgt mit dem Kommando  T .
+Durch Betaetigen  der Taste OFF wird  das Testsystem  verlas-
+sen  und  in  den  Anzeigemodus  von  OCEAC1  zurueckgekehrt.
+
+2. Kommandos
+------------
+
+2.1. Kommandos zur Programmabarbeitung
+--------------------------------------
+
+T   - Abarbeiten  des aktuellen  Befehls und  Protokollierung
+      der Registerinhalte  im Haltepunkt.  Der Haltepunkt ist
+      ueblicherweise der naechste vom Programm auszufuehrende
+      Befehl (Schrittbetrieb).  Wurde durch das Kommando H im
+      Anzeigemodus von OCEAC1 ein spezieller Haltepunkt defi-
+      niert, erfolgt  eine Programmabarbeitung  bis zu diesem
+      Haltepunkt. Dieser ist danach geloescht.
+
+N   - Abarbeiten  des aktuellen  Befehls und  Protokollierung
+      der Registerinhalte im Haltepunkt. Haltepunkt ist dabei
+      der im Programm auf dem naechsten Speicherplatz stehen-
+      de Befehl, der nicht mit dem naechsten  abzuarbeitenden
+      Befehl identisch sein muss. Dadurch ist ein abschnitts-
+      weiser Test von Unterprogrammen  oder Programmschleifen
+      moeglich.  Das abschnittsweise  Testen  kann durch  OFF
+      abgebrochen  werden. In diesem Fall wird der letzte be-
+      arbeitete  Befehl  protokolliert  und es kann mit einem
+      neuen Kommando fortgesetzt werden.
+
+L   - Direktes  Abarbeiten  des  Programms  (Echtzeitlauf).
+      Es erfolgt keine Protokollierung  waehrend der Abarbei-
+      tung.  Der Befehl  RST 7 (Code FFH) wirkt als Software-
+      haltepunkt.  Nach Abarbeitung  von RST 7 wird der Echt-
+      zeitlauf abgebrochen  und der naechste Befehl protokol-
+      liert. Soll mit Softwarehaltepunkten gearbeitet werden,
+      so sind diese zusaetzlich  in das Programm  einzufuegen
+      (RST 7) und anschliessend wieder zu streichen.
+
+2.2  Registermodifikation
+--------------------------
+
+R   - Aendern  der  Registerinhalte  durch  Ueberschreiben.
+      Das Kommando kann mit CR oder OFF abgeschlossen werden.
+      Mit CR werden  die neuen Inhalte  bestaetigt,  waehrend
+      der  Abschluss  mit OFF im Sinne  einer  Fehlerquittung
+      der  urspruengliche   Zustand  wiederhergestellt  wird.
+      Es koennen  nur die Register  AF,  BC, DE, HL, IX u. IY
+      modifiziert werden.
+
+X   - Registertausch
+      Der Hauptregistersatz  wird gegen den Nebenregistersatz
+      ausgetauscht. Die Nebenregisterinhalte werden angezeigt
+      koennen  gegebenfalls  modifiziert  und  rueckgetauscht
+      werden  oder  es erfolgt  Weiterarbeit  mit dem nunmehr
+      aktuellen Registersatz.
+
+3. Besondere Hinweise
+---------------------
+
+Bei der Programmabarbeitung  unter  der Regie des Testsystems
+(Kommando  T und N) wird das Programm nach jedem Befehl durch
+einen vom Testsystem initialisierten  Interrupt unterbrochen,
+um in der Interruptserviceroutine  die Haltepunktbedingung zu
+ueberpruefen.  Dadurch wird das Programm  etwa 2ии ...5ии mal
+langsamer abgearbeitet als im Echtzeitlauf.
+Das zu testende Programm muss folgende Forderungen erfuellen:
+- Das I-Register darf nicht veraendert werden.
+- Der Interruptmodus IM2 darf nicht verlassen werden.
+- Der vom Testsystem  benutzte CTC-Kanal  2 und dessen Inter-
+  ruptverbindungsadresse(188CH) darf nicht veraendert werden.
+- Vom zu testenden Programm sollten der Bildschirminhalt  und
+  die  Arbeitszellen  des  Betriebssystems  nicht  veraendert
+  werden.
+- Nach einer Interruptannahme  oder nach dem Befehl DI laeuft
+  das zu testente  Programm im Echtzeitlauf  bis einschliess-
+  lich dem Befehl nach EI. Die abgearbeiteten  Befehle werden
+  nicht protokolliert.
+
+
+- Achtung ! :
+
+  Wird  mit dem Testsystem  gearbeitet,  ist eine  Verbindung
+  von M1 (Pin  14 CTC)  nach  CLK2  (Pin 21 CTC) zu schalten.
+
+
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+
+Wichtige Tastencodes:
+
+
+   Taste       hex-Code       Bemerkung
+  -----------------------------------------------------------
+
+    CR    (Ctr.M)  иD     Eingabeende
+    OFF   (Ctr.C)  и3     Uebergang  in  den  Anzeigemodus
+                          Bei 2-maliger Betaetigung Rueckkehr
+                          zum Monitor
+    DOWN  (Ctr.J)  иA     Uebergang  zum  naechsten  Befehl
+                          (Kursor nach unten)
+    UP    (Ctr.K)  иB     Uebergang zum voranstehenden Befehl
+                          (Kursor nach oben)
+    LEFT  (Ctr.H)  и8     Kursor nach links
+    RIGHT (Ctr.I)  и9     Kursor nach rechts
+    INS   (Ctr.E)  и5     Zeichen einfuegen
+    DEL   (Ctr.S)  13     Zeichen loeschen
+    Tab   (Ctr.W)  17     Tabulator
+
+
+Ausgabe auf Drucker:
+
+Das  Minientwicklungssystem  enthaelt  eine  eigene  Drucker-
+steuerung ueber einen zusaetzlichen PIO-Schaltkreis.
+Soll eine andere  Druckausgabe  (z.B. Fernschreiber)  benutzt
+werden, muss die Anschlussadresse des Treibers auf die Adres-
+sen 5D43H und 5D44H des Sprungverteilers von OCEAC1 eingetra-
+gen werden. Die Ausgabe erfolgt zeichenweise im Akku.
+
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+
+
+
+
+
+So, das  waers erst einmal !!!!!
+
+    Die Verfasser  hoffen  auf einen  guten  Start mit diesem
+
+       OCEAC1 - Minientwicklungssystem.
+
+
+Zugegeben die Beschreibung ist sehr umfangreich   ---
+Am bessten ist es, man druckt  sich den Text einmal aus  !!!!
+
+   ODER , wenn es notwendig, aber beim bessten  Willen  nicht
+moeglich  ist, setzt man sich mal mit den Verfassern  in Ver-
+bindung.
+
+
+Freiberg,  Jan.87 * Klaus Schneider   , Gunter Roessel  Y59ON
+
+
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+
+
+
+                                      =======================
+                                      =                     =
+                                      =  AC1-Computerdruck  =
+                                      =       Y59ON         =
+                                      =======================

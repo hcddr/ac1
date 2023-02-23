@@ -1,0 +1,300 @@
+
+
+-------------------------------------------------------------
+
+
+      AC 1   M O N I T O R   SCCH   Version 1Ø/88
+
+
+-------------------------------------------------------------
+
+
+Der Monitor 1Ø/88 belegt 4kB Speicher im Adressbereich
+Ø - ØFFF H
+
+Inbetriebnahme  AC 1:
+---------------------
+Monitor auf 4 K EPROM programmieren.Das Betriebsystem für
+Computer AC 1 stellt weitgehend eine Entwicklung des SCCH
+dar,modifiziert von J.Beisler,Leipzig.
+Wichtige Routinen,RST - Befehle und Sprungverteiler sind
+kompatibel zum Monitor V.3.1 von Heyder.Die im Funkammateur
+veröffentlichten AC 1 - Programme bleiben somit lauffähig.
+
+
+Funktionen Monitor V.1Ø/88:
+---------------------------
+Der SCCH - Monitor umfasst das Betriebsystem und einen
+eingebauten Maschinenspache - Monitor (Debugger).Das
+Betriebssystem (Software) dient der Verbindung der Computer-
+hardware mit dem Nutzerprogramm (Anwendersoftware).
+Es realisiert die Eingabe/Ausgabe (Tastatur,Bildschirm,
+Kassetteninterface).Die Verwaltung des Speichers ist er-
+weiterungsfähig.Die nutzbaren Betriebsroutinen und die
+Belegung des Arbeitsspeichers sind in Tabellen im Anhang
+zu entnehmen.
+
+
+EINSCHALTEN:
+------------
+Nach dem Einschalten des Computers übernimmt der SCCH -
+Monitor die Initialisierung des Systems und meldet sich mit
+der Überschriftszeile und zwei Zeilen weiter mit dem Prompt-
+symbol (Doppelkreuz),dahinter blinkt der Kursor.Das Betriebs-
+system befindet sich jetzt im Maschinensprache - Monitor,
+es lassen sich Befehle des Debuggers aufrufen,Abwender-
+programme laden oder in eine andere Betriebssystemebene
+springen (Basicinterpreter,Programmpaket X ).
+
+
+
+
+
+
+
+
+
+
+
+
+
+TASTATUR:
+---------
+Neben der Eingabe von Zeichen und Zahlen erfolgt in
+Verbindung mit der Control - Taste die Eingabe von Steuer-
+zeichen.Diese sind notwendig,um z.B.fehlerhafte Eingaben
+zu korrigieren (Zeichenüberschreiben,einfügen,löschen u.s.w.)
+
+STEUER-/EDITIER-/KURSORTASTEN: (Taste Control und Taste Buch-
+                                staben gleichzeitig drücken!)
+
+CODE:       TASTE:       FUNKTIONEN:
+-----       ------       -----------
+
+Ø1 H          A          Home,Kursor oben links
+
+Ø2 H          B          Bildschirm ab Kursor löschen
+
+Ø3 H          C          Zeile ab Kursorposition löschen
+
+Ø4 H          D          Delete; 1 Zeichen löschen,Zeile
+                         rückt nach links
+
+Ø5 H          E          Insert;Space einfügen, Zeile
+                         rückt nach rechts
+
+Ø6 H          F          Kursor an den Anfang der Zeile
+
+Ø7 H          G          Bel; akustisches Signal
+
+Ø8 H          H          Kursor nach links
+
+Ø9 H          I          Kursor nach rechts
+
+ØA H          J          Kursor nach unten
+
+ØB H          K          Kursor nach oben
+
+ØC H          L          Bildschirm löschen,Kursor Home
+
+ØD H          M          CR;Kursor an Anfang nächster Zeile;
+                         Enter
+
+ØE H          N          Kursor direkt positionieren (s.unt.)
+
+ØF H          O          Tabulator 8 Spalten
+
+19 H          Y          Ein-/Ausgabe normal Drucker aus
+
+5F H     DEL/RUBOUT      Kursor nach links und Zeichen lösch.
+
+1A H          Z          Umschaltung Zeichensatz SCCH/ACC
+                         (nach Erweiterung 4k Zeichengenerat)
+
+Ctrl. + N:  Direkte Kursorpositionierung.
+            Ctrl.+ N steht Kursor Home.Mit den Ziffern-
+            tasten dezimale Bildschirmposition angeben.
+
+            1.Zeilenposition  ( ØØ bis 31 )
+            2.Spaltenposition ( ØØ bis 63 )
+
+
+
+
+Der Kursor kann an jede beliebige Bildschirmposition gebracht
+werden.Dargestellte Zeichen werden dabei nicht verändert (der
+Kursor blinkt abwechelnd zum Zeichen).Fehlerhafte Zeichen
+können durch überschreiben mit anderen Zeichen,oder mit
+DEL/Rubout korrigiert werden.
+Um den Kursor um mehrere Bildschirmpositionen zu bewegen oder
+Zeichen mehrfach zu schreiben,braucht die entsprechende Taste
+nur gedrückt zu bleiben.Das Zeichen wird mit erhöhtem Tempo
+ständig wiederholt (Repetierfunktion).Wird der Bildbereich
+nach oben verlassen,erscheint der Kursor an der gleichen
+Stelle am untrren Bildrand.
+
+BREAK - Taste / NMI: Die entprellte NMI - Taste ist mit dem
+NMI - Eingang der CPU zu verbinden.Im Monitor dient diese
+Taste zum Programmabbruch mit Rücksprung in die Maschinen-
+sprache - Monitorebene.Registeranzeige mit R (CR),Programm-
+fortsetzung mit G (CR) möglich.
+
+Befehlsroutinen des Monitors:
+-----------------------------
+Befehle können eingegeben werden,sobald sich der Monitor mit
+seinen Promptsymbol (Doppelkreuz) meldet.Dabei hat die
+Befehlszeile folgende Form:
+X aaaa bbbb cccc
+X - ist das entsprechende Zeichen,mit dem das Kommando abge-
+kürzt wird.Hinter dem Kommandozeichen können bis zu 3 der
+max.4 stelligen Argumente folgen (hexadezimal).Hinter jeden
+Argument muss mindestens 1 Leerzeichen stehen,führende
+Nullen können entfallen.Werden weniger Argumente angegeben,
+als zu dem Kommando erforderlich,wird für die Fehlenden,der
+Wert Ø gebildet.
+X: Die Angabe des Doppelpunktes hinter dem Kommandozeichen
+bewirkt,dass die Argumente des vorhergehenden Kommandos
+verwendet werden.Die Befehlszeile wird mit Taste 'ENTER'
+bzw.'CR' vom Bildschirm übernommen,analysiert und ausgeführt.
+Wird ein Befehl nicht verstanden,erfolgt Ausschrift '?'.
+Die Übernahme der kompletten Befehlszeile vom Bildschirm in
+den Computer hat den Vorteil,dass Korrekturen  jederzeit noch
+möglich sind oder ein Befehl mehrfach ausgeführt wird,indem
+der Kursor erneut in die Befehlszeile positioniert wird
+(beliebige Position hinter Doppelkreuz).
+
+DEBUGGER:
+---------
+Der Debugger dient insbesondere der Testung,Fehlersuche,
+Entwicklung von Maschinenprogrammen.Weiterhin sind Kommandos
+zur Ein / Ausgabesteuerung (Kassette,Drucker) vorhanden.
+Die Kommandozeichen sind mit den geforderten Argumenten zu
+übergeben.In Klammern stehende Argumente sind nicht unbedingt
+erforderlich.
+
+
+
+
+
+
+
+       Tabelle 1 Maschinensprache - Monitor Debugger
+
+Befehlssatz:
+------------
+
+A   Arithmetik     Addition,Subtraktion,Displ.,Dezimal
+b   BASIC          Start des Basicinterpreter V.3.2 (kalt)
+B   Breakpoint     Unterbrechung setzen, nur RAM
+C   Compare        Vergleich von 2 Speicherbereichen
+D   Dump           Hexdump und ASCII-Darstellung
+E   Einzelschritt  Befehl abarbeiten und Register anzeigen
+F   Find           Suchen nach Bytes oder Zeichenkette
+G   Go             Sprung in Programm ab Adresse PC
+H   I / O          Zuordnung der Ein- und Ausgabekanäle
+I   Init           RSA löschen,SP initialisieren
+J   Jump           Sprung in Programm ab Adresse
+K   Kassette save  Speichert Programm oder Datei auf Kassette
+L   Load           Lädt ein Programm oder Datei von Kassette
+N   CRC            Cheksumme berechnen
+O   RAM - Test     Testet RAM ab Adresse
+p   Pattern        Speicher löschen von 19ØØ-FFFF,FF einschr.
+P   Pattern        Füllt Speicher mit Datenbyte
+r   BASIC          Start des Basicinterpreter V.3.2 (warm)
+R   Register       Ausgabe der RSA - Register (Modifikation)
+U   In             Lesen auf Portadresse
+T   Transfer       Kopiert Speicherbereich in anderen Speich.
+W   Out            Schreiben auf Portadresse
+X   Exit           Sprung in Betriebssystem Programmpaket X
+?   Help           Liste der verfügbaren Kommandos
+=   Speichern      Ablegen Bildschirm nach AØØØ H - DFFF H
+/   Display        Ablage zurück auf Bildschirm
+::  Arg.           Argument Anzeige
+Z   Verify         Vergleich einer Bandaufzeichnung
+
+A   aaaa   bbbb     Arithmetik
+------------------------------
+Es werden berechnet: Sprungabstand (für relative Sprünge),
+Summe,Differenz (aaaa zu bbbb),dezimaler Wert.
+
+
+b                   BASIC
+-------------------------
+Kaltstart des Basic - Interpreter V.3.2 (Modul 1)
+
+
+B   aaaa            Breakpoint
+------------------------------
+Setzen eines Softwarehaltepunktes auf Adresse aaaa.Der Break-
+point wird bei J - Befehl geladen (RST 38 H, 1 Byte - Befehl)
+Mit Erreichen des Breakpoint eines Programmlaufes wird das
+Originalbyte wieder hergestellt und der Monitor springt in
+den Einzelschrittmodus (siehe 'E').Jeder Breakpoint wird nur
+einmal aktiviert,erforderlichenfalls ist der gleiche Break-
+point neu einzugeben.
+
+
+
+
+
+
+C  aaaa bbbb cccc  Compare
+--------------------------
+Vergleicht die Speicherbereiche ab aaaa und bbbb mit der
+Länge cccc.Ungleichheiten werden mit Adress- und Datenangabe
+durch Taste "CR' fortlaufend angezeigt.Jede andere Taste
+bewirkt vorzeitigen Abbruch.
+
+
+D  aaaa             Dump normal
+D  aaaa eeee        Dump drucken
+--------------------------------
+Der Adressbereich von Adresse aaaa wird angezeigt.
+Angezeigt wird Adresse, ASCII 'A',oder Hex 'H' Eingabe,
+8 Datenbytes, ASCII - Interpretation.Das Bild lässt sich
+mit 'CR' rollen.Mit den Kursortasten kann sowohl vorwärts
+als auch rückwärts gerollt werden.Datenbytes können über-
+schrieben werden,dazu wird der Kursor in die entsprechende
+Zeile positioniert und die erforderlichen Datenbyte über-
+schrieben.Mit 'CTRL.+ A' wird zwischen ASCII- und Hex - Ein-
+gabe umgeschalten.Leerstellen zwischen Datenbytes werden
+automatisch übersprungen.Rückkehr in Monitor CTRL.+ C.
+
+
+E  aaaa ; E:        Einzelschritt
+---------------------------------
+Befehlabarbeitung eines Anwenderprogramms ab Adresse aaaa
+oder ab PC (E:) im Schrittmodus.
+Die Prozessor - Register werden automatisch mit Werten der
+RSA geladen,welche bei Bedarf vorher mit Befehl R gesetzt
+und angezeigt werden können.Der Stackpointer ist vorher
+unbedingt mit 'R' oder 'I' auf definierten Wert zu bringen!
+Angezeigt werden bei ausgeführten Befehl: Adresse, Befehl,
+4 Hauptregister, Flag.In der nächsten Bildzeile wird die
+Adresse und Bytes des nachfolgenden Befehls bereits angezeigt
+Befehlausführung jeweils mit Taste 'CR'.
+Gesamt werden 32 Befehlszeilen gleichzeitig auf den Bild-
+schirm dargestellt,womit sich Programmfehler gut zurück-
+verfolgen lassen.
+
+Weitere Funktionen:
+Taste 'R' Sprung in den Befehl 'R '.Es kann der gesamte
+Registersatz dargestellt und neu gesetzt werden (siehe 'R').
+
+Taste 'B' Anzeige des alten Breakpoint,ein neuer Breakpoint
+kann eingegeben werden.Somit können z.B. UP - Aufrufe über-
+sprungen werden.
+
+Taste 'G' Fortsetzung des Programmlaufs in Echtzeit bis zum
+Erreichen eines neuen Breakpoint.
+
+Taste 'Q' Einzelschrittmodus beenden,Rückkehr in Monitor.
+Die CPU - Register werden in RSA zwischengespeichert.Der
+Einzelschritt kann jederzeit mit 'E:' an gleicher Stelle
+fortgesetzt werden.
+Folgende Befehle dürfen nicht im zu testenden Programm
+stehen: IMØ; IM1; DI; EI; LD I,A
+Breakpoint kann nur im RAM gesetzt werden,Schrittmodus ist
+im RAM/ROM - Bereich möglich.
+Der Kanal Ø der CTC darf ebenfalls vom Programm nicht ver-
+ändert werden.

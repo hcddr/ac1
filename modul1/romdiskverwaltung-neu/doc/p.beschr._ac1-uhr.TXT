@@ -1,0 +1,153 @@
+            Eine Weckuhr fuer den AC-1         Dez.'88
+            --------------------------
+
+          Vorbemerkung
+          ------------
+
+       Die folgende Beschreibung ist in Anlehnung an den
+       Artikel im FA entstanden. Sie ist etwas ausfuehr-
+       licher gehalten und soll auch ein paar  Erfahrun-
+       gen im Umgang mit der Uhr vermitteln. Ich bin je-
+       dem AC-1-Freund dankbar, der  mich auf  moegliche
+       Fehler aufmerksam macht oder  der  mir  seine Er-
+       fahrungen bzw. Verbesserungsvorschlaege uebermit-
+       telt. Natuerlich bin ich  auch an einem  weiteren
+       Software-Tausch interessiert. Nun aber zum Thema.
+
+       Zuerst nocheinmal die Grundeigenschaften:
+
+        - CTC-Betrieb mit Interrupt
+        - staendige Anzeige der Uhrzeit
+        - relocatables Programm
+        - einfache Stell- und Korrekturmoeglichkeit
+        - minimale Hardware-Ergaenzung
+        - Zeitschalteinrichtung mit beliebig vielen
+          Zeiten
+        - Start von Load, Save und Verify bei laufen-
+          der Uhr
+
+       Die Uhr  beansprucht  die CTC-Kanaele  2 und 3 des
+       AC-1. Dadurch  ergibt  sich eine kleine  Hardware-
+       ergaenzung.  Die  Pins  ZC/TO  2 und CLK 3 muessen
+       miteinander  verbunden  werden.  Das geschieht  am
+       Einfachsten   am  Steckverbinder   zur   Tastatur.
+       Dort werden  die Anschluesse  B7 und B8 gebrueckt.
+       Das Programm  ansich  belegt  319 Byte  RAM und 22
+       Arbeitszellen,  die sich  unmittelbar  an die Sys-
+       temvariablen  des Monitors  anschliessen.  Die Uhr
+       kann  an jede  beliebige  Stelle  im RAM geschafft
+       werden  (mit  L+Offset  oder unmittelbar  nach dem
+       Laden).  Beim Verschieben der Uhr mit dem T-Befehl
+       in einen  hoehergelegenen  RAM-Bereich  ist darauf
+       zu achten,  dass das alte Uhrenprogramm  geloescht
+       wird,  weil  es  sonst  zu  Fehlfunktionen  kommen
+       kann.  Die  Uhr  wird  mit dem Kennbuchstaben  "U"
+       und der gewuenschten  Uhrzeit  gestartet.  Bei Be-
+       darf ist ein anderer Kennbuchstabe  in die Rahmen-
+       sequenz einzutragen.  Load,Save  und Verify werden
+       mit den Kleinbuchstaben  l,s bzw. v gestartet. Die
+       Interruptanforderung  der CTC wird  dann unterbun-
+       den. Nach  der Kassettenarbeit  muss  die Uhr dann
+       in bekannter  Weise neu gestartet werden. Die Uhr-
+       zeit  kann  bei laufender  Uhr korrigiert  werden.
+       Die Ganggenauigkeit ist (systemtaktbedingt)  nicht
+       ueberwaeltigend,  reicht fuer Kurzzeitbetrieb aber
+       voellig aus. Bei laengerer  Laufzeit  muss gegebe-
+       nenfalls  korrigiert  werden  ('U' u. Zeitangabe).
+
+       Zur Zusammenarbeit  mit  anderen  Programmen  muss
+       Folgendes  gesagt werden (vergl.  auch FA 7/1986):
+
+       - der INT-Mode IM 2, das I-Register  der CPU (18H)
+         und der INT-Vektor  der CTC (88H) duerfen  nicht
+         veraendert werden,
+       - bei INT-Anforderungen  der Kanaele  Ø und 1 sind
+         folgende  Adressen  in der Sprungtabelle  zu be-
+         nutzen:        Kanal Ø  ->  1888H
+                        Kanal 1  ->  188AH
+       - Wenn in Programmen der  DI-Befehl laenger als  1
+         sec. nicht aufgehoben wird, kommt es zu weiteren
+         Gangabweichungen.
+
+
+          Die Zeitschalteinrichtung
+          -------------------------
+
+       Ein Programmteil  der  ISR vergleicht  nach  jedem
+       Zaehlvorgang  die  aktuelle  Uhrzeit  mit der vor-
+       eingestellten  Zeit.  Sind beide  gleich,  springt
+       der  Prozessor  nicht  mehr  in  das  unterbrochen
+       Programm zurueck,  sondern zur Adresse 1896H. Dort
+       muss entweder ein Weckprogramm  oder ein Sprung zu
+       diesem stehen.  Das Weckprogramm  kann individuell
+       gestaltet werden. So kann man z.B. vor der eigent-
+       lichen  Weckroutine  den Zeitschaltpuffer  mit mit
+       einer neuen Weckzeit  laden.  Auf diese Weise sind
+       beliebig viele Zeiten vorprogrammierbar. Die Zeit-
+       schalteinrichtung kann auch unwirksam gemacht wer-
+       den.
+
+
+          Handhabung der Uhr
+          ------------------
+
+       Einstellen der Uhrzeit:         U hh mm ss
+       (nichtangegebene Argumente = Ø)
+
+       Ca. 1 sec. nach  Betaetigung  der  'cr'-Taste  er-
+       scheint in der rechten  oberen Ecke (2. Zeile) die
+       Uhrzeit in der Form     12:23:34
+
+       Einstellen der Weckzeit:        W hh mm ss
+
+       Eine Anzeige der Weckzeit erfolgt nicht, kann aber
+       problemlos nachgeruestet werden.
+
+       Zeitschalteinrichtung deaktivieren:   W A
+
+       Dies ist auch vorsichtshalber  nach der Inbetrieb-
+       nahme  der Uhr auszufuehren,  wenn keine  Weckzeit
+       benoetigt wird. Die RAM-Zellen  des Zeitschaltpuf-
+       fers sind dann definiert  und es kommt  zu  keinen
+       Ueberraschungen  oder  geheimnisvollen  Rechnerab-
+       stuerzen,  wenn Uhrzeit  und die Zufallsbelegungen
+       des Schaltzeitpuffers einmal uebereistimmen.
+
+
+          Speicherbelegung
+          ----------------
+
+       Das Hauptprogramm  belegt 319 Byte RAM an beliebi-
+       ger Stelle.  Die Arbeitszellen  liegen  wie folgt:
+
+          188Ø - 1885   Uhrzeitpuffer
+          1886 - 1887   Hilfszellen
+          1888 - 188F   Sprungtabelle
+          189Ø - 1895   Schaltzeitpuffer
+          1896          Beginn Weckroutine
+
+       Die Zeiten  sind  bereits  im ASCII-Code  abgelegt
+       und beginnen  bei 188Ø bzw. 189Ø mit den Sekunden-
+       Einern. Das hat den Vorteil, dass eine  Konvertie-
+       rung in die Anzeigeform entfallen  kann und  somit
+       Speicherplatz eingespart  und  die  ISR  schneller
+       abgearbeitet wird.
+
+       Bsp.: 188Ø # 32   : 2     ;Belegung Uhrzeitpuffer
+             1881 # 33   : 3
+             1882 # 3Ø   : Ø
+             1883 # 31   : 1
+             1884 # 37   : 7
+             1885 # 31   : 1   =  17:1Ø:32
+
+       Die Doppelpunkte werden von der Anzeigeroutine zu-
+       gefuegt.
+
+       Sollte es noch weitere Fragen geben, bin ich gerne
+       bereit, diese zu  beantworten. Ansonsten  wuensche
+       ich viel Spass bei der Arbeit mit bzw. an der Uhr.
+
+       Vielen Dank fuer Ihr Interesse!
+
+              Mit freundlichen Gruessen
+                                          J.Hannemann

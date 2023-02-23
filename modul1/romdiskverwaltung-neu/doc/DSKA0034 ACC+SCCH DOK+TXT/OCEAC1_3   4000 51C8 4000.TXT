@@ -1,0 +1,153 @@
+Beschreibung   - OCEAC1 -                  Teil 3
+
+Speichermodifikation RAM
+
+1. Uebersicht  der Funktionen
+------------------------------
+
+- Anzeige der Speicherbelegung (hex oder als Zeichen)
+- Speichereingabe (hex)
+- Kopieren  eines Speicherbereiches  in einen anderen Bereich
+- Vergleich zweier Speicherbereiche
+- Suchen  nach einem oder mehreren  Byte in einem Speicherbe-
+  reich
+- Speicherbereich ausdrucken
+
+Alle Funktionen werden durch Ein-Tasten-Kommandos aufgerufen.
+Erforderliche  Parameter werden ueber die Tastatur eingegeben
+und mit CR abgeschlossen.
+
+Die Adressangabe auf dem BS links oben kennzeichnet die aktu-
+elle  Adresse  innerhalb  des angezeigten  Speicherbereiches,
+d.h. die durch den Kursor angewaehlte Adresse.
+
+2. Kommandouebersicht
+---------------------
+
+2.1. Wahl des Anzeigeformats
+-----------------------------
+
+H     - Speicherinhalte  werden als 2-stellige Hex-Zahl ange-
+        zeigt (Standard)
+S     - Speicherinhalte  werden als Zeichen (entsprechend des
+        Zeichensatzes des BS dargestellt)
+
+2.2  Positionierkommandos
+-------------------------
+
+RIGHT - Die aktuelle Adresse  wird um eins erhoeht.Wird dabei
+        der Bereich Grundadresse  + 255 ueberschritten,  wird
+        die Grundadresse um 16 erhoeht.
+LEFT  - Die aktuelle  Adresse  wird um eins vermindert.  Wird
+        dabei  die Grundadresse  unterschritten,  wird sie um
+        16 vermindert.
+DOWN  - Aktuelle  Adr.  und Grundadr.  werden  um 16 erhoeht.
+UP    - Aktuelle Adr. und Grundadr.  werden um 16 vermindert.
+N     - Anzeige naechster Seite
+Z     - Vorangehende Seite wird angezeigt
+G     - Kommando zur direkten Positionierung. Dieses Kommando
+        erfordert eine Adressangabe,  auf welche die aktuelle
+        Adr. und die Grundadr. eingestellt wird.
+
+        G adr CR
+
+2.3. Speichereingaben
+----------------------
+
+CR    - Die rechts  neben  der Angabe  der aktuellen  Adresse
+        stehende  2-stellige  Hex-Zahl  wird auf die aktuelle
+        Adresse eingetragen.
+T     - Der Code des naechsten  ueber die Tastatur eingegebe-
+        nen  Zeichens  wird  in das  Eingabefeld  uebernommen
+        (Texteingabemoeglichkeit).   Die  Eintragung  in  den
+        Speicher erfolgt mit CR .
+I     -  Fuellen  eines  Speicherbereiches.  Dieses  Kommando
+        erfordert eine Adressangabe. Der hex-Eingabewert wird
+        ab aktueller  Adr.  bis  ausschliesslich  adr  in den
+        Speicher  eingetragen.  Das Kommando  wird nur ausge-
+        fuehrt, wenn adr groesser  als die aktuelle Adr. ist.
+
+        I adr CR
+
+2.4. Speicherbereich kopieren
+-----------------------------
+
+M     - Kommando zum Kopieren eines Speicherbereiches
+
+        M adr1 CR
+          adr2 CR
+
+        Der Speicherbereich von adr1 bis ausschliesslich adr2
+        wird auf den Bereich ab Anzeigeadresse  kopiert.  Das
+        Kommando wird nur ausgefuehrt, wenn adr2 groesser als
+        adr1 ist.
+
+2.5. Speicherbereiche vergleichen
+---------------------------------
+
+V     - Kommando zum Vergleich von Speicherbereichen
+
+        V adr1 CR
+          adr2 CR
+
+        Der Speicherbereich von adr1 bis ausschliesslich adr2
+        wird mit dem Bereich ab Anzeigeadr.  verglichen.  Die
+        Anzahl  der Differenzen  wird  auf dem Display  ange-
+        zeigt. Die aktuelle  Adr. weist  auf die erste Nicht-
+        uebereinstimmung.  Im Eingabebereich  steht  der Wert
+        aus  dem  Vergleichsbereich   (Anzeige  durch  adr1).
+        Die Arbeit  kann durch eines der folgenden  Kommandos
+        fortgesetzt werden:
+
+        CR   Der im Eingabefeld  stehende  Wert  aus dem Ver-
+             gleichsbereich  wird auf die aktuelle  Adr. ein-
+             getragen  (dadurch wird die Anzahl der Differen-
+             zen um eine vermindert)  und der Vergleich  wird
+             fortgesetzt.
+        V    Fortsetzen des Speichervergleiches.
+        OFF  Abbruch des Vergleiches.
+
+Ist keine Differenz  zwischen  beiden Speicherbereichen  auf-
+getreten bzw. wurden der Vergleich vollstaendig durchgefuehrt
+gelangt  man durch Betaetigen  einer beliebigen  Taste in den
+Anzeigemodus.
+
+2.6. Suchen einer Datenfolge im Speicher
+----------------------------------------
+
+L     - Kommando  zur  Suche  einer  Datenfolge  im  Speicher
+        L adr1 CR
+          adr2 CR
+
+Die durch adr1 bis ausschliesslich  adr2 gekennzeichnete  Da-
+tenfolge wird im Speicher ab aktueller  Adresse bis Speicher-
+ende gesucht. Wird die Datenfolge gefunden, erscheint sie mit
+der aktuellen Anzeigeadresse.
+
+        CR   Der Suchvorgang wird fortgesetzt.
+        OFF  Der Suchvorgang  wird  abgebrochen  und es wird
+             der Bereich  vor  Ausfuehrung  des  L-Kommandos
+             angezeigt.
+
+2.7. Ausgabe der Speicherbelegung
+---------------------------------
+
+P      - Kommando zum Ausdrucken der Speicherbelegung
+         P adr CR
+
+
+Das Programm  gibt die Speicherbelegung  in hex-Form  und als
+KOI-7 Zeichen aus.
+Die Datenuebertragung  kann mit CONTROL  S und mit CONTROL  Q
+analog der Reassemlerausgabe  gesteuert  werden.  Abbruch der
+Druckerausgabe ist nur durch RESET moeglich.
+Sind alle Daten bis ausschliesslich  der Endadresse gedruckt,
+wird vom Programm  eine Angabe  zum Seitenvorschub  erwartet.
+Die Eingabe  von "F" loest  einen Seitenvorschub  aus. Danach
+wird, wie bei der Eingabe jedes anderen Zeichens,  zur Anzei-
+geadresse zurueckgekehrt.
+
+
+                                     (Textende Teil 3
+
+                                               Teil 4 folgt)

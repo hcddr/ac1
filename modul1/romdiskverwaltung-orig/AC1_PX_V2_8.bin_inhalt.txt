@@ -1,0 +1,16 @@
+Basic		4000-5FFF	b,r                     4000-5FFF (02) => RAM: 4000, start at 5FCC 
+Monitor V 3.1	0000-07FF                  EDCE-F5CD (01) => RAM: 1FF0, start at 1FF0 
+Monitor Z1013	F000-FE48	Y                8000-8E47 (08) => RAM: F000, start at F009 
+CP/M		CFF0-F86F	JEE00                    D084-F8FB (08) => RAM: CFF8, start at EE00 
+Turbo LOAD/COPY	2000-284F	l              F5CE-FE10 (01) => RAM: 2000, start at 2000 
+Multicopy V 2.0	2000-295F	m,w            8E48-97A7 (08) => RAM: 2000, start at 2005 
+KC Save/Load V.2	1900-1E5F	l,s           C9E4-CD71 (08) => RAM: 1900, start at FFFF 
+Compiler-MC	4000-412F	@                  FE11-FF40 (01) => RAM: 4000, start at FFFF 
+DEZ-HEX Umr.	1900-1949	h                 E500-E549 (01) => RAM: 1900, start at FFFF 
+Dateiverwaltung	1D00-2583	Y              E54A-EDCD (01) => RAM: 1D00, start at 1D0B 
+TPG AC-1		4FA0-60FD	t                    9B19-AC75 (08) => RAM: 4FA0, start at 4FCC 
+CLIST-TURBO	1900-1C70	@                  97A8-9B18 (08) => RAM: 1900, start at 1909 
+EDAS*4		4000-54FF                        AC76-C0C1 (08) => RAM: 4000, start at 4000 
+ReQuelle 3	5600-5F20	e                   C0C2-C9E3 (08) => RAM: 5600, start at 57AD 
+AC1-SAVE/LOAD	1900-1C11	Q                CD72-D083 (08) => RAM: 1900, start at 1900 
+GEDIT AC-1	1900-1E5F	f,g                 F8FC-FE5A (08) => RAM: 1900, start at 1900 

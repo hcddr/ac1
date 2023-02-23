@@ -1,0 +1,63 @@
+
+
+Steuercodesequenzen für Drucker  K6311    (aus Manual ROBOTRON)
+===============================================================
+
++---------+------------------+--------------------------------+
+! Zeichen ! Hexcode          ! Funktion                       !
++---------+------------------+--------------------------------+
+! NOP     ! ØØ               ! Leerbefehl                     !
+! HPRV    ! 1B 5B 3n...3n 61 ! Horizontalposit. relativ vorw. !
+! HPRR    ! 1B 5B 3n...3n 71 ! Horizontalposit. relativ rückw.!
+! HPA     ! 1B 5B 3n...3n 6Ø ! Horizontalposit. absolut       !
+! CR      ! ØD               ! Wagenrücklauf                  !
+! BS      ! Ø8               ! Rückschritt                    !
+! LF      ! ØA               ! Zeilenschaltung                !
+! VPRV    ! 1B 5B 3n...3n 65 ! Vertikalposit. relativ vorw.   !
+! VPRR    ! 1B 5B 3n...3n 75 ! Vertikalposit. relativ rückw.  !
+! VPA     ! 1B 5B 3n...3n 64 ! Vertikalpositionierung absolut !
+! LPF     ! 1B 5B 3n...3n 7D ! Formularlänge                  !
+! FF      ! ØC               ! Formularvorschub               !
+! LLFS    ! 1B 5B 3n...3n 7A ! Formularendezeile setzen       !
+! LLFC    ! 1B 3Ø            ! Formularendezeile löschen      !
+! BDE     ! 1B 5B 31 6D      ! Breitdruck ein                 !
+! SDE     ! 1B 5B 33 6D      ! Schrägdruck ein                !
+! NDE     ! 1B 5B 3Ø 6D      ! Normaldruck ein                !
+! DEL     ! 7F               ! Gerät rücksetzen               !
+! CPI 8Ø  ! 1B 5B 3Ø 2Ø 4B   ! Zeichenbreite 1/1Ø Zoll (8Ø)   !
+! CPI 1ØØ ! 1B 5B 32 2Ø 4B   ! Zeichenbreite 1/12,5 Zoll (1ØØ)!
+! CPI 12Ø ! 1B 5B 33 2Ø 4B   ! Zeichenbreite 1/15 Zoll (12Ø)  !
+! UDL     ! 1B 5B 34 6D      ! Unterstreichungsstrich         !
++---------+------------------+--------------------------------+
+Die eingestellten Zeichenbreiten pro Zeile heben sich gegensei-
+tig auf. Schriftarten werden durch jedes LF (ØA) aufgehoben.
+
+Anzahl der Druckstellen und Druckpositionen pro Zeile
++--------+-------------------------+
+!Zeichen-!      Druckstellen       !
+! breite +--------+-------+--------+
+!        ! Normal ! Breit ! Schräg !
+!--------+--------+-------+--------!
+! 1/1Ø"  !  8Ø    !  4Ø   !  79    !
+!1/12,5" !  1ØØ   !  5Ø   !  99    !
+! 1/15"  !  12Ø   !  6Ø   !  119   !
++--------+--------+-------+--------+
+
+Mittels des Befehles DEL (7F)  wird der Drucker  in den  Grund-
+zustand versetzt. Der Grundzustand beinhaltet folgende  Aktivi-
+täten:
+ -Zuordnung des nachfolgenden Druckzeichens zur Druckposition Ø
+ -Einstellung von Normaldruck
+ -Einstellung der Zeichenbreite 1/1Ø Zoll
+ -Einstellung der Formulargröße auf 144 Grundschritte
+ -Löschen der Formularendezeile    (Formularendezeile = Zeilen-
+  position 144
+ -Aktuelle Papierposition wird als Formularanfang gewertet
+   (Formularanfang = Zeichenposition 2)
+
+Die numerischen Parameter 3n (Wertebereich Ø bis 9)  dienen zur
+Darstellung von Dezimalwerten. Die Übertragung beginnt  mit der
+höchsten Dezimalstelle. Führende Nullen (z.B.3/Ø) bleiben unbe-
+rücksichtigt und können entfallen.
+Der maximale Dezimalwert beträgt 255. Größere  Werte führen  zu
+Operationsfehlern.

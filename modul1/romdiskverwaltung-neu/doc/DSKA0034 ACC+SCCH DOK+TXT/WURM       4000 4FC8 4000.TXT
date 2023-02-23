@@ -1,0 +1,133 @@
+             Kurzbeschreibung  'WURMSPIEL'
+             ----------------------------
+
+ Das Programm besteht aus insgesamt 3 Bildern. Der'Wurm' muss
+ mit Hilfe der Steuertasten   (ohne anzustossen)   durch alle
+ 3  Bilder  gelenkt   werden. Dabei hat er alle Zahlen  "auf-
+ zufressen" die mit Hilfe eines Zufallszaehlers staendig  auf
+ dem Bildschirm erscheinen. Jede aufgenommene  Zahl  wird  zu
+ der Gesamtpunktzahl addiert und der Wurm wird  um diese Zahl
+ laenger. Ist eine Zahl aufgenommen worden, erscheint  sofort
+ an anderer Stelle des Bildes eine neue Zahl.  Die Anzahl der
+ Zahlen in  den  einzelnen  Bildern  ist  unterschiedlich. Im
+ Bild 1  sind staendig  3 Zahlen, im Bild 2 sind es  2 Zahlen
+ und im Bild 3  ist nur noch 1 Zahl.
+ Ist der Wurm  angestossen,  dann ist das Spiel  beendet  und
+ der Spieler wird mit Name und Punktzahl in einer Bestenliste
+ eingeordnet.
+ Im Bild 1 und 2  sind bzw. werden in der Grafik einige Stel-
+ len  durchlaessig  ( alle  'duennen'  wagerechten  und senk-
+ rechten Balken ).
+
+ Nach einigen Spielen hat  man schnell herausgefunden, wo der
+ 'Wurm' durchlaufen kann oder nicht.
+
+ Der Wurm erscheint  nach jedem  Bildaufbau  am linken  Bild-
+ schirmrand.  Wenn  er einmal  losgelaufen  ist, dann kann er
+ nicht mehr angehalten werden.
+
+ Nach dem Programmstart durch  'RUN'  kann durch Eingabe ent-
+ schieden werden, ob eine Bestenliste  mit ausgegeben  werden
+ soll oder nicht.
+
+ Weiterhin kann nach Eingabe des Namens (max.1и Stellen)  die
+ Laufgeschwindigkeit  des  Wurmes  durch den  Schwierigkeits-
+ grad bestimmt werden.  Diese Eingabe gilt aber nur fuer  das
+ erste Bild. Die Laufgeschwindigkeit fuer Bild 2 und 3 werden
+ durch das Programm festgelegt.
+
+ In jedem Bild befindet sich ein  eingerahmtes  Feld, in  dem
+ staendig die erreichte Punktzahl angezeigt wird.
+
+ Wird bei der Auschrift 'NOCH EIN SPIEL ...' ein 'N' eingege-
+ ben, so erscheint eine grafische Uebersicht der Bestenliste.
+ Voraussetzung ist aber, dass die Bestenliste mit angezeigt
+ wird.
+
+
+    Endebedingungen fuer die einzelnen Bilder
+    -----------------------------------------
+
+    Bild  1   -   Es muessen 15и Punkte erreicht werden.
+
+    Bild  2   -   Dieses Bild besteht aus zwei Halbbildern.
+
+               a) In der unteren Bildhaelfte befindet sich
+                  ein Haus. In dem Fenster an der Giebel-
+                  seite erscheint nach einer bestimmten
+                  Punktzahl ein Schluessel  (grafisches
+                  Sonderzeichen, das Piek-Symbpl).
+                  Der Zeitpunkt, wann der Schluessel er-
+                  scheint, wird durch ein Zufallszaehler
+                  bestimmt. Er muss geholt werden.
+                  Fuer jede erreichte Zahl gibt es am Haus
+                  eine zusaetzliche Oeffnung, auch in dem
+                  Fenster, wo der Schluessel erscheint. Nur
+                  durch eine solche Oeffnung kommt man an ihn
+                  heran und das Haus wird durchlaessig.
+                  Das  erste Halbbild ist dann beendet,
+                  wenn der Wurm den Schluessel erreicht hat.
+                  Dafuer werden dann auch 5и Punkte gutge-
+                  schrieben.
+
+               b) Nachdem der Wurm den Schluesel erreicht
+                  hat muss er jetzt zu den beiden Schaetzen
+                  in der oberen grafischen Figur (Schatz-
+                  truhe). Diese oeffnet sich aber nur, wenn
+                  wieder Zahlen 'aufgefressen' werden. Auch
+                  hier gilt: Fuer jede Zahl eine Oeffnung!
+                  Das Bild ist beendet wenn beide Schaetze
+                  erreicht sind. Die Reihenfolge spielt
+                  keine Rolle. Fuer jeden Schatz gibt es
+                  wieder 5и Punkte.
+
+
+    Bild  3   -   Dieses Bild ist das Schwierigste.
+                  Hier gibt es keine Endebedingung.
+                  Die 'aufgefressenen' Zahlen zaehlen in
+                  diesem Bild  1и-fach.
+                  Hinweis:  Die erste Zahl erscheint erst
+                            nachdem der Wurm losgelaufen ist.
+
+
+    FUER ALLE BILDER GILT !
+
+    Ist der Wurm an ein Hinderniss angestossen, ist das
+    Spiel beendet. Es beginnt dann wieder mit Bild 1.
+
+
+
+    Hardware - Voraussetzung
+    ------------------------
+
+    Das Wurmspiel ist auf einem erweiterten "AC 1" mit
+    folgenden Merkmalen lauffaehig:
+
+        - Speichererweiterung (min. 32 KBytes)
+
+        - erweiterter Zeichengenerator (2 KBytes)
+
+        - Bildschirm mit 32 Zeilen
+
+
+    Das Programm realisiert eine Tonausgabe ueber TB-Kanal.
+
+
+
+    Steuertasten
+    ------------
+
+           Taste   T   -->   hoch
+             "     V   -->   runter
+             "     G   -->   rechts
+             "     F   -->   links
+
+    Die Steuertasten koennen bei Bedarf geaendert werden.
+
+    Basic-Zeile  4и, 48и, 1иии, 161и    ===>  links
+      "     "    5и, 49и, 1и1и, 162и    ===>  rechts
+      "     "    6и, 5ии, 1и2и, 163и    ===>  oben
+      "     "    7и, 51и, 1и3и, 164и    ===>  unten
+
+
+                             VIEL SPASS BEIM WURMSPIEL !

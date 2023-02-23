@@ -1,0 +1,152 @@
+4.     Der Kommandointerpreter
+******************************
+
+ Der Kommandointerpreter unterscheidet sich vom alten System
+in folgenden Punkten :
+
+       * Kommandoname bis 16 Zeichen
+         " ",":",";" sind nicht erlaubt !!!
+
+       * Trennung des Kommandonamens von den Argumenten
+         durch mindestens ein Leerzeichen
+
+       * maximale Laenge der Kommandozeile sind 255 Zeichen
+
+       * Eingabe von mehreren Kommandos bis zur max.
+         Eingabelange. Die Trennung erfolgt durch ";".
+
+       * Als Kommandopuffer dient ein separater Puffer ab
+         19b2h. Beim Kommandoansprung wird in DE die Adresse
+         im Kommadopuffer nach den ersten drei Agrumenten
+         bzw. dem ":" uebergeben. Die ersten drei Argumente
+         stehen wie bisher schon in den Zellen ARG1 bis ARG3
+         ab 185bh.
+
+       * erneute Abarbeitung der Kommandozeile durch CTRL-A
+
+       * Darstellung der Kommandozeile auf dem Schirm durch
+         CRTL-B. Eine Bearbeitung mittels Zeilencopy ist
+         dann moeglich.
+
+ Eine Kommadozeile koennte, wie folgt, aussehen :
+
+K$ D 4иии 41ии;D 4иии;D :;S 4иии 41ии 4иии Probe;V;L;J :<cr>
+
+
+ Es wird dabei zuerst ein Dump von 4иии bis 41ии angezeigt.
+Dann wird sofort in den Speicherschreibmodus uebergegangen.
+Nach dessen Beendigung wird der beschriebene Bereich mit
+Pruefbyte angezeigt. Dann wird zuerst angezeigte Bereich von
+4иии bis 41ии unter dem Namen PROBE1 abgespeichert und
+verglichen. Ein Programm von Kassette wird geladen und
+angesprungen.
+
+ Es soll hier nicht ueber den Sinn dieser Kommandofolge
+diskutiert werden, sondern nur die Moeglichkeiten des
+Kommandointerpreters aufgezeigt werden.
+
+ Der Kopf eines Kommandos sieht wie folgt aus :
+
+       DEFW 9ииh
+NAMB   DEFM name         ;name bis zu 16 Zeichen
+NAME   DEFB 12+NAME-NAMB ;Kompatibilitaet zu bisher иDH
+       Programm
+       RET
+
+ Im Kommandointerpreter werden alle Bildschirmsteuerzeichen
+unterdrueckt bis auf :
+
+HEX Name  Bedeutung
+------------------------------------------
+и8  left  loescht Zeichen links und positioniert dort den
+          Kursor
+иd  cr    beendet die Eingabe
+12  dele  siehe left
+1e  delli loescht die gesamte Kommandozeile
+
+ Die Steuerfunktionen der Tastatur (Zeilencopy,Hardcopy usw.
+bleiben voll erhalten.
+
+
+
+5.     Bisher installierte Kommandos
+************************************
+
+D      Display
+==============
+
+Syntax1 : D aadr eadr opt    Speicheranzeige als Dump
+       keine opt            Dump und ASCII
+       opt = A              Dump und Zeichensatz
+       opt = B              Dump und Pruefbyte
+
+ Es werden jeweils 16 Zeilen ausgegeben. Danach erscheint
+unter dem Dump folgende Zeile :
+
+(<--,space,cr,.)
+
+ Je nach Betaetigen einer dieser Tasten wird wie folgt
+fortgesetzt :
+
+<--   Ein 256 Byte-Block vorher wird zur Anzeige gebracht.
+
+space Die naechsten 16 Byte (1 Zeile) wird zur Anzeige
+      gebracht.
+
+cr    Der naechste 256 Byte-Block wird angezeigt.
+
+.     Die Anzeige wird abgebrochen.
+
+Wenn die Endadresse erreicht ist, wird die Anzeige
+abgebrochen und der CRC-REST von aadr bis eadr angezeigt.
+
+
+Syntax2 : D aadr
+
+ Es kann der Speicher (nur RAM) beschrieben werden. Die
+Bedienung erfogt ebenso wie im DEB31
+
+
+Syntax3 : D :
+
+ Je nach den jeweils vorgeladenen Argumenten wird einer
+der oben genannten Modi durchgefuehrt.
+
+
+>      Datenumleitung
+=====================
+
+Syntax : > aadr laen
+
+ Es wird ein Puffer mit der Anfangsadresse aadr und einer
+maximalen Laenge von lean+1 eroeffnet. Alle Bildschirmaus-
+gaben werden in ihm abgelegt.
+
+ Durch nochmaliges Kommando "> cr" wird die Datenumleitung
+abgeshlossen.
+
+Achtung : Bei der Eroeffnung der Umleitung wird der Puffer
+          vollstaendig geloescht. Das Steuerzeichen delli
+          bewirkt ebenfalls das Loeschen des Puffers.
+
+
+W      Fensterdefinition
+========================
+
+Syntax : W zusr zosl
+
+ Es wird ein Fenster definiert mit den Eckpunkten unten
+rechts (zu : Zeile unten ; sr : Spalte rechts) und links
+oben (zo : Zeile oben ; sl : Spalte links). Die Angaben
+erfolgen dabei hexadezimal. Die Zaehlung der Zeilen beginnt
+von oben bei и und die der Spalten von links ebenso bei и.
+
+z.B.: W 1f3f и
+
+eroeffnet den gesamten Schirm als Fenster.
+
+
+T      Speichertransfer
+=======================
+
+ Dies Kommando ist identisch zum bisherigen Monitorkommando.

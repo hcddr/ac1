@@ -1,0 +1,260 @@
+           PASCAL-Compiler - Stand 6/88
+         -------------------------------
+
+Start:     "p" bzw. J58ØØ
+Restart:   "r" bzw. J58Ø3
+
+Speicherplatzangaben:
+---------------------
+Top of RAM? :        RAM-Top fuer den Compiler
+                     CR setzt auf Speicherende
+Top of RAM for 'T':  RAM-Top fuer das zu erzeugende Objekt-
+                     codeprogramm
+                     CR setzt auf Top of RAM
+Table Size? :        Laenge des internen Arbeitsspeichers
+                     CR setzt auf (freien Speicher) DIV 16
+
+Kommandos:
+----------
+
+B        - Betriebssystem
+C ÄnÜ    - Uebersetzen ab Zeile n bis Programmende
+           bei Auftreten von Syntaxfehlern:
+            E - Editieren der aktuellen Zeile
+            P - Editieren der vorangehenden Zeile
+D n,m    - Loeschen der Zeilen n bis m
+E n      - Editieren der Zeile n
+F n,m,f,s- Editieren ab erstem Zeichen der Zeichenkette f
+           zwischen n und m
+G ,,f    - Laden eines mit P gesicherten Quelltextes von
+           Kassette
+I n,m    - Automatische Erzeugung der Zeilennummern ab n
+           mit Schrittweite m
+K n      - stellt das Listen auf Gruppen zu n Zeilen ein
+L n,m    - Listen des Quelltextes
+M n,m    - Zeile n als m gedoppelt
+N n,m    - Neunummerierung des gesamten Textes
+P n,m,f  - Sichern des Quelltextes von n bis m unter Namen f
+R        - Starten des mit C uebersetzten Programms
+           (bei Syntaxfehlern, Erweiterung des Textes und
+            T-Kommando ausgeschaltet)
+T n,,f   - Uebersetzen ab Zeile n bis Programmende, nach
+           fehlerfreier Uebersetzung Frage ok?, bei Y erfolgt
+           Verbindung der Laufzeitroutinen (ca.6k) mit dem
+           Objektcodeprogramm, sofortiges Sichern auf
+           Kassette und anschliessender Autostart.
+           Start des fertigen Anwenderprogramms nach Einlesen
+           mit "p".
+W        - Listen des Quelltextes auf Drucker
+           (41Ø3H Druckini, 41ØØH Druck)
+X        - Anfangsadresse des Quelltextes als Hex-Zahl
+
+Unterkommandos Editor:
+----------------------
+Space    - zeichenweise Uebernahme aus alter in neue Zeile
+CTRL-W   - uebernimmt bis zur naechsten Tab-Position
+<-       - baut neue Zeile wieder zeichenweise ab
+C        - Korrigieren mit: <- loeschend zurueck
+                            CR beendet Kommando C
+F        - Suchen der Zeichenkette f
+I        - Einfuegen mit: siehe C
+K        - loescht Zeichen auf Kursorposition (ohne Reaktion
+           auf Bildschirm)
+L        - Ausschreiben der aktuellen Zeile
+Q        - Beenden ohne Ersatz
+R        - wie L aber alte Zeile
+S        - Einsetzen der Zeichenkette s ab erster Position
+           der Zeichenkette f, Uebergang zum Kommando F
+X        - Weiterschreiben am Ende der Zeile wie I
+Z        - Loeschen ab Kursor bis Zeilenende
+CR       - Beenden des Editierens mit Ersetzen
+
+
+Sprachumfang:
+-------------
+
+Bezeichner  - mit Buchstaben beginnen, 1Ø Zeichen signifikant
+
+Verknuepfungen:
+
+     :=
+     +  -  *  /
+     DIV  MOD
+     OR   AND   NOT
+     IN    (fuer SET-Arithmetik)
+
+Sonderzeichen:
+     ÄÜ  (fuer Felder)  Ersatzzeichen: (/  /)
+     äü  (Kommentare)                  (*  *)
+
+Programm-Grundstrukturen:
+
+    PROGRAM  BEGIN  END  FUNCTION  PROCEDURE
+
+Deklarationen:
+
+    TYPE  LABEL  ARRAY ... OF ...  PACKED ARRAY ... OF ...
+    VAR   CONST  SET               RECORD ... END
+
+Schleifen:
+
+    FOR ... := ... TO ... DO ...
+    FOR ... := ... DOWNTO ... DO ...
+    WHILE ... DO ...
+    REPEAT ... UNTIL ...
+
+Verzweigungen:
+
+    IF ... THEN ... ELSE ...
+    CASE ... OF ... END
+    CASE ... OF ... ELSE ...
+    GOTO
+
+Records:
+
+    WITH ... DO ...
+
+Pointer:
+
+    NIL   MARK  RELEASE  NEW
+
+Vorwaerts-Definition:
+
+    FORWARD
+
+Konstanten/ Type-Konstanten:
+
+    FALSE  TRUE  MAXINT (=32767)
+
+    INTEGER (mit vorangestelltem # als Hex-Zahl)
+    REAL
+    CHAR
+    BOOLEAN
+
+Funktionen:
+
+    ROUND(r)  FRAC(r)  ODD(i)  ENTIER(r)  COS(r)
+    TRUNC(r)  ABS(r)   SQR(r)  SQRT(r)    SIN(r)
+    EXP(r)    LN(r)    TAN(r)  ARCTAN(r)
+    RANDOM
+    EOLN (wird TRUE, falls naechstes Zeichen CR ist)
+
+    ORD(a)  liefert Position des Skalarwertes a in der
+            durch Typ von a festgelegten Wertemenge
+    CHR(i)  liefert ASCCI-Zeichen mit Code i
+    SUCC(a) Nachfolger von a
+    PRED(a) Vorgaenger
+
+Ein-/Ausgabe:
+
+    READ(A)  READLN(A)
+    WRITE(A) WRITELN(A)
+    PAGE   - Seitenvorschub bzw. Loeschen BS
+    INCH   - Tastaturabfrage ohne CR
+    INP(p)
+    OUT(p,c)
+    TOUT(n,a,l) - Schreiben auf Kassette  Ö  Name n, Anfangs-
+    TIN(n,a)    - Laden von Kassette      /  adr. a, Laenge l
+
+              ( z.B.:      TOUT('Feld T',ADDR(T),SIZE(T)) )
+
+Speicherzugriff:
+
+    SIZE(v)   ADDR(v)
+    POKE(n,v) PEEK(n,t) - Auswertung Speicherinhalt ab
+                          Adresse n entsprechend Typ t
+
+Maschinen-Code:
+
+    INLINE(F)
+    USER(n)
+
+Programm-Abbruch:
+
+    HALT
+
+
+Kontrollfunktionen:
+-------------------
+
+Kontrollfunktionen koennen zu- oder abgeschaltet werden, z.B.
+
+  ä$L-,C-ü oder: (*$ A-,P*)
+
+Standard: A,L,O,C,S auf + , P auf Bildschirm
+
+   A : Bei A+ werden alle Feldindizes auf Einhaltung der
+       Feldgrenzen ueberprueft.
+   L : Bei L+ wird beim Uebersetzen der Quelltext mit
+       Adressen aufgelistet, bei L- werden nur fehlerhafte
+       Zeilen gelistet.
+   O : Alle Gleitkommaoperationen sowie Multiplikation und
+       Division bei ganzen Zahlen werden staendig auf Ueber-
+       lauf kontrolliert, bei O+ auch Addition und
+       Subtraktion.
+   C : Bei C+ wird waehrend des Programmlaufs in allen
+       Schleifen, Funktionen und Prozeduren die Tastatur
+       abgefragt, CTRL-C fuehrt zum Abbruch. Bei C- ist
+       Tastaturabfrage unterdrueckt.
+   S : S+ kontrolliert Ausdehnung des Stackpointers
+   P : Ausgabe zum Bildschirm oder Drucker, P wirkt um-
+       schaltend, es folgt nicht + oder - .
+
+
+Fehlermeldungen Compiler:
+-------------------------
+   (w.e.: wird erwartet, n.e.: nicht erlaubt)
+
+Ø1 Zahl zu gross             4Ø SET ist zu gross (>256 El.)
+Ø2 ; oder END fehlt          41 Typname f. Funktionswert w.e
+Ø3 nicht deklarierter Name   42 , oder Ü oder /) in SET w.e.
+Ø4 ein Name w.e.             43 .. oder , oder Ü in SET w.e.
+Ø5 := in Konstantendef.      44 Typname des Parameters w.e.
+Ø6 = w.e.                    45 leere Menge als erster
+Ø7 dieser Name hier n.e.        Operand n.e.
+Ø8 := w.e.                   46 Skalar oder REAL w.e.
+Ø9 ) w.e.                    47 Skalar w.e.
+1Ø falscher Typ              48 Mengen nicht vertraeglich
+11 . w.e.                    49 < u.> fuer Mengenvergl. n.e.
+12 ein Operand w.e.          5Ø FORWARD, LABEL, CONST, VAR,
+13 Konstante w.e.               TYPE, BEGIN w.e.
+14 Name ist keine Konstante  51 Hexzahl w.e.
+15 THEN w.e.                 52 SETs nicht mit POKE
+16 DO w.e.                   53 Feld zu gross
+17 TO od. DOWNTO w.e.        54 END oder ; in Satzdeklaration
+18 ( w.e.                       w.e.
+19 dieser Typ nicht          55 Feldname w.e.
+   schreibbar                56 Variable nach WITH w.e.
+2Ø OF w.e.                   57 Variable nach WITH vom
+21 , w.e.                       Satztyp w.e.
+22 : w.e.                    58 zu Satzkomponente fehlt
+23 PROGRAM w.e.                 WITH-Anweisung
+24 Variable als Parameter    59 nach LABEL vorzeichenlose,
+   w.e.                         ganze Zahl w.e.
+25 BEGIN w.e.                6Ø nach GOTO vorzeichenlose,
+26 Variable als Parameter       ganze Zahl w.e.
+   von READ w.e.             61 Marke in falschem Niveau
+27 Ausdruecke dieses Typs    62 nicht deklarierte Marke
+   nicht vergleichbar        63 Parameter von SIZE muss
+28 INTEGER od. REAL w.e.        Variable sein
+29 dieser Variablentyp       64 Pointer koennen nur auf
+   nicht lesbar                 Gleichheit getestet werden
+3Ø Mane ist kein Typbez.     67 H nach zweitem : w.e.
+31 Exponent in REAL-Zahl w.e.68 Strings duerfen kein
+32 Ausdruck v. Skalartyp w.e.   CR enthalten
+33 Leerstring n.e.           69 Parameter von NEW, RELEASE,
+34 Ä oder (/ w.e.               MARK muss v. Pointertyp sein
+35 Ü oder /) w.e.            7Ø Parameter von ADDR muss
+36 Feldindex muss Skalar sein   Variable sein
+37 .. w.e.
+38 Ü oder /) oder , in
+   Felddeklaration w.e.
+39 untere Grenze groesser
+   als obere
+
+
+
+
+
+
+                                                            .

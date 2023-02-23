@@ -1,0 +1,65 @@
+                              - и2 -
+
+* Optionen zum Assembler
+  ----------------------
+
+  Bit и    +и1  Unterdruecke Assemblerliste
+  Bit 1    +и2  Maschinencode zum Speicher
+  Bit 2    +и4  Drucke Assemblerliste
+  Bit 4    +1и  Aktiviere 2. Lauf bei Fehlern im 1. Lauf
+  Bit 5    +2и  relative Sprungdistanz absolut (SYPS K152и)
+  Bit 7    +8и  Ausgabe der Symboltabelle
+
+* Pseudobefehle des Assemblers
+  ----------------------------
+
+  DEFB arg,arg,... definiere Byte
+                   arg:xx - dez; #xx o. xxH - hex; 'x - ASCII
+  DEFW arg,arg,... definiere Wort (Doppelbyte)
+  DEFM 'string'    definiere Zeichenkette (ASCII)
+  DEFS n           reserviere n Speicherplaetze
+  ORG  n           Zuweisung des Speicherplatzzaehlers
+  EQU  n           Vereinbarung eines Ausdrucks (Marke)
+  ENT              Startadresse fuer G - Kommando
+  SKIP             erzeuge Leerzeile in der Assemblerliste
+  $    (24H)       Adresszaehlersymbol
+
+                   n - Zahl (hex o. dez), Marke o. Ausdruck
+
+* Fehlermeldungen
+  ---------------
+
+       ии  Speicherueberlauf, Editierpuffer voll
+       и1  Zeilennummernueberlauf (groesser 9999)
+       и2  Ueberlauf im I Kommando (groesser 9999)
+       и3  Zeile existiert nicht
+       и4  unzulaessiger G Befehl (ENT nicht definiert)
+       и5  Reaktivieren des Puffers nicht moeglich
+       и6  Schrittweite и
+       и7  Zeilennummernbereich zu klein
+       и8  unzulaessige Argumenteingabe
+       и9  Zweitquelle nicht aktiviert
+       1и  unzulaessige Befehlszeile (Marke oder Mnemonik)
+       2и  unbekannte Mnemonik
+       21  Operand passt nicht zum Operationscode
+       22  Befehl mit Indexregistern nicht moeglich
+       23  Operand bzw. Distanz zu gross
+       24  zu viele Register
+       25  unzulaessige Operandenkombination
+       26  unzulaessiges Zeichen
+       27  unzulaessiger Operand
+       28  Klammer-Fehler
+       3и  Marke nicht gefunden
+       31  Marke mehrfach definiert
+       4и  falsche Assembleranweisung (Pseudo-Befehl)
+       41  unzulaessige Vorwaertsreferenz (bei EQU,ORG,DEFS)
+       61  erzeugter MC wuerde EDAS ueberschreiben
+       99  unzulaessiges Kommando
+
+* wichtige Systemadressen
+  -----------------------
+
+  4ии6H - 4ии7H  Vorzugseinstellung Editierpufferanfang
+  4ии8H - 4ии9H  Vorzugseinstellung Editierpufferende
+  4ииAH - 4ииCH  JP Druckerausgabe (Zeichen in A)
+  544иH - 5442H  JP Druckerinitialisierung

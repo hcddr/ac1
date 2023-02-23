@@ -1,0 +1,113 @@
++-----------------------------------------------------------+
+ö                                                           ö
+ö            #                     #           #            ö
+ö                                  #                        ö
+ö  ######### # ######### ######### # ######### # #########  ö
+ö  #         # #       # #         #         # # #          ö
+ö  ######### # #       # #         # ######### # #          ö
+ö          # # #       # #         # #       # # #          ö
+ö  ######### # #       # ######### # ######### # #          ö
+ö                                                           ö
+ö  ZX Spectrum  -  T a p e  (c) SINCLAIR Research Ltd.1982  ö
+ö                                                           ö
++-----------------------------------------------------------+
+
+     Bearbeiter:  H.-J.Smith, K.-P.Winkler, J.Hannemann
+
+                     Kurzbeschreibung
+                     ----------------
+
+     Die fuer den  AC-1 bearbeiteten  Kassettenroutinen
+     des Spectrum sollen jedem Amateur die Moeglichkeit
+     bieten, Files im Spectrum - Format  abzulegen bzw.
+     einzulesen. Orginalprogramme  koennen so unter be-
+     stimmten Voraussetzungen  sofort in den AC-1 gela-
+     den  und  analysiert werden. Das  beschraenkt sich
+     jedoch nur auf reine Maschinenprogramme. Datenfel-
+     der und BASIC - Programme  koennen  nicht  geladen
+     werden. Die Informationen ueber den Charakter  des
+     zu ladenden Programmes sind im Haeder abgelegt und
+     werden von der Load - Routine  ausgewertet. Danach
+     wird das Laden des Programmes begonnen bzw.verwei-
+     gert.  Die  Bearbeitung von  BASIC, MERGE, SCREEN$
+     sind nicht implementiert. Die sichere Funktion des
+     Programmes  ist an bestimmte Hardwarevoraussetzun-
+     gen gebunden, die im Wesentlichen im  AC-1 bereits
+     vorhanden sind. Sollte es  beim  Einlesen  dennoch
+     Probeme geben, so ist zuerst der Pegel zu erhoehen
+     und das  Einlesen zu wiederholen. Bleibt das  ohne
+     Erfolg, so muss  gegebenenfalls die  Zeitkonstante
+     des TB - Interfaces verkleinert werden, indem  man
+     z.B. den Kondensator  C2 (2,2n) weglaesst und  den
+     Widerstand R2 (2k) auf 22k-56k vergroessert.  Wenn
+     auch das nicht hilft, sollte die Stellung des Ton-
+     kopfes ueberprueft werden.
+     Nun zur Handhabung des Programmes. Nach dem  Start
+     erfolgt die Aufforderung  'L' (LOAD),  'S' (SAVE),
+     'V' (VERIFY) oder  '^C' (Abbruch) einzugeben. Nach
+     der entsprechenden Wahl  erscheint die  Ausschrift
+     des  Befehlswortes und es wird die  Eingabe  eines
+     Programm - Namens erwartet. Der Name kann  max. 1Ø
+     Zeichen lang sein. Bei laengeren Namen kommt  eine
+     Fehlermeldung.Der Name ist mit Anfuehrungsstrichen
+     abzuschliessen. Es  erfolgt automatisch  die  Aus-
+     schrift CODE. Bei LOAD und VERIFY kann nun bei Be-
+     darf eine Anfangsadresse (hex.) eingegeben werden.
+     Bei SAVE ist die  Angabe der Startadresse und  die
+     Laenge des abzulegenden Files anzugeben (hex.).Die
+     beiden  Angaben muessen durch ein  Komma  getrennt
+     werden. Ist ein  File  z.B. 1K (3FFH) lang und be-
+     ginnt bei 4ØØØH, so ist   4ØØØ,4ØØ (!)  anzugeben.
+     Die Befehlszeile wird mit 'cr' abgeschlossen.
+
+      Beispiele:
+
+         SAVE "TEST-File" CODE 2ØØØ,8ØØ
+
+         VERIFY "TEST-File" CODE Ä2ØØØÜ
+
+         LOAD "TEST-File" CODE Ä2ØØØÜ        u.s.w.
+
+     Die Argumente in Ä...Ü koennen weggelassen werden,
+     wenn die  Adressen uebereinstimmen. Bei anderslau-
+     tenden  Befehlszeilen kommt eine Fehlerausschrift.
+     Im Unterschied zum AC-1 sind  die  Argumente  nach
+     LOAD und VERIFY keine Offsetwerte, sondern  Start-
+     adressen.
+     Die Programmausfuehrung kann mit '^C' unterbrochen
+     werden ( nicht waehrend  des  Synchron - Tones bei
+     SAVE ). Wird bei LOAD eine  Flanke erkannt, so er-
+     kannt, so erscheint am linken  Bildschirmrand  ein
+     's'. In der Reihenfolge der eingelesenen  Informa-
+     tionen  erscheinen  nun  noch  'S' ( waehrend  des
+     Synchrontones) und 'D' wenn die Daten geladen wer-
+     den. Darunter erscheint der Programmtyp  (Program,
+     Bytes, Number array oder Character array) und  der
+     Programmname. LOAD wird nur bei Bytes ausgefuehrt,
+     bei allen anderen erfolgt nur die  Ausschrift  des
+     Typs und des  Namens, die  Ladebereitschaft bleibt
+     hier aber erhalten. Nach der Ausfuehrung von  LOAD
+     Bytes kehrt das Programm in das Menue zurueck. Von
+     hieraus kommt man dann auch wieder in den Monitor.
+     Am Ende von LOAD wird eine Checksummen - Kontrolle
+     vom Programm durchgefuehrt. Stimmt die  Errechnete
+     nicht mit der im Header ueberein erfolgt eine Aus-
+     schrift "Tape loading error".
+     Wird der  Haeder  nicht  ordnungsgemaess  gelesen,
+     so  erscheint  nach  dem  'S'  wieder  das 's' und
+     das Bandgeraet muss wieder auf den  Programmanfang
+     gebracht werden. Das  ist auch der Fall, wenn  der
+     eingelesene Name nicht mit dem vorgegebenen ueber-
+     einstimmt. Alle Zeichen des Namens sind dabei sig-
+     nifikant. Wird kein Name, sondern nur zwei Anfueh-
+     rungsstriche angegeben, so wird das naechste  Pro-
+     gramm eingelesen.
+
+     Hier noch die Speicherbelegung:
+
+                   Gesamtprogramm  : 19ØØ - 1F25
+                   Hautprogramm    : 19ØØ - 1ED8
+                   Arbeitszellen   : 1ED9 - 1F25
+
+
+              Also dann, viel Erfolg !

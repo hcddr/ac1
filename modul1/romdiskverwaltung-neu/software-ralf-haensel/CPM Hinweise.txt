@@ -1,0 +1,33 @@
+Hinweise:
+
+1. Bei sämtlichen CPM-Bios'n ist jeweils der FDC und das GIDE 
+bereits mit drin, aber so gestaltet, das erst beim realen Zugriff
+auf die Routinen wirklich zugegriffen wird.
+
+Solange nur mit A: gearbeitet wird, wird es keine Fehlermeldung
+geben, wenn KEIN FDC oder GIDE gesteckt ist.
+
+Beim FDC sind dabei prinziell alle 4 Laufwerks-ID ansprechbar.
+Das ist auch in der Startausschrift zu erkennen, welche ID genutzt wird.
+
+Beim GIDE sind 3 Laufwerke eingestellt, die auf der HD physikalisch
+ab Spur 10 (dez.) beginnen. Ich nutze die Spur 1 im Monitor (V10/88)
+und die Spuren Spuren 4..9 für DiskVerHD und zum Booten versch. BootLader.
+
+Konkret sind die Laufwerke wie folgt im Bios fest verdrahtet !
+
+; DeLock SSD 256MB je Track 256KB, 984 Tracks
+; 1.Partition beginnt ab Spur 10, damit stehen die Spuren 0..9 
+; 				  zusätzliche als Bootspuren
+
+PART	C, 10, 64,2048	; C: mit  64 Spuren ab Spur 10  (16 MB) HR
+PART	D,150, 64,4096	; D: mit  64 Spuren ab Spur 150 (16 MB) HR
+PART	E,300, 64,4096	; E: mit  64 Spuren ab Spur 300 (16 MB) HR
+;PART	E,300,128,4096	; E: mit 128 Spuren ab Spur 300 (32 MB) HR
+
+Als Festplatte nutze ich eine Delock 256MB SSD
+; Master = DELOCK SSD (256 MByte)
+CYLS0	EQU	984		; Anzahl Zylinder
+HEAD0	EQU	16		; Anzahl Koepfe
+SECS0	EQU	32		; Anzahl Sektoren
+

@@ -266,6 +266,7 @@ close IN;
 
 our $filename = $typ.'.'.$name;
 $filename =~ s/[\x00 ]+$//;	# Leerzeichen am Ende löschen
+$filename =~ tr/:\/\\\*/____/;
 
 open OUT, '>'. ($filename || 'test') . '.a1t';
 binmode OUT;
@@ -316,7 +317,9 @@ close OUT;
 #########################################
 
 # bin-datei
-$filename=sprintf"%s.%s_%.4X_%.4X_%.4X.bin", $typ, $name, $aadr, $eadr, $sadr;
+$filename=sprintf"%s_%.4X_%.4X_%.4X.bin", $filename, $aadr, $eadr, $sadr;
+$filename =~ tr/:\/\\/___/;
+
 open OUT, '>'. $filename;
 binmode OUT;
 #Daten schreiben

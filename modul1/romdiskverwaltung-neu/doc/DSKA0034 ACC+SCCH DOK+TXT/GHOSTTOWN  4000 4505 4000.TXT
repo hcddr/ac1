@@ -1,0 +1,55 @@
+
+                K U R Z B E S C H R E I B U N G
+                -------------------------------
+
+
+                *******************************
+                *                             *
+                *  G  H  O  S  T  T  O  W  N  *
+                *                             *
+                *******************************
+
+
+
+Dieses Spielprogramm ist ein Assemblerprogramm fur den AC 1 .
+Es belegt den Speicherbereich  von 4иииH - 74ииH und wird mit
+dem Monitorbefehl "J 4иии" gestartet.
+Die Spielidee begruendet  sich in der Erreichung der Zielmar-
+ke (Symbol "#")
+Dabei  sind  die Hindernisse  mit Hilfe  der Cursortasten  zu
+umgehen ( Geister und Fallen).Die  Leitern koennen angesprun-
+gen werden  und den Geistern  muss  ausgewichen  werden  bzw.
+man versucht  sie zu ueberspringen.Den  Fallen (Symbol  Leer-
+zeichen  und  Punkt)  ist durch  einen  Sprung  auszuweichen.
+Treffen  sich zwei Geister  in einem  Punkt so kann der Bild-
+inhalt an dieser Stelle geloescht werden.
+Nach dem Erscheinen  der Spielflaeche  ist die Taste  "cr" zu
+betaetigen  und die Geister  (Symbol "o") und das Spielsymbol
+"*" erscheint.
+Die Steuertasten  sind wie folgt gewaehlt  und koennen  durch
+Eingabe  des  ASCII-Codes   in  die  jeweilige  Speicherzelle
+neu belegt werden:
+
+                   ASCII-Code        Speicheradresse
+
+     links            и8H                 4и58H
+     rechts           и9H                 4и68H
+     hoch             иBH                 4и78H
+
+
+
+
+ V I E L  S P A S S  ! ! !
+
+
+
+
+         (c) 1и/87 by hobbysoft
+
+                      Lutz Haase
+                      Raguhner Schleife 7
+                      Wolfen
+                      444и
+
+----------------------------------------------------------------
+---

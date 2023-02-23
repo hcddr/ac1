@@ -1,0 +1,10 @@
+Original 4K Zeichengenerator des SCCH (also unverändert !)
+
+Es sind im Prinzip 2 2k_ZG's, die mit Adresse A11 vom 
+PIO1 Port B3 umgeschaltet werden.
+Dieser ZG wird auch im BWS TFT von R.Hänsel verwendet !
+
+Viel Spaß beim Basteln wünscht 
+
+Ralph Hänsel ralphhaensel@gmx.de
+

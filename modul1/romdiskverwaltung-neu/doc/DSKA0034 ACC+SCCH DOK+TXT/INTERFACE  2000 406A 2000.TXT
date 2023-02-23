@@ -1,0 +1,309 @@
+
+
+
+            --------------------------
+            ö  Programmbeschreibung  ö
+            ö                        ö
+            ö    Interface / Tape    ö
+            --------------------------
+
+
+
+
+Die Idee zu diesem Programm entstand durch zeitweilig
+auftretende Schwierigkeiten beim Programmaustausch ueber
+Cassette zwischen einzelnen Computerfreunden und die
+damit verbundenen Enttaeuschungen und Veraergerungen.
+
+Untersuchungen mit verschiedenen Programmcassetten an
+mehreren Cassettengeraeten ergaben folgende moegliche
+Ursachen:
+
+
+         - Falsche Einstellung des Tonkopfes
+
+         - Falsche Bandgeschwindigkeit
+
+         - Kurvenverfaelschungen durch den
+           Aufnahme-/Wiedergabebverstaerker
+           des Cassettengeraetes
+
+         - Falsche Einstellung des Cassetten-
+           Interfaces
+
+         - Unterschiedliche Aufnahmespannungen
+           an den Tonkoepfen der Geraete
+
+
+
+Bei Messungen mit einem normalen Oszilloskop (ohne Speich-
+ermoeglichkeiten) entstand bald der Wunsch nach Momentan-
+wertuntersuchungen und nach einer groesseren Messwertspreiz-
+ungen als es der kleine Bildschirm des Oszilloskop zulaesst.
+
+Durch Einbeziehung des Computers in den Messvorgang, speziell
+der CTC, koennen mit Hilfe dieses Programmes Frequenzgenauig-
+keiten im interessierenden Bereich von ca. 2ØHz erreicht
+werden. Es erfolgen Messungen der Momentanwerte der Low- und
+High-Flanken der jeweiligen Cassetteninformationen im Sekun-
+den-Rhytmus. Also jede Sekunde erfolgt die Messung einer
+High- und dann einer Low-Flanke.
+
+Da die Messung nach dem Cassetten-Interface erfolgt, ist
+gleichzeitig eine Aussage ueber die Arbeitsweise des Inter-
+face moeglich.
+
+Guenstig ist es vorher mit Hilfe des Programmes (Menu/Pkt.2)
+eine Test-Cassette mit zwei Messtoenen (745Hz und 1489Hz) zu
+erstellen. Diese beiden Frequenzen sind die in der Cassetten-
+Routine des AC1 auftretenden Toene (wurden durch Messungen
+mit Frequenzzaehler ermittelt).
+
+
+ Frequenz:      745Hz                     1489Hz
+
+ z.B. Byte-
+ muster im       55H                        ØØH
+ RAM (bei
+ Save-Rout.)
+
+ ensprechende
+ Bitmuster     LHLH LHLH                  LLLL LLLL
+
+
+
+Am Besten wird auf einem qualitativ hochwertigen Cassetten-
+geraet ein Messband mit diesen beiden genannten Frequenzen
+erstellt und damit dann alle anderen Geraete eingeregelt.
+
+Mit Hilfe dieses Messbandes koennen dann die Geschwindig-
+keiten, aber auch im Zusammenhang mit der Tonhoehe und
+Lautstaerke die Stellung des Tonkopfes kontrolliert werden.
+Die Messbalken muessen sich immer annaehernd um den Wert "Ø"
+bewegen.
+
+Bei der Erstellung von Programmbaendern sollte man sich dann
+bemuehen, die Groesse der Aufnahmespannung durch sorgfaelti-
+ges Einstellen der Handreglung zwischen den einzelnen Casset-
+tengeraeten annaehernd anzupassen. Stark unterschiedliche
+Aufnahmespannungen koennen sonst zu Lesefehlern fuehren.
+
+
+Messung:
+Um zu einem einheitlichen Anzeigemodus zwischen beiden
+Toenen zu kommen, wurde die hohe Frequenz (1489Hz) als
+Grundlage genommen. Messungen dieser High- bzw. Low-Flanken
+ergeben die wahren Flankenlaengen. Da die niedrige
+Frequenz (745Hz) durch den staendigen Wechsel zwischen
+High- und Low-Bits entstehen und dadurch bedingt eine
+Addition zweier aufeinanderfolgender Flanken entsteht,
+wird hier das Messergebnis durch 2 dividiert.
+
+Durch diesen Angleichung ist es sogar moeglich, sich mit
+einer normalen Aufnahme eines Programmes einen groben
+Ueberblick zu verschaffen.
+
+
+
+
+
+     1. Messen von Tape und Interface
+     --------------------------------
+
+Es werden auf dem Bildschirm vier Messbalken dargestellt:
+
+
+
+    Jeweiliger aktueller Momentan-Messwert der High-Flanke
+
+    Jeweiliger aktueller Momentan-Messwert der Low -Flanke
+
+    Durchschnittswert aller bisherigen Messwerte der
+    High-Flanke
+
+    Durchschnittswert aller bisherigen Messwerte der
+    Low-Flanke
+
+
+
+
+Bei der Messung ist zuerst die Cassette zu starten. Sowie
+der Kennton des Programms, oder bei einem Messband der
+Messton ertoent, ist die Taste (CR) zu druecken und damit
+der Messvorgang einzuleiten. Durch Betaetigen der Tasten
+CTRL/C wird der Messvorgang beendet.
+
+Bewegen sich die Messbalken um den Skalenwert "Ø" so stimmen
+die gemessenen Werte mit den Sollwerten der Magnetband-Rout.
+ueberein. Sind die gemessenen Werte der High- und Low-Flanken
+gleichlang, so liegt ein Tastverhaeltnis von 1:1 vor.
+
+Sollten die Werte der High- und Low-Flanken vom Normalwert
+1:1 stark abweichen, so kann dies zu Fehlern fuehren. Ge-
+gebenenfalls ist die Einstellung des Cassetten-Interface
+zu korrigieren. Kurvenverfaelschungen durch den Aufnahme-
+und Wiedergabeverstaerker des Cassettengeraetes koennen auch
+zu diesen Veraenderungen des Tastverhaeltnisses fuehren.
+
+Ist die Bandgeschwindigkeit des Cassettengeraetes zu schnell,
+so bewegen sich die Balken der High- und Low-Messungen in
+den negativen Bereich der Skale.     ---
+Ist die Bandgeschwindigkeit zu langsam, so gehen beide Balken
+in den positiven Bereich.
+
+Es hat sich gezeigt, das der Toleranzbereich der Cassetten-
+Routine recht gross ist. Sollten Geschwindigkeitprobleme zu
+Einlese-Fehlern fuehren, kann versucht werden, mit Hilfe des
+hier beschriebenen Programmes (Menu-Punkt 3,4 und 5) durch
+Veraendern des Zeitfaktors der Magnetband-Routine das Pro-
+gramm zu laden.
+
+
+
+
+
+     2. Ausgabe 745Hz bzw. 1489Hz
+     ----------------------------
+
+Es kann hier zwischen den beiden Frequenzen 745Hz und 1489Hz
+gewaehlt werden. Diese Frequenzen werden durch die CTC er-
+zeugt und ueber die PIO auf Cassette ausgegeben. Die jewei-
+liege Frequenz ist eine reine Rechteckschwingung ohne
+Magnetblock-Organisation (Blockkennzeichen, Adressen,CTC und
+Luecken) und somit zu Messzwecken wesentlich besser geeignet
+als ein Programm.
+
+
+
+
+     3. Veraenderung des Zeitfaktors fuer V und L
+     --------------------------------------------
+
+Das Monitor-Programm LOAD und VERIFY aus der Cassetten-Rout.
+wurde mit in das Interface-Programm aufgenommen. Dadurch
+wurde es moeglich den Zeitfaktor der beiden obengenannten
+Routinen zu beeinflussen und so falsche Bandgeschwindig-
+keiten auszugleichen.
+
+Die Standard-Zeitfaktor-Einstellung beim AC1-Monitor ist
+3FH. Durch vorsichtiges Probieren bekommt man so abweichen-
+de Cassetten eingelesen bzw. pruefen.
+
+
+
+
+     4. Verify  (V)
+     --------------
+
+Hiermit hat man die Moeglichkeit diese oben beschriebenen
+Cassetten, welche Bandgeschwindigkeitsabweichungen haben,
+zu pruefen.
+
+Bei Ertoenen des Kenntones ist die Taste (CR) zu druecken.
+Dadurch beginnt die Pruefung wie vom Monitor gewohnt.
+
+
+
+
+     5.Load    (L)
+     -------------
+
+Wie im Punkt 3. beschrieben, kann man hier Cassetten mit
+Bandgeschwindigkeitsabweichungen einladen. Etwas abweichend
+zu Monitor wird hier die Verschiebung extra abgefragt.
+Hat man die Absicht ein Programm mit Verschiebung zu laden,
+so kann man die drei aus dem Monitor bekannten Arten ver-
+wenden:
+
+
+           Also z.B. bei einer Verschiebung von 32ØØH
+                                                ----
+
+
+           32ØØ               ö
+                   oder       ö Lade-Adr. + Verschiebung
+           32ØØ+              ö
+
+
+
+
+           32ØØ-              ö Lade-Adr. - Verschiebung
+
+
+
+
+Beim Ertoenen des Kenntones wird die Taste (CR) gedrueckt
+und damit der Ladevorgang eingeleitet.
+
+
+
+
+     6. Abspeichern der High-Zeitlaengen
+     -----------------------------------
+
+Es besteht hier die Moeglichkeit, die fuer manche Unter-
+suchungen eventuell notwendigen Messergebnisse der vom
+Punkt 1. bekannten Messweise, abzuspeichern. Dabei werden
+die von der CTC gemessenen echten Zaehlergebnisse in
+hexadezimaler Form im RAM ab Adresse 3AØØH nacheinander
+im Sekunden-Rhythmus abgespeichert. Der RAM-Bereich
+3AØØ - FFØØH wird vorher auf ØØH geloescht.
+
+Im Gegensatz zum Punkt 1. werden aber nur High-Flanken-
+Messungen durchgefuehrt.
+
+Durch Druecken der Taste (CR) wird der Messvorgang gestartet.
+CTRL/C stoppt den Messvorgang und das Programm springt zum
+Monitor, so dass mit Hilfe von DUMP die Messergebnisse im
+RAM ausgewertet werden koennen.
+
+Zu beachten ist, dass das RAM-Ende nicht abgeprueft wird
+und so bei zu langem Messvorgang ein Ueberlauf eintreten
+koennte. Desweiteren ist zu beachten, dass die Anwendung
+dieser Messung nur mit einem    M e s s b a n d
+sinnvoll erscheint, da bei Programm-Baendern durch wech-
+selnde Bit-Folgen (z.B. LLHHLHLHLL) Fehlinterpretationen
+auftreten.
+
+Eine Messbalken-Anzeige erfolgt nicht, da hier eine echte
+absolute Messung durchgefuehrt wird. Im Gegensatz zum
+Punkt 1., wo eine relative Anzeige erfolgt (Null-Wert in
+der Messbalkenanzeige entspricht richtige Flankenlaenge).
+
+
+
+
+     7. Abspeichern der Low-Zeitlaengen
+     ----------------------------------
+
+Hier werden nur die Low-Flanken gemessen, ansonsten ist
+dieser Punkt identisch mit dem Punkt 6.
+
+
+
+
+     8. Zurueck zum Monitor
+     ----------------------
+
+Mit Hilfe dieses Punktes kann zum AC1-Monitor zurueck-
+gesprungen werden.
+
+
+
+
+
+                 Viel Erfolg
+
+                      und gute Verstaendigung
+
+                          zwischen den jeweiligen
+
+                                Cassettengeraeten
+
+
+                                   wuenscht
+
+
+                                        A r n i m
+
+                                            Y22LO

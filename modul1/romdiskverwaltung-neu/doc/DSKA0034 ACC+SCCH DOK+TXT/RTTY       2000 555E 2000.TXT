@@ -1,0 +1,508 @@
+
+         Kurzbeschreibung zum RTTY-Programm V2.2
+         ***************************************
+
+
+ Ø. Hardwarevoraussetzungen
+ ==========================
+
+Das Programm ist fuer einen AC1 mit folgenden Merkmalen
+geschrieben:
+
+ Speichererweiterung (min 16kBytes bei 4ØØØH beginnend)`
+ Bildwiederholspeicher 2 kBytes
+ Zeichengenerator mit Kleinbuchstaben
+ Betriebssystem entspr. FA 1/85
+ Tastatur nach FA 4/84 (od. gleicher log. Funktion)
+
+Der verwendete Converter muss die logischen Funktionen der
+Schaltungen nach FA 5/84 oder 2/86 erfuellen.
+
+PIO-Anschaltung: PB1 (X2/C8) - Rx
+                 PB2 (X2/C7) - Tx
+                 PB3 (X2/C6) - PTT
+
+Erzeugt bzw. verlangt werden folgende Pegel:
+
+Sendeseitig    : Mark  H-Pegel
+                 Space L-  "
+                 PTT   L-  "
+
+Empfangsseitig : Mark  L-  "
+                 Space H-  "
+                 PTT   H-  "
+
+Des weiteren ist eine Kaskadierung der CTC-Kanaele Ø u. 1
+(Bruecke X2/B3-B4) erforderlich.
+
+
+  1. Speicheraufteilung
+  =====================
+
+ Arbeitsspeicher     4ØØØH - 59FFH
+ RAM-Zellen          5BØØH - 5FFFH
+ Sendepuffer (stat.) 6ØØØH - 63FFH
+ Sendepuffer (dyn.)  64ØØH - 67FFH
+ Textpuffer          7ØØØH - o.RAM-Ende
+
+Folgendes ist vom Anwender selbst festzulegen:`
+
+ 59FØH  C3 XX XX   JP    INITPR   ;Druckerinitialisierung`
+ 59F3H  C3 XX XX   JP    PRT      ;Einzelzeichenausgabe`
+                                   Drucker
+ 59F6H  2Ø         DEFB  2ØH      ;Leerzeichen
+ 59F7H  593237584F DEFM  "Y27XO"  ;Homecall
+ 59FCH  ØØ         DEFB  Ø        ;Abschluss
+
+
+Die zur Programmsteuerung benutzen Codes wurden entsprechend
+der verwendeten Tastatur festgelegt. Diese sind am Programm-
+ende in einer Tabelle zusammengefasst und unterliegen nicht
+der Checksummenueberpruefung.
+
+   Adresse   Code      Funktion
+   --------------------------------------------
+    59EØ      Ø5       Empfangsumschaltung
+    59E1      13       Sendeumschaltung
+    59E2      14       Textaufruf
+    59E3      17       Wiederholfunktion
+    59E4      15       Registerumschaltung
+    59E5      Ø2       Baudrate eingeben
+    59E6      19       neues Gegencall eingeben
+    59E7      Ø1       Gegencall aufrufen
+    59E8      11       Homecall aufrufen
+    59E9      1Ø       RAM-Copy ein/aus
+    59EA      Ø4       Didle ein/aus
+    59EB      Ø9       Empfangsunterbrechung
+    59EC      Ø3       Cursor in Kommandozeile
+    59ED      ØA       Baudrate-1
+    59EE      ØB       Baudrate+1
+
+
+
+  2. Programmstart
+  ================
+
+ Startadresse :  4ØØØH
+
+Nach dem Programmstart wird eine Cheksummenueberpruefung
+durchgefuehrt. Sollte das Programm im Bereich 4ØØØH bis
+59CFH fehlerhaft sein, geht der Prozessor in den HALT-
+Zustand.
+
+Das Programm meldet sich mit folgendem Menu:
+
+  A : ASCII - CODE
+  B : BAUDOT- CODE
+  C : TEXTEDITOR
+  D : MONITOR
+
+
+  3. Menufunktionen
+  =================
+
+  3.1 ASCII -CODE
+  ---------------
+
+Es wird das Telegrafenalphabet ITA 5 (ASCII) eingestellt.
+
+Sendeseitig wird folgendes Format festgelegt:
+
+   1 Startbit
+   7 Datenbit
+   1 Paritaetsbit
+   2 Stopbit
+
+Da z.Zt. der Programmerstellung noch keine Normung fuer das
+Paritaetsbit bekannt war, muss dieses vom Anwender per Dialog
+selbst festgelegt werden.
+
+Empfangsseitig wird folgendes Format benoetigt:
+
+  1 Startbit
+  7 Datenbit
+  1 Paritaetsbit (wird nicht ausgewertet)
+  1 Stopbit
+
+
+Folgende Zeichen des ASCII-Codes werden vom Programm reali-
+siert:
+
+  ØAH     line feed      (nur Sendeseitig)
+  ØDH     cariage return
+  1EH     new line       (nur Empfangsseitig)
+  2ØH-7EH Zeichencodes
+
+7FH ist im Programm zur automatischen Empfangsumschaltung
+reserviert.
+
+Vorzugsbaudrate: 11Ø Baud
+
+
+
+  3.2 Baudotcode
+  --------------
+
+Es wird das Telegrafenalphabet ITA 2 mit folgendem Format
+festgelgt:
+
+  1 Startbit
+  5 Datenbit
+  2 Stopbit  (1 Stopbit bei Empfang)
+
+Zeichen, die nicht im ITA 2 enthalten sind, werden als Leer-
+Zeichen ausgegeben (vgl. FA 5/87 Gl='@'(4ØH);WD='#'(23H)).
+Kleinbuchstaben werden vor dem Aussenden in Grossbuchstaben
+umgewandelt.
+
+Vorzugsbaudrate: 45 Baud
+
+
+
+  3.3 Texteditor
+  --------------
+
+Dieser Programmteil wird zur Erzeugung der Standardtexte,
+sowie zum Bearbeiten und Ausdrucken der Empfangstexte be-
+noetigt.
+
+
+
+  3.4 Monitor
+  -----------
+
+Das RTTY-Programm wird verlassen und die Steuerung an das
+Betriebssystem zurueckgegeben. Der Standardtextbereich wird
+angezeigt und die Argumentzellen des Monitors mit den ent-
+sprechenden Werten geladen, so dass mit S:NAME die Texte auf
+Kassette abgespeichert werden koennen.
+
+
+
+  4.Programmsteuerung
+  ===================
+
+Nach dem Ansprung der Menufunktion mit dem entsprechenden
+Kennbuchstaben stellt sich folgendes Bildschirmformat ein:
+
+ - Statusanzeige
+ - Textbereich
+ - Kommandozeile
+
+Im RTTY-Teil ist der Textbereich noch in Tx- und Rx- Bereich
+unterteilt.
+Bei der Zeicheneingabe ueber die Tastatur muss zwischen 2
+Betriebsarten unterschieden werden.
+
+ - Kommandomodus (Cursor in der letzten Zeile)
+ - Textmodus     (Cursor im Textbereich)
+
+Die Steuerung des Programmes erfolgt ueber 4-stellige Kom-
+mandowoerter. Die Eingabe muss auf der 1.Zeichenposition der
+Kommandozeile beginnen, wobei es unerheblich ist, ob Klein-
+oder Grossbuchstaben verwendet werden.
+
+Zur vereinfachten und schnelleren Bedienung des RTTY-Teiles
+kann die Steuerung auch durch Funktionstasten erfolgen. Diese
+sind wiederum nur wirksam, wenn sich der Cursor im Textbe-
+reich befindet.
+Eine Funktionstastensteuerung fuer den Texteditor ist nicht
+vorgesehen.
+
+
+
+
+
+  4.1. RTTY-Teil
+  --------------
+
+RX..  CTRL.E  (Ø5H)   Empfangsumschaltung
+TX..  CTRL.S  (13H)   Sendeumschaltung
+TEXT  CTRL.T  (14H)   Standardtextaufruf
+RPT.  CTRL.W  (17H)   Wiederholtaste
+RG..  CTRL.U  (15H)   Registerumschaltung (Baudotcod.)`
+BAUD  CTRL.B  (Ø2H)   Baudrateneingabe
+NCAL  CTRL.Y  (19H)   neues Gegencall eingeben
+GCAL  CTRL.A  (Ø1H)   Gegencall aufrufen
+HCAL  CTRL.Q  (11H)   Homecall aufrufen
+COPY  CTRL.P  (1ØH)   RAM-Copy ein/aus
+DIDL  CTRL.D  (Ø4H)   Diddle ein/aus
+HALT  CTRL.I  (Ø9H)   Empfangsunterbrechung
+EXIT  ------   ---    zurueck ins Menu
+
+      CTRL.J  (ØAH)   Baudrate -1
+      CTRL.K  (ØBH)   Baudrate +1
+      CTRL.C  (Ø3H)   Cursor in Kommandozeile
+      CTRL.R  (12H)   shift-look
+      CTRL.I  (Ø8H)   Backspace
+      CTRL.M  (ØDH)   Carriage return+line feed
+
+Folgende Hinweise sollten beachtet werden:
+
+RX..  Bei diesem wie auch bei den folgenden Kommandowoertern,
+      die nicht aus 4 Zeichen bestehen, ist der Rest mit
+      Punkten aufzufuellen.
+      Wird am Ende des Sendetextes 7FH eingegeben, erfolgt
+      die Empfangsumschaltung automatisch.
+
+
+TX..  Das Aussenden des 1.Zeichens wird um 3ØØms verzoegert.
+      Diese Zeit steht der PTT-Umschaltung zu Verfuegung.
+
+
+TEXT  Es ist die Eingabe des maximal 6-stelligen Namens er-
+      forderlich, unter dem der Text abgespeichert wurde.
+      Der Name kann durch Weglassen abgekuerzt  werden.
+      Ist im Text das Zeichen "@"(4ØH) vorhanden, so wird an
+      entsprechender Stelle die Ausgabe unterbrochen und es
+      koennen Tastatureingaben erfolgen. Die Fortsetznung der
+      Standardtextausgabe geschieht durch Druecken der
+      "CR"-Taste.
+      Sollte es beim Aufruf eines Textes zum Ueberlauf und
+      damit zur Blockade des Sendepuffers kommen, kann nach
+      der Sendeumschaltung und Aufhebung der Blockade die
+      Textausgabe  durch Druecken einer Taste fortgesetzt
+      werden.
+
+RPT.  Dieses Kommando wirkt sich je nach Position des Cursors
+      unterschiedlich aus:
+       -als erste Eingabe des Durchganges wird der vorher-
+        gehende Sendetext wiederholt (max. 1Ø24 Zeichen)
+       -am Zeilenanfang wird die vorhergehende Zeile wieder-
+        holt
+       -am Ende eines Wortes wird das Wort bis zum vorher-
+        gehenden Leerzeichen wiederholt.
+
+BAUD  Es ist die Eingabe jeder Baudrate > 31 in Schritten zu
+      1 Baud moeglich. Es sollten im Sendebetrieb jedoch nur
+      die Standardbaudraten genutzt werden.
+      Zur kontinuierlichen Aenderung koennen die Cursortasten
+      (up, down) eingesetzt werden.
+
+NCAL  Das Rufzeichen der Gegenstation kann zu Beginn eines
+      QSO's einmalig eingegeben und dann per Funktionstaste
+      oder Kommandowort  beliebig oft wiederholt werden.
+      Das Rufzeichen kann aus max. 11 Zeichen (Y2- Doppel-
+      rufzeichen) bestehen.
+
+COPY  Die Empfangstexte koennen im Standardtextbereich ab-
+      gelegt und wie diese bearbeitet, gedruckt oder gesendet
+      werden.
+      Beim Einschalten der Funktion verlangt das Programm
+      die Eingabe einer zweistelligen Zeichenkette. Diese
+      bildet zusammen mit der in der Statuszeile angezeigten
+      Nummer des jeweiligen Durchganges den Textnamen.
+      Wird keine Zeichenkette eingegeben legt das Programm
+      "XX" fest.
+      Jeder Durchgang wird als selbststaendiger Text im
+      Speicher abgelegt.
+
+DIDL  Ist im Sendepuffer kein Zeichen vorraetig, wird bei
+      eingeschalteter Funktion ein Fuellzeichen gesendet.
+      Bei Baudotcode handelt es sich dabei um die Buchstaben-
+      kennung und bei ASCII um ØØH.
+      Unabhaengig vom Zustand der Funktion wird bei Baudot
+      vor midestens jedem 1Ø.Zeichen die aktuelle Register-
+      kennung gesendet.
+
+HALT  Die Unterbrechung wird wieder aufgehoben bei nochmali-
+      gem Betaetigen der Funktion, beim Aendern der Baudrate
+      oder bei der Sendeumschaltung.
+
+EXIT  Der Sende- bzw. Empfangsbetrieb wird unterbrochen und
+      ins Menu zurueckgekehrt.
+      Um eine versehentliche Betaetigung ausschliessen zu
+      koennen, ist keine Funktionstaste vorgesehen.
+
+
+Fehlerhafte Anweisungen  werden verweigert, jedoch nicht
+quittiert.
+
+
+Die Angaben der Statuszeile haben folgende Bedeutung:`
+
+ Code    eingestellter Code
+ Baud    eingestellte Baudrate bzw. HALT bei Empfangsunter-`
+         brechung
+ Text    Name des zuletzt aufgerufenen Standardtextes`
+ Call    das mit "NCAL" festgelegte Rufzeichen der Gegen-`
+         station
+ Rx-Buf  verfuegbarer Empfangspuffer (Standardtextbereich)`
+ Nr      Nummer des Durchganges bei eingeschalteter RAM-Copy`
+ F *     Sendepuffer voll
+ D *     Diddle eingeschaltet
+ C *     RAM-Copy eingeschaltet
+
+
+Der Sendepuffer hat eine Gesamtlaenge von  2kBytes, d.h. es
+koennen ca. 2ØØØ Zeichen vorgeschrieben werden. Anschliessend
+wird er blockiert, was in der Statuszeile angezeigt wird.
+
+Der Sendepuffer ist in 2 1-kBytes Bereiche unterteilt.
+
+- statischer Bereich
+  Er wird beim Aussenden nicht veraendert und dient beim
+  "RPT"-Kommando zur Wiederholung des letzten Sendetextes.
+  Das bedeutet, dass nach einer Blockade des Sendepuffers
+  zuerst dieser Bereich gesendet werden muss, bevor weitere
+  Texteingaben moeglich sind.
+
+- dynamischer Bereich
+  Beim Aussenden des zweiten Teils des Sendepuffers wird
+  dieser zeilenweise kontinuierlich "gerollt", so dass fuer
+  weitere Texteingaben Platz geschaffen wird. Wurde die
+  Ausgabe eines Standardtextes blockiert, so kann sie dann
+  durch Druecken der Leerzeichentaste fortgesetzt werden.
+
+
+
+  4.2.Texteditor
+  --------------
+
+Im Editor sind bei der Texteingabe folgende Steuerfunktionen
+wirksam:
+
+ CTRL.H (Ø8H)  backspace
+ CTRL.I (Ø9H)  H-Tabulator
+ CTRL.M (ØDH)  carriage return + line feed
+ CTRL.E (Ø5H)  Zeichen einfuegen
+ CTRL.R (12H)  shift-look
+ CTRL.S (13H)  Zeichen loeschen
+ CTRL.T (14H)  carriage return
+
+Die aufgefuehrten Steuerfunktionen sind sowohl in der Kom-
+mandozeile des Texteditors als auch in der des RTTY-Teils
+wirksam.
+
+Die Kommandos des Texteditors lassen sich prinzipiell in drei
+Gruppen unterteilen:
+
+  4.2.1 uebergeordnete Kommandos
+
+DELX  Loeschen aller Texte
+HELP  Auflisten aller Kommandowoerter
+INFO  Ausgabe von Informationen zu den vorhandenen Texten`
+EXIT  Verlassen des Texteditors und Rueckkehr ins Menu`
+
+  4.2.2 Kommandos mit Namensvereinbarung
+
+Nach dem Kommandowort muss der entsprechende Textname an-
+gegeben werden. Er kann aus maximal 6 Zeichen bestehen.
+Abgesehen vom Kommando "NEWT" kann der Name durch Weglassen
+abgekuerzt werden.
+
+NEWT  Eroeffnen eines neuen Textes. Das Programm befindet
+      sich anschliessend im Textmodus und es kann mit der
+      Standardtexteingabe begonnen werden. Durch ein "/" auf
+      der 1.Zeichenposition einer Zeile kehrt das Programm in
+      den Kommandomodus zurueck.`
+      Das Zeichen "@"(4ØH) wirkt bei der Ausgabe im RTTY-
+      Teil als Stop-Zeichen, bei dem die Textausgabe unter-
+      brochen und Woerter ueber die Tastatur eingefuegt
+      werden koennen.
+
+LIST  Ausschreiben des Textes auf dem Bildschirm(s.a. LIST d)
+
+DELT  Loeschen eines Textes
+
+DELN  Zusammenfuegen zweier Texte. Empfangstexte werden je
+      Durchgang als getrennte Files im Puffer abgelegt.
+      Sollen diese wieder zusammengefuegt werden, so ist
+      mit "DELN" der Name und damit die Anfangskennung des
+      jeweils zweiten Files zu loeschen.
+      Achtung! Wird mit diesem Kommando das erste File im
+      Puffer bearbeitet, so ist kein Zugriff auf diesen
+      Text mehr moeglich.
+
+TEXT  Namen eines vorhandenen Textes zur weiteren Bearbeitung
+      vereinbaren.
+
+
+  4.2.3 Kommandos mit Bezug auf letzte Namensvereinbarung`
+
+Hier erlauben einige Kommandos die Eingabe einer maximal 4-
+stelligen Zeilennummer "d". Diese ist hinter dem Kommandowort
+anzugeben.
+
+LIST d  Ausgabe eines Textes ab der angegebenen Zeile mit
+        Voranstellung der Zeilennummern. Die Zeilennummer Ø
+        oder das Weglassen des numerischen Wertes bewirken
+        die Ausgabe des gesamten Textes ohne Zeilennummern.
+        Nach jeweils 25 Zeilen wird das Listen unterbrochen
+        und auf die Betaetigung einer beliebigen Taste ge-
+        wartet.
+
+PRNT    Drucken eines Textes. Bedingung ist das Vorhandensein
+        einer geeigneten Druckerroutine und der Eintrag der
+        entsprechenden Ansprungadressen im Vereinbarungsteil.
+
+EDIT d  Korregieren eines Textes ab der angegebenen Zeile.
+        Die weiteren Funktionen entsprechen dem Kommando
+        "NEWT".
+
+INSZ d  Einfuegen einer Leerzeile vor der angegebenen Zeile.
+        Das Kommando kann durch mehrmaliges Druecken der
+        "CR"-Taste wiederholt werden.
+
+DELZ d  Loeschen der angegebenen Zeile. Das Kommando kann
+        ebenfalls wiederholt werden.
+
+FORM    Formatieren des Textes. Alle Zeilen werden gleich-
+        maessig mit Leerzeichen aufgefuellt, so dass nach
+        Moeglichkeit ein rechtsbuendiger Abschluss im Format
+        entsteht. Da nach jedem Wort maximal ein Leerzeichen
+        eingefuegt wird, muss das Kommando ggf. wiederholt
+        manuell aufgerufen weden.
+        Das Format wird von der laengsten im Text vorhandenen
+        Zeile bestimmt.
+        Eine Ausnahme bilden Zeilen, die mit "ö" 7CH abge-
+        schlossen sind. Diese werden nicht formatiert.
+        7CH wirkt nur als Hilfszeichen zum Beenden eines Ab-
+        satzes und wird beim Textaufruf im RTTY-Teil nicht
+        mit ausgegeben.
+
+REFO    Reformatieren eines Textes. Es wird der Orginalzu-
+        stand nach dem Formatieren wiederhergestellt.`
+
+
+Fehlerhafte Anweisungen werden mit ERROR-Meldungen quittiert.
+
+  Ø1 - illegales Kommando
+  Ø2 - nicht existierender Text
+  Ø3 - Name fehlt
+  Ø4 - RAM-Bereich ueberschritten
+  Ø5 - nicht existierende Zeile
+
+
+
+
+  JO62SK, den 18.Ø1.1988
+
+
+
+               Viel Spass beim Fernschreiben
+                         wuenscht
+                        Y27XO/Y36ZO
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.

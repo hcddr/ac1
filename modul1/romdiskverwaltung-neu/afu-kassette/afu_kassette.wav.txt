@@ -1,0 +1,50 @@
+Kassette - Anwendungen für den Funkamateur
+
+Hardwarevoraussetzungen:
+-	AC1 nach FuA
+-	Monitorprogramm 3.1 oder kompatibel,
+-	1KByte Zeichengenerator nach FuA 06/86
+-	2KByte BWS von 0x1000 bis 0x17FF
+-	2KByte RAM von 0x1800 bis 0x1FFF
+-	16KByte RAM ab Adresse 0x4000
+
+WAV-Datei neu erstellt, März 2014, ac1-info.de 
+
+ Nr. min:sek Namen           Anfang Ende  Start Bemerkung
+--------------------------------------------------------------------
+1	00:00  HINW.1           18A0  1B95  18A0 
+2	00:13  BAS.B            4000  5A02  4000  Beschreibung 8K-BASIC-Interpreter
+3	01:00  BASIC+EDITV1.1   4000  5FFF  4000  8K-BASIC-Interpreter
+4	01:54  LOCATO           BASIC-File        Entfernung aus Locator 
+5	02:24  OSCAR            BASIC-File        Bahnberechnung OSCAR-10
+6	03:05  Filter           BASIC-File        RC-Bandpass
+7	03:22  tiefpa           BASIC-File        Butterwort-Tiefpass-Berechnung
+8	03:47  NTrafo           BASIC-File        Netztransformator-Berechnung
+9	04:35  W*Uhr            BASIC-File        Weltzeituhr
+10	04:32  ANTDIA           BASIC-File        vertikales Antennendiagramm 
+11	04:57  BOWEAS           BASIC-File        Bodenwellenausbreitung 
+12      05:29  ANTBER           BASIC-File        Langdrahtantennen
+13	06:29  ZF-PRO           BASIC-File        Nebenempfangsstellen 
+14	06:43  -YAGI-           BASIC-File        Yagi-Antennen
+15	07:28  PARABOL          BASIC-File        Parabol-Antennen
+16	07:49  Q-FILT           BASIC-File        Quarzfilter
+17	08:32  RESOAN           BASIC-File        Resonator-Anpassung
+18	08:58  SELRES           BASIC-File        selektive Resonator-Anpassung
+19	09:27  Verst.           BASIC-File        Kleinsignalverstärker
+20	10:14  PI-FIL           BASIC-File        Anpassung mit Pi-Glied
+21	10:45  -DFUE-           BASIC-File        Zeitdauer einer Datenübertragung 
+22	10:57  NF-MESSPROGRAMM  1900  1B27  1900  schnelles NF-Messprogramm, siehe FuA 1/88 u. 4/88
+                                                  Frequenzmessung, Eingang ist der TB-Eingang,       
+23	11:10  CW*@             1900  1AFF  0000  Morseschreibmaschine, Start mit "@",
+                                                  Tasten 1 bis 0 --> Tempo 10 bis 100 BPM,
+                                                  # Text schreiben, ":" Ausgabe starten,
+                                                  "@" Stop, "*" Wiederholen, CTRL-C zurück zum Monitor,
+                                                  Ton über TB-Ausgang, Tastrelais an Port B, Bit 5,
+                                                  CTC ZC/T0 - CLK1 Brücke setzen,
+24	11:22  CW_W.B           4000  4DAF  4000  Beschreibung CW-Sende- u. Empfangsprogramm
+25	11:51  CW_W             18C0  1F1F  0000  CW-Sende- u. Empfangsprogramm
+26	12:09  RTTY2K           18A0  1FFF  0000  Fernschreibprogramm, siehe FuA 5/84 sowie 2 u. 3/86
+27	12:27  RTTY.4           4000  45ED  4000  erw. Fernschreibprogramm, siehe FuA 2 u. 3/86
+
+28	12:46  RTTY_2.1.B       4000  7557  4000  Beschreibung Fernschreibprogramm V2.1
+29	14:11  RTTY_2.1         4000  59FF  4000  Fernschreibprogramm V2.1, Baudot und ASCII-Mode      14:58  Gesamtzeit

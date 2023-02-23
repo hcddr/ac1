@@ -1,0 +1,378 @@
+Funkamateur 07 und 08/87
+
+Texteditor für den "AC1"
+
+5000-5B6F
+
+J. REUL - Y36ZO
+
+Computer werden in immer stärkerem Maße dazu verwendet, die altbekannte
+Bürotechnik zu ersetzen. So werden heute schon vielerorts Schreibmaschinen durch
+Bürocomputer bzw. rechnergestützte Geräte verdrängt. Die Vorteile, wie
+beispielsweise die nachträgliche Korrektur oder das Abspeichern von Texten, wird
+wahrscheinlich erst derjenige ermessen können, der einmal mit beiden
+Möglichkeiten gearbeitet hat. Aber nicht nur im kommerziellen, sondern auch im
+Amateurbereich setzt sich die rechnergestützte Textverarbeitung immer weiter
+durch. Mit dem folgenden Beitrag soll auch dem "AC1 "-Besitzer diese Technik
+eröffnet werden.
+
+Selbstverständlich wird das vollständige Hexlisting als Rechnerausdruck mit
+veröffentlicht, so daß jeder Elektronikamateur ohne die Zahlung einer
+Nachnutzungsgebühr in den Besitz des Programms gelangen kann. Eine Praxis, die
+eigentlich unter Amateuren üblich sein sollte. Nutzbar ist der "AC1"-Texteditor
+in zweierlei Hinsicht. Zum einen können die erarbeiteten Texte unter Verwendung
+eines geeigneten Druckers zu Papier gebracht werden. Sie können aber auch als
+eigenständige Textfiles in den RAM-Bereich ausgelagert und auf
+Magnetbandkassette abgespeichert werden. Dem Programmierer ist damit
+beispielsweise die Möglichkeit gegeben, Programmbeschreibungen auf einfache Art
+und Weise vervielfältigen zu können.
+
+An dieser Stelle soll gleich darauf hingewiesen werden, daß das Programm ohne
+Vorbild geschrieben wurde und die Anpassung auf einen anderen Rechnertyp nur
+unter großen Schwierigkeiten möglich sein dürfte.
+
+
+
+Hardware-Voraussetzungen
+
+Der Texteditor ist für einen erweiterten "AC1" mit folgenden Merkmalen
+geschrieben:
+
+- Speichererweiterung (min. 16 KBytes, bei 4000H beginnend);
+- Zeichengenerator mit Kleinbuchstaben;
+- Bildschirm mit 32 Zeilen.
+
+Eine weitere wichtige Voraussetzung für die Funktion des Programms ist die
+Verwendung des Betriebssystems nach [1] und einer Tastatur, die die logischen
+Funktionen nach [2] gewährleistet.
+
+
+
+Programmstart
+
+Der Texteditor belegt den Bereich 5000...5B6FH als Arbeitsspeicher und 5D00H bis
+zum oberen RAM-Ende, das selbständig vom Rechner ermittelt wird, als Textpuffer.
+Der dazwischenliegende Bereich ist dem Stack und den Merkzellen zugeordnet. Die
+Startadresse des Programms ist 5000H. Bei erweitertem Suchbereich für
+Kennbuchstaben ist der Start auch mit "t" (74H) möglich.
+
+Nach dem Löschen des Bildschirms gelangt ein Menü zur Anzeige, in dem die
+Grundfunktionen zur Textverarbeitung aufgeführt sind. Außerdem wird die Anzahl
+der auf Grund der vorhandenen RAM-Länge zur Verfügung stehenden Bildschirmzellen
+angezeigt. Steht an Stelle dieses Wertes ein "Error", so ist das Programm
+fehlerhaft.
+
+Der Aufruf der Menüfunktionen erfolgt mittels des vorangestellten
+Kennbuchstabens und "CR". Sind weitere Angaben erforderlich, so nimmt der
+Rechner die Abfrage im Dialog vor.
+
+
+
+Menüfunktionen
+
+A - Start
+
+Der Puffer wird zur Erstellung eines neuen Textes vollständig gelöscht. Der
+gesamte Bereich wird dabei mit Leerzeichen (20H) aufgefüllt und dessen Beginn
+auf dem Bildschirm angezeigt.
+
+Zur komfortablen Texteingabe, die nun beginnen kann, ist das Programm in einen
+Schreibmaschinenmodus geschaltet und die Tastaturabfrage um die
+Autorepeatfunktion erweitert. Alle von der Tastatur erzeugten Kodes, die den
+ASCII-Zeichen zwischen 14H und 7FH entsprechen und nicht in Tabelle 1 als
+Steuerkodes vereinbart sind, werden als Zeichen interpretiert und verarbeitet.
+Die Erläuterung spezieller Steuerfunktionen folgt in einem späteren Abschnitt.
+Zur verbesserten Orientierung beim Schreiben zeigt die letzte Zeile
+Statusinformationen, die sich auf die aktuelle Position des Kursors beziehen.
+
+B - Restart
+
+Die Abläufe entsprechen "A". Der Puffer wird jedoch nicht gelöscht, so daß mit
+der Bearbeitung eines vorhandenen Textes fortgefahren werden kann.
+
+C - Komprimieren
+
+Der geschriebene Text läßt sich in einen frei wählbaren RAM-Bereich unterhalb
+5000H umlagern. Ihm vorangestellt ist dann ein Hilfsprogramm, das es gestattet,
+den Text ohne Zuhilfenahme des Editors auf dem Bildschirm auszugeben. Eine
+Sonderstellung bei der Umlagerung nehmen Leerzeichen und Bindestrich ein. Bis zu
+64 zusammenhängende Zeichen dieser Art werden zu einem Byte komprimiert, so daß
+bei übersichtlicher Arbeit mit eingerückten Zeilen oder Unterstreichungen kein
+erhöhter Speicherbedarf entsteht.
+
+Nach Abarbeitung des Kommandos gelangen Anfangs- und Endadressen des Textfiles
+zur Anzeige und das Programm kehrt zum Betriebssystem zurück. Außerdem werden
+Anfangs-, End- und Startadresse in die Argumentzeilen geladen, so daß man das
+File mit S:Name auf Kassette abspeichern kann. Die Eingabe der Anfangsadresse 0
+bewirkt den Rücksprung in das Menü.
+
+D - Dekomprimieren
+
+Komprimierte Texte lassen sich zur Weiterbearbeitung oder zum Drucken in den
+Puffer zurückladen. Befindet sich auf der angegebenen Adresse ein solches File,
+wird der Puffer gelöscht, der Text übernommen und ein Restart ausgeführt. Bei
+Eingabe einer falschen Adresse wird die Ausführung des Kommandos verweigert und
+bei Adresse 0 in das Menü zurückgesprungen.
+
+E - Drucker
+
+Die Verwendung dieses Kommandos setzt das Vorhanden sein einer geeigneten
+Druckerroutine voraus. Diese muß folgende Bedingungen erfüllen:
+
+1. zeichenweise Übergabe im Akku,
+
+2. retten aller Register (Akku kann zerstört werden).
+
+3. Abschluß mit RET.
+
+Zur einfachen Anpassung an die jeweiligen Gegebenheiten besitzt das Programm
+einen Sprungverteiler, dessen Belegung noch erläutert wird.
+
+F - Format
+
+Beim Programmstart stellt sich ein Format von 61 Zeichen je Zeile ein. Eine
+Veränderung dessen ist mit dem Kommando "Format" möglich. Die Eingabe von Werten
+zwischen 10 und 63 ist erlaubt. Als zweiten Wert erfragt der Rechner die Größe
+des Formatierungsraumes. Das ist der Bereich vom rechten Zeilenende gerechnet,
+in dem beim Formatieren auf das Vorhandensein von Zeichen getestet wird. Die
+Anzeige des eingestellten Bereichs erfolgt durch "+"-Zeichen in der Trennlinie
+oberhalb der Statuszeile. Die Eingabe des Wertes 0 bewirkt eine Berechnung zu
+Format/10 + 2. Die Anfangsinitialisierung beträgt 8.
+
+G - Formatieren
+
+Es werden alle Zeilen. in denen im Formatierungsraum ein Zeichen steht,
+gleichmäßig mit Leerzeichen aufgefüllt, so daß nach Möglichkeit ein
+rechtsbündiger Abschluß im Format entsteht. Um das Textbild nicht zu stark zu
+verfälschen, werden nach jedem Wort maximal zwei Leerzeichen eingefügt.
+Gegebenenfalls kann man das Kommando erneut aufrufen.
+
+H - Zentrieren
+
+Der Text wird je nach Format in die Bild­mitte gerückt.
+
+I - Reformatieren
+
+Es wird der Originalzustand nach Formatieren bzw. Zentrieren wieder hergestellt.
+Dieses Kommando ist bei dekomprimierten Texten wirkungslos. D.h. Texte die zur
+späteren Weiterverarbeitung komprimiert und auf Kassette abgespeichert werden,
+sollten nicht formatiert sein.
+
+K - Monitor
+
+Mit diesem Kommando ist das Verlassen des Texteditors möglich. Die Steuerung
+wird an das Betriebssystem zurückgegeben. Zur Unterstützung der Kassettenroutine
+werden die Argumentzellen geladen, so daß ein direktes Abspeichern mit S:Name
+möglich ist.
+
+Vor dem Wiedereinladen ist das Löschen des Puffers erforderlich. Das kann
+beispielsweise mit dem Kommando "Start" des Menüs geschehen. Da der Puffer vom
+oberen Ende beginnend beschrieben wird, ist nach einer Veränderung der RAM-Länge
+im Rechner ein Laden mit Offset notwendig.
+
+
+
+Editorfunktionen
+
+Bei der Texteingabe wirken eine Reihe von Steuerbefehlen, die entsprechend der
+verwendeten Tastatur mit den in Tabelle 1 aufgeführten Kodes belegt wurden. Da
+diese zumeist Standardfunktionen entsprechen, soll an dieser Stelle nur auf
+einige Besonderheiten eingegangen werden.
+
+Kursorsteuerung
+
+Der Kursor kann auf jede beliebige Bildschirmposition gelenkt werden, um mit der
+Texteingabe oder anderen Steuerfunktionen fortzufahren. Das Verlassen der Zeile
+oder des Bildschirmes ist nicht möglich. Die Funktion Backspace + Space, wie aus
+dem Monitor bekannt, ist nicht vorhanden. Sollen einzelne Zeichen gelöscht
+werden, muß der Kursor positioniert und mit Space vorgerückt werden.
+
+Ein spezieller Tabulator gestattet es, den Kursor bis zum nächsten Wort in der
+darüberliegenden Zeile vorzurücken. Diese Funktion unterstützt die Erstellung
+von Tabellen und die Arbeit mit eingerückten Texten.
+
+Shiftlock
+
+Nach dem Starten des Editors stellt sich der Schreibmaschinenmodus ein. Die von
+der Tastatur erzeugten ASCII-Zeichen für Buchstaben werden softwaremäßig
+umgewandelt, so daß im Normalfall Klein-, bei gedrückter Shifttaste
+Großbuchstaben entstehen. Bei aktiver Shiftlockfunktion dagegen werden die
+ASCII-Zeichen original interpretiert. Das bedeutet, daß es sich eigentlich um
+eine sogenannte Capital-Shiftlock-Funktion handelt, die nur bei Buchstaben (41H
+5FH und 61H 7FH) wirksam ist. Ziffern und Zeichen werden nicht beeinflußt.
+
+Ein- und Ausschalten der Funktion erfolgt mittels ein und derselben Taste, das
+heißt, sie wirkt alternierend. Der aktive Zustand wird durch ein "S" in der
+Statuszeile angezeigt. Des weiteren wirkt Shiftlock noch auf andere
+Steuerfunktionen. Beim Bildhoch- bzw. -runterrollen wird jeweils um eine halbe
+Bildschirmseite "weitergeblättert".
+
+Das Zeicheneinfügen wird normalerweise blockiert, wenn das letzte Zeichen der
+Zeile kein Leerzeichen ist. Shiftlock bewirkt hier einen Zeilenumbruch, der ggf.
+über den gesamten Absatz ausgeführt wird. Ähnlich verhält es sich beim
+Zeichenlöschen. Passen eines oder mehrere Wörter der Folgezeile an das Ende,
+werden diese übernommen und die Folgezeile nach links verschoben. Dieser Umbruch
+wird jedoch nicht über mehrere Zeilen ausgeführt, da ansonsten das Textbild
+zerstört werden könnte. Wenn nötig, muß man ihn in den Folgezeiten manuell
+wiederholen.
+
+Zeile löschen
+
+Um die Gefahr des versehentlichen Löschens einer Zeile durch Fehlbedienung
+auszuschließen, ist im Programm eine zusätzliche Abfrage eingebaut, die mit "CR"
+quittiert werden muß. Die Quittung mit jeder anderen Taste führt zum
+Wiedereinfügen der Zeile.
+
+
+
+Programmanpassung
+
+Wie bereits erwähnt, besteht die Möglichkeit, das Programm in gewissen Grenzen
+der verwendeten Hardware anzupassen. Speziell die Funktionsbelegung der Tastatur
+dürfte sich bei den meisten Amateuren unterscheiden.
+
+Zum Zweck der Anpassung befindet sich am Programmanfang ein Tabellenteil, der
+nicht der Checksummenüberprüfung unterliegt. Die Belegung entsprechend dem
+abgedruckten Hexlisting zeigt Tabelle 1. Die einzelnen Punkte haben folgende
+Bedeutung:
+
+OUTP - Einzelzeichenausgabe zum Druckerkanal
+
+Hier ist an Stelle der Adresse 07EBH die der genutzten Druckerroutine
+einzutragen. Auf die zu erfüllenden Bedingungen wurde bereits in der
+Beschreibung der Menüfunktionen hingewiesen.
+
+INIT - Druckerinitialisierung
+
+Zu Beginn eines jeden Druckzyklusses kann über diesen Sprung die
+Anfangsinitiatisierung des Druckers erfolgen. Komfortable Druckprogramme, die
+eine selbständige Seitenformatierung vornehmen, benötigen sie als Information
+zum Schreiben der ersten Abrißlinie, Rücksetzen der Seitennumerierung oder
+Positionieren des Druckkopfes. Auch andere Funktionen sind denkbar.
+
+Einzige Bedingung ist die Rückkehr mit RET. Auch hier ist im abgedruckten
+Hexlisting ein Sprung zur Adresse 07EBH eingetragen. Wird die
+Anfangsinitialisierung nicht benötigt, sollte der Befehl unverändert bleiben.
+
+ZEILE - Zeilen je Seite
+
+An dieser Stelle ist die Anzahl der Zeilen dezimal einzutragen, die der
+verwendete Drucker je Seite erzeugt. Einfluß hat dieser Wert nur auf die Anzeige
+in der Statuszeile, um die Übersichtlichkeit beim Schreiben zu erhöhen und beim
+Drucken die Seitenauswahl zu ermöglichen.
+
+CSYMB - Kursorsymbol
+
+Das zu verwendende Kursorsymbol kann dem persönlichen Geschmack angepaßt werden.
+Mit dem Wert 0FH blinkt bei Verwendung des Zeichengenerators nach [3] ein weißes
+Feld.
+
+CODTAB - Steuerkodetabelle
+
+Die nachfolgenden 16 Bytes beinhalten die Steuerkodes des Editors. Maßgebend für
+die Funktion ist die Reihenfolge der Bytes, nicht aber deren Wert. Das bedeutet,
+daß jedes beliebige ASCII-Zeichen an entsprechender Stelle eingetragen und als
+Steuerkode verwendet werden kann.
+
+ZGCODE - Einzelzeichenkodierung
+
+Dem Zeichengenerator nach [3] fehlen für die Textverarbeitung in deutscher
+Sprache die Umlaute, "ß" und noch einige andere Symbole. Um die Arbeit mit
+diesen Zeichen zu ermöglichen, gibt es im "AC1" prinzipiell zwei Lösungswege.
+Zum ersten kann ein zweiter Zeichengenerator eingesetzt und hard- oder
+softwaremäßig zugeschaltet werden. Zum anderen besteht aber auch die
+Möglichkeit, die fehlenden Zeichen in den bisher freien Bereich des
+Zeichengenerators (14H 1FH) zu legen. Diese Lösung entspricht zwar keinem
+Standard, stellt aber den einfacheren Weg dar. Zur Erzeugung dieser Zeichen
+bietet der Texteditor die Möglichkeit, die Tastaturabfrage auf eine zweite Ebene
+umzuschalten.
+
+Der entsprechende Steuerkode ist Tabelle 1 zu entnehmen. Da die Funktion
+alternierend wirkt, erfolgt eine Anzeige durch ein "U" in der Statuszeile. Bei
+aktiver Funktion wird jedes von der Tastatur erzeugte Zeichen mit den jeweils
+ersten Werten der ZGCODE-Tabelle verglichen und bei Auffinden in den dahinter
+stehenden Wert umgewandelt. Die momentane Belegung soll nur als Beispiel gelten.
+Sobald der Inhalt des Zeichengenerators endgültig festgelegt ist, wird dieser
+veröffentlicht und eine entsprechende Tabellenbelegung vorgeschlagen.
+
+SPCPRT - Leerzeichenausgabe zum Druckerkanal
+
+Es wird bei den im Amateurbereich eingesetzten Druckern häufig der Fall sein,
+daß einige Zeichen nicht der für die Textverarbeitung erforderlichen Qualität
+entsprechen. Symbole, die von der Druckerroutine beispielsweise durch
+Überdrucken erzeugt werden, mögen für ein Programmlisting genügen, sehen jedoch
+in einem Brief oftmals von Hand nachgetragen besser aus. Zu diesem Zweck kann
+jeder Anwender bis zu fünf verschiedene ASCII-Zeichen in die SPCPRT-Tabelle
+eintragen, die über den Druckerkanal als Leerzeichen ausgegeben werden sollen.
+
+
+
+Benutzung der Textfiles
+
+Wie bereits erwähnt, besteht die Möglichkeit, die erstellten Texte in den
+vorhandenen RAM-Bereich unterhalb 5000H umzulagern. Durch die Voranstellung
+eines Hilfsprogramms, das den Text in einer Art Laufschrift über den Bildschirm
+ausgeben kann, entsteht ein eigenständiges Textfile. Mit dieser Anwendung wird
+der Texteditor auch für die Amateure interessant, die keinen Drucker haben.
+
+Die Umlagerung ist im Menü als "Komprimieren" bezeichnet. Dieser Begriff wurde
+gewählt, da aufeinanderfolgende Leerzeichen und Bindestriche zu einem Byte
+zusammengefaßt und in die Kodes, ab 80H umgewandelt werden. Die dadurch
+erreichte Speicherplatzeinsparung ist recht erheblich.
+
+Im Textfile sind keinerlei Steuerzeichen enthalten und eine Zeile wird immer mit
+64 Zeichen beschrieben. Dadurch entsteht ein etwas eigenwilliges Format, was
+jedoch für den Anwender keine Bedeutung haben dürfte. Ansprüche auf
+Kompatibilität zu anderen Systemen werden ohnehin nicht erhoben.
+
+Die Textfiles sind relocatibel, das heißt, sie können in jeden beliebigen RAM-
+Bereich verschoben werden und sind dort lauffähig. Nach dem Laden eines
+Textfiles von Kassette wird dieses mit "J:" angesprungen. Erfolgt das Laden mit
+Offset, muß die neue Startadresse natürlich entsprechend angegeben werden.
+Daraufhin werden der Bildschirm gelöscht und die Zeichen mit etwa 30 ms
+Verzögerung über den Befehl RST 10 des Betriebssystems auf dem Bildschirm
+ausgegeben. Durch Drücken einer beliebigen Zeichentaste kann die Ausgabe
+gestoppt und mit "CR" fortgesetzt werden. Anhaltendes Drücken von "CR" bewirkt
+das Ausschreiben mit doppelter Verzögerung. Mit CTRL-C wird die Ausgabe bei
+laufendem Text abgebrochen. Es bietet sich natürlich auch die Möglichkeit an,
+die Texte zu dekomprimieren und mit Hilfe des Editors auf dem Bildschirm
+auszugeben, zu bearbeiten oder zu drucken.
+
+
+
+Schlußbetrachtungen
+
+Das vorgestellte Textverarbeitungsprogramm erhebt nicht den Anspruch mit
+kommerziellen Systemen, in denen Speicherplatz kein Thema ist, konkurrieren zu
+wollen. Es wurde versucht, das Programm den Bedürfnissen eines Amateurs
+anzupassen und die Bedienung ohne Programmierkenntnisse zu ermöglichen.
+Lediglich die Arbeitsweise des "AC1"-Betriebssystems sollte bekannt sein.
+
+Der beschriebene Texteditor ist seit einiger Zeit bei mehreren "AC1"-Besitzern
+in Betrieb. Es sollte dabei beachtet werden, daß schon relativ früh
+Arbeitsvarianten verteilt wurden, die zwar alle aufwärtskompatibel sind, nicht
+aber den vollen Funktionsumfang realisieren. Das Eintippen oder der Besuch einer
+der nächsten Softwareveranstaltungen könnte sich also lohnen.
+
+Die mögliche Länge der zu bearbeitenden Texte richtet sich nach dem zur
+Verfügung stehenden RAM-Bereich. Bei einer Minimalforderung von 16 KByte ab
+4000H stehen etwa zwei Schreibmaschinenseiten zur Verfügung. Ein Vollausbau auf
+64 KByte gestattet die Bearbeitung von etwa 10 Seiten a 63 Zeilen. Einem Amateur
+dürfte das meist genügen. Außerdem kann aber auch das Kassettenbandgerät als
+zusätzlicher Massenspeicher genutzt werden.
+
+Auf Grund der bisherigen Erfahrungen bei der Veröffentlichung von Hexdumps wird
+hier die CRC-Summe 0,5-KByteweise angegeben, um mögliche Kompensationsfehler
+beim Eintippen, die nicht durch das Zeilenprüfbyte erkannt werden, schneller
+finden zu können. Der Autor wünscht allen "AC1"-Freunden bei der Arbeit mit dem
+Texteditor viel Erfolg und hofft, einen kleinen Beitrag zur weiteren
+Vervollkommnung dieses Kleincomputers geleistet zu haben.
+
+
+
+Literatur
+
+[1]	Heyder, F.: Der Amateurcomputer "AC1" (12), FUNKAMATEUR 34 (1985) H.1, S.40...43
+[2]	Heyder, F.: Funkamateure entwickeln Amateurcomputer "AC1", FUNKAMATEUR 33 (1984) H.4, S.170/171
+[3]	Heyder, F.: Bitmuster für Zeichengenerator und Ergänzungen zum "AC1", FUNKAMATEUR 35 (1986) H.6, S.306/307
+

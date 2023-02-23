@@ -1,0 +1,53 @@
+DiskettenFormate für den AC1 				Stand 31.07.2011
+
+Zur Zeit gibt es für den AC1 und den Betrieb von Disketten an den
+verschiedenen FDC Kontrollern, 2 versch. Diskettenformate.
+
+1.SCCH-Format (verwendet vom SCCH)
+
+Der SCCH hat aus mehreren Gründen das Dateiformat 16*256 verwendet.
+
+1. Das Format ist softwareseitig recht einfach zu händeln und auch mit
+   einer langsamen CPU funktioniert es noch OHNE WAIT Schaltung zuverlässig.
+2. Der verschwendete Speicherplatz bei kleinen Dateien ist deutlich geringer
+   als im Format 5*1024.
+
+ 16 x 256 heißt, eine Spur auf der Diskette besteht aus 16 Sektoren mit
+jeweils 256 Bytes je Sektor = 4096 Bytes je Spur.
+
+Die Anzahl der Spuren auf der Disk, hängt vom Laufwerkstyp ab und kann
+bis zu 80Spuren doppelseitig (akt.3,5" Disks) betragen, also 640k.
+
+Die Tools DiskVer, DVHD und sämtliche aktuellen CP/M verwenden dieses
+Format. HRDOS & HRCPM bietet sowohl SCCH, als auch ACC Format.
+
+
+2.ACC-Format (verwendet vom ACC)
+
+Der ACC setzt auf das Format 5*1024, weil hier deutlich mehr Bytes auf 
+die Diskette passen. Das wird jedoch mit einigen Nachteilen erkauft.
+
+1. Eine 2Mhz CPU ist gradeso in der Lage die Daten schnell genug vom
+   FDC zu lesen, wenn die Routine dazu klein programmiert wurde.
+   Um das zu umgehen, wurde eine spezielle WAIT Schaltung im FDC nötig,
+   die beim SCCH FOrmat nicht nötig ist.	
+	
+2. Speziell bei kleinen Dateien kann sich der Vorteil mehr speichern zu
+   können, auch ins Gegenteil umkehren, denn ein Datei die nur 10Bytes
+   Inhalt hat, belegt auf der Diskette trotzdem 1024Bytes! = 1 Sektor
+
+3. Ein Vorteil des ACC Formates ist, das die große Gruppe der KC-Computer
+   dieses Format auch standardmäßig einsetzt, allderings ist die z.Zt.
+   verwendete Art die Daten auf der Diskette zu verwalten inkompatibel
+   zu den KC's und damit sind KC-Disketten erstmal nicht nutzbar :-(
+
+
+ 5 x 1024 heißt, eine Spur auf der Diskette besteht aus 5 Sektoren mit
+jeweils 1024 Bytes je Sektor = 5120 Bytes je Spur, also 1024 Bytes mehr
+als beim SCCH Format.
+
+Die Anzahl der Spuren auf der Disk, hängt vom Laufwerkstyp ab und kann
+bis zu 80Spuren doppelseitig (akt.3,5" Disks) betragen, also max.800k.
+
+Dieses Format wird bisher vom RH-DOS(altes MLDOS für CP/M), 
+den FDC Tools 1.5 und einem CP/M Bios von Johann Spannenkrebs verwendet.

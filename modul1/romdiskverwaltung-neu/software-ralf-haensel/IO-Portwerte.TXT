@@ -1,0 +1,43 @@
+Das kleine Tool IO-Portwerte liest fortlaufend sämtliche 
+IO-Portadressen (0..FFH) ein und zeigt auf dem BWS alle
+IO-Port's mit Adresse und gelesenem Wert an, die NICHT FFH sind !
+Dabei startet es immer wieder neu, sodass sich ändernde
+Portwerte gut zu sehen sind !! Das ist so von mir gewollt !!
+
+Das Tool ist relocatibel, läuft also in jedem Adressbereich.
+
+Beendet wird es mit CTRL+C ! Achtung diese Abfrage erfolgt
+erst nach dem Lesen von IO-Port FFH, also etwas verzögert!
+Nach dem Beenden bleiben die gelesenen Wert auf dem BWS.
+
+Syntax:  
+t xx CR  startet IO-Portwerte ab IO Adresse xx
+t CR     startet IO-Portwerte ab IO-Adresse 00H
+
+Das Tool hab mir schon geholfen, viele Fehler zu finden !
+Damit das Tool richtig funktioniert, werden unbedingt 
+die PullUp Widerstände für den Datenbus benötigt !
+
+Typischerweise melden sich beim AC1 folgende IO Adressen:
+
+CTC 	00..03, 
+PIO1 	04,05, 
+PIO2	08,09, 
+FDC 	40,41,
+PIONet 	C0,C1, 
+RFL-Prä.E0,E1,E2,E3,
+BWSPort F0, 
+PIOUSB 	FC,FD
+
+Mehr Ports können sich melden, müssen aber nicht. 
+
+Schmiert das Programm etwa ab, dann ist im AC1 etwas faul.
+Entweder sind Adressen nicht richtig sauber dekodiert, oder
+verändern die Ac1 Konfiguration schon beim Lesen eines 
+Portes.
+
+
+Viel Erfolg bei der Fehlersuche wünscht Ralph 
+
+@HR ralphhaensel@gmx.de
+

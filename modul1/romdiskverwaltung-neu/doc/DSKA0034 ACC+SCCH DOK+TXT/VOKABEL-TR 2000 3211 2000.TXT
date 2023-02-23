@@ -1,0 +1,96 @@
+                VOKABELTRAINER
+
+Mit Hilfe dieses Programmes können Sie, wenn Sie es lokrativ
+nutzen, Fremdsprachen, die sich leicht "verdeutschen" lassen,
+gut erlernen. Mein Vorsatz bestand darin, Wörterbücher zu er-
+setzen und parallel zur Schule ein Lernen von einzelnen Lek-
+tionen zu ermöglichen.
+Nun zu den Vorschriften der Eingaben:
+Das Programm Vokabeltrainer ist ein Basicprogramm und wird
+somit mit RUN gestartet. Jetzt erscheint auf dem Bildschirm
+ein Menü. Wenn schon ein Vokabelfeld auf Kassette existiert,
+so kann dies während des Programmes geladen oder gespeichert
+werden ( Punkt 1 oder 2 im Menü ).
+Mit Punkt 3, gleichbedeutend mit Taste 3+"ENTER" ist es mö-
+glich neue Lektionen einzugeben, oder vorhandene Wörter durch
+Eingabe zu erweitern. Der Rechner fragt nach dem Schuljahr,
+welches man mit "ENTER" abschließen muß. Danach wird nach
+gleichem Prinzip die Lektion und die Fremdsprache ( z.B.
+Englisch = Taste 1+"ENTER" ) eingegeben. Nun kann man alle
+Wörter, wenn möglich nur die Schwierigsten um Speicherplatz
+zu sparen, nach der Fragestellung des Rechners eingeben (die
+Reihenfolge ist Englisch,Deutsch ). Wichtig ist, daß man,
+bevor die Eingabe beendet ist, alle Wörter der Lektion (z.B.
+2Ø Wörter) mit  e i n e m  Mal eingibt, da der Rechner später
+die Lektionen nicht mehr erweitern kann. Verlassen wird die
+Eingabe durch ein einzelnes "e"+"ENTER".
+Falsch geschriebene Wörter lassen sich sehr leicht mit Punkt
+4 korrigieren. Dort gibt man die Fremdsprache, das Schuljahr
+und die Lektion ein. Jetzt erhält man eine Gesamtübersicht
+der gewünschten Lektion und kann durch die Auswahl der Num-
+mer+"ENTER" das verkehrt geschriebene Wort leicht berichti-
+gen.
+Mit Punkt 5 ist es möglich Russische Fälle, bis auf die Verbn
+zu erlernen. Gefragt wird nach der Anzahl der Versuche. Nun
+erscheint in der linken oberen Ecke die Endung des 1.Falls
+Einzahl, in der nächsten Zeile wird angezeigt was dekliniert
+werden soll (wenn dies nicht der Fall ist, so ist es immer
+ein Substantiv) und in der 3.Zeile wird angegeben welche
+Endung man verdeutscht eingeben soll. Zum Schluß erfolgt eine
+Auswertung.
+Mit den Punkten 6-9 ist es möglich Lektionen zu üben. Die
+Anweisungen gibt wiederholt der Rechner. Kehrt der Computer
+sofort ins Menü, so existiert die entsprechende Lektion nicht
+im Speicher, d.h. entweder das Schuljahr ist verkehrt ge-
+wählt, oder es muß mit Punkt 3 die Lektion eingegeben werden.
+Am Ende dieses Teiles erfolgt eine prozentuale Auswertung.
+Wichtig ist weiterhin der Punkt 1Ø, welcher es ermöglicht,
+(z.B. Hausaufgaben, die darin bestehen Texte vom Englischen
+ins Deutsche, oder umgekehrt zu übersetzen) das Nachschlagen
+im Wörterbuch zu unterbinden.
+Verfahren wird folgendermaßen: man gibt analog ein und
+schließt mit "ENTER" ab. So schreibt der Rechner, vorrausge-
+setzt das gesuchte Wort befindet sich im Speicher und ist
+grammatisch richtig geschrieben, das ergänzende Wort auf dem
+Bildschirm.
+Das Programm Vokabeltrainer wird in der Zeile 5 an den zur
+Verfügung stehenden Speicherbereich angepaßt (DIMB$(...):
+DIMC$(...):DIME$(...):DIMF$(...) ). Da mir leider kein 64K
+Speicher zur Verfügung stand bitte ich darum, daß dies jeder
+selbsr vollzieht.
+Am sinnvollsten, so meine ich, ist es, F$ und E$ oder B$ und
+C$ so groß wie möglich zu dimensonieren, da nur so annähernd
+ein sinnvolles Wörterbuch entsteht.
+Die Variablen haben folgende Bedeutung: B$(...)  engl.Wort
+      C$(...)   dt.Wort vom engl.
+      E$(...)   russisches Wort
+      F$(...)   dt.Wort vom russischen
+      H         Schuljahr
+      A         Lektion
+      D         Indizess von B$,C$,E$,F$
+Mit "Q"+"ENTER" kann das Programm während des Punktes 3 ver-
+lassen werden.
+Zur Eingabe der russischen Endung und somit der russischen
+Buchstaben habe ich folgendes vereinbart, wobei bis auf die
+Endungen eigene Buchstaben entworfen und verwendet werden
+können. Das russische Alphabet in geordneter Reihenfolge
+( übrigens auch in der Umschlagseite der "Kurzen russis  en
+Sprachlehre" von Kirschbaum Kretschmar zu finden) geringfügig
+gendert lautet:
+  A  B  W  G  D  E  JO  SH  SS  I  I-  K  L  M  N  O  P
+  R  S  T  U  F  CH Z   TSCH  SCH  SCHTSCH  b-  UI b  Ä
+  JU JA
+Wenn man den Text im Basicprogramm ändert, ist es möglich
+fast alle Sprachen zu "verdeutschen". Zu beachten ist nur:
+So wie die Eingabe mit Punkt 3 erfolgte, so vergleicht auch
+der Rechnerin den Punkten 6-1Ø. Auf Grund dessen habe ich
+kein Testbeispiel mitgeschickt. Sollte es denoch Mißver-
+ständnisse geben, bitte ich an mich eine Postkarte zu senden,
+welche Meinungen über das Programm enthält.
+Ich wünsche viel Erfolg mit der Benutzung des Vokabel-
+trainers.
+
+               Steffen Rothe
+               Weststraße  9
+               Hartmannsdorf
+                  9116

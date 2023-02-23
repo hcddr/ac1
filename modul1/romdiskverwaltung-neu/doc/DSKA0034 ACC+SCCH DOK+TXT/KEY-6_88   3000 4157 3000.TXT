@@ -1,0 +1,154 @@
+Beschreibung des Tastatur- und Bildschirmtreibers
+
+ Als Grundlage fuer ein leistungsfaehigeres Betriebssystem
+fuer den AC 1 ist dieser kombinierte Tastatur- und Bild-
+schirmtreiber entstanden. Er umfasst mehrere Funktionen:
+
+* Verarbeitung der Bildschirmsteuerzeichen analog CP/M
+
+* zusaetzlich noch Insert
+
+* Kontrolle auf einige Steuerzeichen schon in der Tastatur-
+  routine (Programmiermodus, Schreibmaschinenmodus, Grafik-
+  modus, Zeilencopy und Hardcopy)
+
+* Fenstertechnik
+
+* Zeichenumleitung in Eingabe- und/oder Datenpuffer und/oder
+  Sperrung des Bildschirms
+
+* Aufwaertskompatibilitaet d.h.: die Steuerzeichentabellen
+  liegen im RAM und sind ergaenzbar auf insgesamt 32 fuer den
+  Bildschirm und z.Z. 7 fuer die Tastatur
+
+* einheitlichdr Ansprungpunkt fuer den Druckertreiber
+
+* geaenderte Zeichenkettenausgabe (keine Veraenderung von A)
+
+ Der Treiber belegt z.Z. den Bereich von 2иии - 254b als Pro-
+gramm und 18fa bis 1bff mit seinen Systemzellen. Darin ist
+auch bei Bedarf der Eingabepuffer mit einer Laenge von max.
+255 Zeichen enthalten. Die Aktivierung erfolgt mit "K <cr>"
+aus dem Monitor heraus.
+
+ Mit "W uurr ooll <cr>" kann ein beliebiges Fenster auf dem
+Schirm eingestellt werden. Dabei bedeuten :
+
+  uu untere Begrenzungszeile
+  rr rechte Spalte
+  oo oberste Zeile
+  ll linke Spalte
+
+ Alle Angaben erfolgen hexadezimal und ab и beginnend. Der
+volle Bildschirm wird also durch "W 1f3F и <cr>" eingestellt.
+
+
+Tastaturfunktionen
+------------------
+
+CTRL-P  Programmiermodus (Kleinschreibung mit Shift)
+        Kursor : Mittelstrich mit Strich nach oben
+
+CTRL-S  Schreibmaschinenmodus (Grosschreibung mit Shift)
+        Kursor : Mittelstrich mit Strich nach unten
+
+CTRL-G  Grafikmodus : Es koennen als direkte Eingabe die Gra-
+        fikzeichen von AиH bis FFH auf die aktuelle Kursor-
+        position geschrieben werden. Der Kursor bleibt stehen
+        und muss mit den Steuertasten bewegt werden.
+        Kursor : dickes Kreuz
+
+CTRL-Q  Hardcopy ein/aus : Wenn auf den Adressen
+        18fa ein Sprung zur Druckerinitialisierung und auf
+        18fd einer zur Zeichenausgabe steht, werden die dem
+        Bildschirmtreiber zugefuehrten Zeichen der Drucker-
+        routine in A uebergeben.
+
+        Achtung : Es duerfen iy und a nicht veraendert
+                  werden !
+
+CTRL-L  Zeileocopy : Der Kursor in duenner-Ausfuehrung
+        erscheint am unteren Bildrand. In dieser Zeile kann
+        voll editiert werden. Ein weiteres CTRL-L verschiebt
+        diesen Kursor eine Zeile nach oben. Der Abschluss
+        dieser Funktion ist ein <cr>. Damit wird die gerade
+        angezeigte Zeile auf die Orginalkursorposition ueber-
+        nommen.
+
+ Die Tastaturroutine ist mit einer Repetierfunktion ausge-
+stattet. Wenn eine Taste laenger als и,5 s gedrueckt wird,
+erfolgt ab dann die Ausgabe ca. alle и,1 s. Abweichend vom
+bisherigen Monitor erscheint auch das Zeichen bei gedrueckter
+Taste sofort.
+
+
+Bildschirmroutine
+-----------------
+
+ Der Bildschirmtreiber realisiert folgende Steuerzeichen,
+deren Startadressen ab 18ииh nach folgender Formel zu finden
+sind :
+       <Startadresse>=18ииh+Kode*2
+
+ Fuer die nicht benutzten Kodes steht die Adresse eines RET.
+
+
+Kode  Bedeutung
+---------------------------------------------------------
+ии    -
+и1    Kursor auf Schirmbeginn
+и2    Kursor auf Zeilenbeginn
+и3    -
+и4    Zeile ab Position loeschen
+и5    Insertmodus ein/aus
+и6    Schirm ab Position loeschen
+и7    -
+и8    Kursor eine Position nach links
+и9    Kursor eine Position nach rechts
+иa    Kursor eine Zeile tiefer
+иb    Kursor eine Zeile hoch
+иc    Bildschirm loeschen, Kursor auf Schirmbeginn
+иd    RETURN, CR oder Enter
+иe    -
+иf    -
+1и    -
+11    -
+12    Loeschen Position links und nachruecken
+13    Loeschen Position und nachruecken
+14    Tabulation nach links
+15    -
+16    -
+17    Tabulation nach rechts
+18    -
+19    -
+1a    -
+1b    Einleitung einer Kursorpositionierung
+      die naechsten Zeichen werden folgendermassen
+      gewertet : 1. Zeichen Zeilennummer (1.Zeile = и)
+                 2. Zeichen Spaltennummer (1.Spalte=и)
+      z.B. ergibt folgende Sentenz : 1b и5 1f
+           eine Kursorpositionierung auf 6.Zeile und
+           32. Spalte.
+1c    -
+1d    -
+1e    Zeile loeschen
+1f    -
+
+ Eine weitere wichtige Adresse ist 194иh. Das hier enthaltene
+Byte steuert die Bildschirmarbeit folgendermassen :
+
+Bit   Bedeutung
+---------------------------
+и     Positinierung allg.
+1     Positionierung Spalte
+2     =1 -> Insert ein
+3     =1 -> Zeilencopy ein
+4     =1 -> Hardcopy ein
+5     =1 -> Zeichen auch in Eingabepuffer
+6     =1 -> Zeichen auch in Datenpuffer
+7     =1 -> Zeichen nicht auf Schirm
+
+
+ Das gueltige Kursorzeichen steht auf Adresse 195иh. Von
+Veraenderung wird gewarnt, da das Kursorsymbol in der
+Tastaturroutine ausgewertet wird.

@@ -1,0 +1,75 @@
+
+                Programmkassette AC1 (1/88)
+                ---------------------------
+
+ Vorbemerkungen
+ --------------
+Alle Programme  auf dieser  Kassette  sind  fuer den persoen-
+lichen Gebrauch  bestimmt.  Fuer Folgen,  die aus der Nutzung
+dieser  Programme  entstehen,  wird  jede Haftung  abgelehnt.
+Eine gewerbliche  Nutzung dieser Programme, insbesondere  der
+Verkauf, ist nicht gestattet.  Auch der Verkauf von Modifika-
+tionen  auf Grundlage  von Programmen  dieser  Musterkassette
+ist untersagt.
+
+!!! Eigentlich sollte all dies selbstverstaendlich  sein. !!!
+
+Die kostenlose  Weitergabe  dieser  Programme  an andere AC1-
+Freunde,  sowie selbige  Weitergabe  eigener  Programme,  ist
+erwuenscht.
+Auch die Verfasser dieser Programmsammlung  freuen sich ueber
+jedes Programm, welches sie erreicht.
+
+Fuer  Hinweise  auf Programmfehler  bzw.  Unzulaenglichkeiten
+sind die Autoren in jedem Fall dankbar.
+
+Eine weitere Musterkassette wurde fuer amateurfunkspezifische
+Anwendungsfaelle zusammengestellt.  Interessenten wenden sich
+bitte an Olaf (Y23FO).
+
+
+ Nutzungshinweise
+ ----------------
+Die meisten  Programme  auf dieser Kassette  erfordern  einen
+erweiterten AC1 mit folgenden Merkmalen:
+
+   - 2k Bildwiederholspeicher
+   - Zeichengenerator mit Kleinbuchstaben
+   - min. 16kBytes RAM-Erweiterung ab 4иииH
+     (in einigen Faellen auch 64kBytes)
+
+Zu allen  Erweiterungen  sind in der 'AC1-Beitragsreihe'  des
+Funkamateur Schaltungen und Hinweise erschienen.
+
+Die Abarbeitung  der Programme  sollte  unter Verwendung  des
+Betriebssystems  Monitor V.8  erfolgen.
+
+Jedes Programm ist 2x nacheinander auf dieser Kassette aufge-
+zeichnet. Den umfangreicheren Maschinenprogrammen ist, sofern
+vorhanden und noch nicht im Funkamateur veroeffentlicht, eine
+Bedienungsanleitung nachgestellt.
+
+
+Da diese Kassette im Direktverfahren kopiert wurde, empfiehlt
+es sich, die Programme nochmals selbst abzuspeichern.
+
+Fuer alle Interessenten noch der Hinweis, dass seit Januar 88
+der  'Berliner-AC1-Computerclub'  existiert.  Er steht  allen
+AC1-Freunden,  die am kostenlosen Programm- und Informations-
+austausch interessiert sind, offen.
+
+   Kontaktadresse: Club Passage
+                   Volkradstr.
+                   Berlin
+                   1136
+                   (Amateurcomputerclub)
+
+Viel Spass und Erfolg  wuenschen  alle, die an der Erstellung
+dieser Kassette  in der einen oder anderen  Weise beigetragen
+haben.
+
+
+
+                   Berlin, den 19.и3.88
+                        Y21SO/Y27XO
+                        Frank/Joerg

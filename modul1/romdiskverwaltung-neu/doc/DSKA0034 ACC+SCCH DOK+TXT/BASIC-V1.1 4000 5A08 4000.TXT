@@ -1,0 +1,240 @@
+
+        8K BASIC Interpreter (Bearbeiter Y21SO)
+        =======================================
+
+
+Die vorliegende Version des BASIC-Interpreters (V 1.1) ist
+fuer den AC 1 angepasst.
+
+Der Interpreter selbst belegt den Speicher ab Adresse 4иииH
+bis 5FFFH. Der Speicher ab 6иииH aufwaerts dient als Arbeits-
+und Programmspeicher. Das Ende dieses Speicherraumes kann
+beim Kaltstart des Interpreters vereinbart werden. Wird nur
+ein CR eingegeben, reserviert sich der Interpreter den ge-
+samten ab 6иииH vorhandenen RAM-Speicher. Aufgrund der auf
+8 KByte begrenzten Version des Interpreters, sind bereits
+viele Probleme (wie z.B.Satellitenbahnberechnung, Entfer-
+nungsberechnung nach Locatoren, Abrechnung kleinerer Con-
+teste) mit einer RAM-Erweiterung von nur 16 KByte loesbar.
+Damit stehen bereits 7878 Bytes als Programmspeicher zur
+Verfuegung.
+
+Nachfolgende, in Sprachumfang und Komfort erweiterte bzw.
+erweiterbare Versionen werden zu dieser weitestgehend kompa-
+tibel bleiben.
+
+Eine ausfuehrliche Beschreibung des Sprachumfangs bzw. des
+Programmierens in BASIC wuerde den Rahmen dieser Kurzinfor-
+mation sprengen. Hierzu muss vorerst auf die vorhandene
+Literatur verwiesen werden (rfe,FA ...).
+Zu Hilfe koennen auch die Sprachbeschreibungen solcher BASIC-
+Versionen wie die vom Z 9ии1 , KC 85/2 , Nascom , TRS 8и ,
+TDL-Basic ... genommen werden.
+
+In der vorliegenden Version 1.1 sind folgende Steuerworte
+vorhanden:
+
+
+  Kommandos:
+
+  AUTO      automatische Zeilennummerierung
+  BYE       zurueck zum Monitor
+  CLEAR     Loeschen des Variablenspeichers; Erweitern des
+            Stringspeicher; Neusetzen des Speicherendes
+  CLOAD     Einlesen von Kassette
+  CLS       Schirm loeschen; Cursor home
+  CONT      Fortsetzen nach Programmunterbrechung
+  CSAVE     Abspeichern auf Kassette
+  LINES     Aendern der Zeilenzahl fuer 'LIST'
+  LIST      Auflisten des Programmspeichers
+  RENUMBER  Neunummerieren des BASIC-Programmes
+  RUN       Start eines Programmes
+  TROFF     Ausschalten des Trace-Mode
+  TRON      Einschalten des Trace-Mode
+  WIDTH     Aendern der Zeilenlaenge
+
+  Befehle:
+
+  CALL      Aufruf eines Maschinenprogrammes
+  DATA      Datenfolge fuer 'READ'
+  DEEK      Speicherlesen - Wort
+  DEFFN     Funktionsdefinition
+  DIM       Einrichten von Variablenfeldern
+  DOKE      Speicherschreiben - Wort
+  END       Programmende
+  FOR...TO.
+  ..STEP    Programmschleife
+  GOSUB     Unterprogrammruf
+  GOTO      Sprunganweisung
+  IF        bedingte Anweisung
+  INP       Lesen eines Bytes von Portadresse
+  INPUT     Eingabeanweisung
+  LET       Wertzuweisung
+  NEW       Loeschanweisung
+  NEXT      Ende einer Programmschleife
+  ON..GOTO  Sprung nach Liste
+  ON..GOSUB Unterprogrammaufruf nach Liste
+  OUT       Ausgabe eines Bytes an Portadresse
+  PEEK      Speicherlesen - Byte
+  POINT     Graphikfeld Testen
+  POKE      Speicherschreiben - Byte
+  PRINT     Ausgabe
+  READ      Liest entsprechend 'DATA'-Liste
+  REM       Kommentar
+  RESET     Graphikfeld ruecksetzen
+  RESTORE   Ruecksetzen des 'DATA-Zeigers'
+  RETURN    Ende des Unterprogrammes
+  SCREEN    Cursorpositionierung
+  SET       Graphikfeld setzen
+  STOP      Stopanweisung
+  WAIT      Warten auf Bitmuster an Portadresse
+
+  Operatoren: (),^(Exponent),*,/,+,-,=,<,>,<>,<=,>=,
+              NOT,AND,OR
+
+  Funktionen: ABS,ATN,COS,EXP,INT,LN,SGN,SIN,SQR,TAN
+
+  Stringbehandlung: LEFT$,LEN,MID$,RIGHT$,STR$,VAL
+
+  sonst. Funktionen: ASC,CHR$,FRE,POS,RND,SPC,TAB
+
+
+  Fehlermeldungen:
+
+  BS   Feldelement nicht im dimensionierten Bereich
+  DD   Feld doppelt definiert
+  FC   illegaler Funktionsaufruf
+  ID   unzulaessige Direkteingabe
+  MO   Operand fehlt
+  NF   'NEXT' ohne 'FOR'
+  OD   zu wenig Elemente in 'DATA'-Anweisung
+  OM   RAM - Speicher zu gering
+  OV   Numerischer Ueberlauf
+  SN   Syntax Fehler
+  RG   'RETURN' ohne 'GOSUB'
+  UL   angegebene Zeile existiert nicht
+  /и   Division durch Null
+  CN   'CONT' ist nicht moeglich
+  LS   Zeichenkette ist laenger als 255 Zeichen
+  OS   vereinbahrter Stringspeicher ist zu klein
+  ST   String zu lang oder zu komplex
+  TM   Variablentyp ist falsch
+  UF   Funktion wurde nicht definiert
+
+
+Nachfolgend einige Hinweise zur Bedienung und zu einigen
+speziellen Befehlen..
+
+
+
+            Start, Restart und Unterbrechung
+            --------------------------------
+
+Start:     J 4иии 'cr'
+
+Restart:   J 4ии3 'cr' ; nur wenn vorher Start erfolgte !
+                         z.B. nach 'BYE'
+
+Unterbrechung:    CTRL-C  (z.B. nach RUN oder zum Beenden
+                           von AUTO )
+
+
+
+
+                     Abkuerzung
+                     ----------
+
+Das Befehlswort 'PRINT' kann durch ein '?' abgekuerzt
+werden, d.h. PRINT"Test" und ?"Test haben die gleiche
+Wirkung.
+
+
+                Cursorpositionierung
+                --------------------
+
+Mit Hilfe des Befehles SCREEN (x,y) ist es moeglich, den
+Cursor auf eine der 2и48 moeglichen Plaetze des Bildschirmes
+zu setzen. Damit laesst sich dann z.B. die Rollfunktion
+des Bildschirmes unterdruecken.'x' enthaelt die Nummer der
+Spalte (и...63) und 'y' die Nummer der Zeile (и...31), wobei
+der Ursprung in der linken oberen Ecke des Bildes liegt.
+
+Beispiel:  1и SCREEN (3и,16):PRINT"Test" ; druckt ca. in
+                                           Bildmitte
+           2и SCREEN (3и,16):PRINT"    " ; loescht wieder
+
+
+                 Pseudographik
+                 -------------
+
+Mit Hilfe von Graphikelementen im Zeichengenerator (Codes
+ииH - иFH) ist es moeglich Felder (3x4 Punkte) auf dem
+Bildschirm lueckenlos im Raster 128x64 zu Setzen, Testen
+und Rueckzusetzen. Damit lassen sich Kurvenverlaeufe schon
+relativ gut darstellen.
+
+
+Graphikbefehle:  Der Ursprung des Koordinatensystems liegt
+                 in der linken oberen Ecke des Bildschirmes.
+
+                 и..............123   x
+                 :
+                 :
+                 :
+                 63
+
+                 y
+
+
+                 SET (x,y)   - setzt das Feld x,y auf weis
+
+                 RESET (x,y) - setzt das Feld x,y zurueck,
+                               d.h. auf schwarz
+
+                 POINT (x,y) - liefert die Information
+                               'wahr' fuer Feld gesetzt und
+                               'falsch' fuer ein rueckge-
+                               setztes Feld
+
+
+
+
+               Abspeichern auf Kassette
+               ------------------------
+
+Abspeichern:  CSAVE "nnnnnn"  nnnnnn=Programmname
+
+Einlesen:     CLOAD "? ; laedt das naechste Programm von
+                         Kassette hinter das bereits im
+                         Speicher vorhandene, d.h. soll ein
+                         neues Programm eingelesen werden
+                         ist das alte durch NEW zu loeschen
+
+Wie auch im Monitor sollte dann die 'CR'-Taste erst nach
+Begin des Kenntones gedrueckt werden. Nach dem Ende der
+Kassettenaufzeichnung muss auf dem Bildschirm sofort das
+BASIC-Prompt '>' erscheinen. Ansonsten hat sich ein Lese-
+fehler eingeschlichen. Dann hilft meist nur 'NEW' und ein
+erneuter Leseversuch. Wenn das Kassetteninterface im Monitor
+einwandfrei arbeitet, und das muss der Regelfall sein, gibt
+es auch im BASIC keine Probleme mit 'CSAVE' und 'CLOAD'.
+Ansonsten sind das Kassetteninterface sowie der Recorder
+zu ueberpruefen. Gegebenenfalls ist eine Vorstufe einzu-
+bauen (siehe auch FA 5 o. 6/86).
+
+In einer neuen Variante wird dann die Kassettenarbeit mit
+weitaus mehr Komfort (Namenerkennung, Prueflesen und Arbeit
+mit Datenfeldern) versehen sein (ca. 6-7/86), wobei wie
+gesagt auf eine groesstmoegliche Kompatibilitaet geachtet
+wird.
+
+Ein Abspeichern von Datenfeldern ist in dieser Version noch
+nicht enthalten. Sollte dies unbedingt notwendig sein, muss
+man sich vorerst mit einem Abspeichern des gesamten fuer
+BASIC zugewiesenen Speichers (6иииH bis 'Memory end') mit
+Hilfe des 'S'-Kommandos behelfen.
+
+
+
+
+.

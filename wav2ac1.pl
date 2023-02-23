@@ -163,7 +163,7 @@ my $badr = 0;
 my $eadr = 0;
 my $sadr = 0;
 my $mode = '';
-my $typ = 'C';
+my $typ = 'P';
 
 while ( !$abort ) {
 	$b = ReadByte();

@@ -1,0 +1,24 @@
+Zerlegung der historischen Softwarepakete für Modul1
+----------------------------------------------------
+
+Mit den Perl-Programmen werden die ROMs des Modul1 (SCCH, AC1-2010)
+passend in originale Programmdateien zerlegt.
+
+xrom ist der 8K-ROM mit der Modulsoftware
+	(enthält auch eine Art Ihaltsverzeichnis der ROM-Disk)
+rom1 und ggf. rom2 sind die ROMs der ROM-Disk (passend zu xrom!)
+
+
+
+f. Programmpaket X Version 1.0, 8/89 H.Fey
+	splitrom_x1.pl xrom rom1 rom2
+
+für Paket X V.2
+	splitrom_x2.pl xrom rom1
+
+für Paket X V2 / ROM ab C000
+	splitrom_x2b.pl xrom rom1
+
+
+
+V. Pohlers, 23.01.2023

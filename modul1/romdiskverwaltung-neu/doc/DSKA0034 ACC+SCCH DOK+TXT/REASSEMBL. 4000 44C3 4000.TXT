@@ -1,0 +1,39 @@
+******** Beschreibung AC 1 - Reassembler 8и ^ @ *************
+-------------------------------------------------------------
+
+Speicherbelegung: Anfang: 565иH Ende: 5F11H Buffer: bis 5FFFH
+                          E65иH       EF11H             EFFFH
+
+Start: ^ oder @   Anfangsadresse   Endadresse   Listingoffset
+
+Die Angabe von Offset bzw Endadr.  und Offset kann entfallen.
+Das  Programm  nimmt  dann  Endadr.=FFFFH  und  Offset=и  an.
+
+In der Betriebsart ^ erfolgt eine seitenweise Ausgabe auf dem
+Bildschirm. Es ist mit  ^ ein Zurueckblaettern  von bis zu 79
+Seiten moeglich.
+
+In der Betriebsart @ erfolgt eine kont. Ausgabe auf dem Bild-
+schirm und eine Uebergabe an die Druckerroutine.  Dazu ist es
+noetig, die Spruenge zu den entspr. Routinen einzutragen .
+
+Druckerinitialisierung: 565иH bzw E65иH C3
+                        5651H  -  E651H EB <=
+                        5652H  -  E652H и7 <=
+       Druckerausgabe : 5653H  -  E653H C3
+                        5654H  -  E654H EB <=
+                        5655H  -  E655H и7 <=
+
+Dieses Programm konvertiert  die Adressen der Monitorroutinen
+und einiger  Merkzellen  des  Monitors  in die entsprechenden
+Namen. Die Zuordnung  ist aus folgender  Tabelle ersichtlich.
+
+       Adresse /  Name              Adresse / Name
+      ------------------           -----------------
+        #и7EB    MS 3и               #18ии    CURPO
+        #и7EE    OUTHEX              #185B    ARG 1
+        #и7F1    OUTHL               #185D    ARG 2
+        #и7F4    INLINE              #185F    ARG 3
+        #и7F7    INHEX
+        #и7FA    TASTE
+        #и7FD    GETCO1

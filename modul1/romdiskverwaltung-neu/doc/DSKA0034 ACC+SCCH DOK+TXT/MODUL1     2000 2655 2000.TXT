@@ -1,0 +1,68 @@
+Beschreibung:
+
+M O D U L 1           SPEICHERVERWALTUNG AC 1
+
+-------------------------------------------------------------
+
+Weiterhin Anleitung: Programmpaket X V.2
+
+-------------------------------------------------------------
+
+MODUL 1 ќbernimmt die Kontrolle des Grundspeichers.Dabei
+werden die jeweils benіtigten Speicherbereiche (RAM oder
+ROM) in den Adressbereich des Prozessors geschalten.
+Die jeweilige Speicherkonfiguration bestimmt Register D1.
+Das 8-Bit-Register ermіglicht universellste Speicherkon-
+figurationen (siehe Tabelle).Konflikte werden durch die
+nachgeschaltete Logik verhindert.Nach Reset von Register
+D1 (Einschalten des Computers) entspricht dem normalen
+AC 1 Modus.
+
+
+SPEICHER:
+---------
+
+GRUNDPLATINE AC 1:
+------------------
+
+ииии - иFFF  Monitor SCCH V.1и/88         4 KB
+1иии - 17FF  Bildwiederholspeicher        2 KB
+18ии - 1FFF  statischer RAM               2 KB
+
+RAM - ERWEITERUNG:
+------------------
+ииии - FFFF  RAM                         64 KB
+
+
+MODUL 1:
+--------
+2иии - 5FFF  EPROM BASIC - Interpreter   16 KB
+Eиии - FFFF  EPROM Pr.X/Verwaltung        8 KB
+Cиии - FFFF  EPROM ROM - Disk        2 * 16 KB oder
+8иии - FFFF  EPROM ROM - Disk            32 KB
+
+MODUL 2:
+--------
+4иии - 57FF  RAM Bildwiederholspeicher
+                 ZX - Spectrum            6 KB
+58ии - 5BFF  Farbattributspeicher ZX      1 KB
+
+
+TABELLE 1:     KONFIGURATIONSREGISTER 14 :
+----------
+
+BIT и    Eиии - FFFF  Programmp.X,Umschalt.ROM - Disk
+BIT 1    2иии - 5FFF  BASIC - Interpreter   1)
+BIT 2    ииии - 1FFF  MONITOR,BWS,Stat.RAM
+BIT 3    Cиии - FFFF  ROM - Disk
+Bit 7   z.B.          Stіraustastung oder Vollgrafik
+
+1)  Brќcke offen : 4иии - 5FFF 8k-Basic-Interpreter V.3.1
+
+
+ERLФUTERUNGEN:
+--------------
+
+BIT и  Ist BIT и = High,wird der RAM weggeschaltet und der
+       ROM D3 wird in den Adressbereich Eиии - FFFF gelegt.
+       Ist BIT 3 = H

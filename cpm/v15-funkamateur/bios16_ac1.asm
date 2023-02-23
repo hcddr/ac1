@@ -488,9 +488,7 @@ co4:		ld	hl, (cupos)
 ; Bildschirm-Steuerzeichen, SCP-kompatibel
 ; 00h            NOP (keine Wirkung)
 ; 01h            Cursor links oben (home)
-; 07h            akustisches  Zeichen an  Tastatur  (i.a. nicht
-;                vorh.,  dann  Blinken  der Lampen  neben  Stop-
-;                Taste bzw. der Statuszeile beim PC1715)
+; 07h            akustisches  Zeichen
 ; 08h            Cursor zurueck
 ; 0ah            Linefeed (neue Zeile)
 ; 0ch            Bildschirm  loeschen (verzoegert zum Lesen  der

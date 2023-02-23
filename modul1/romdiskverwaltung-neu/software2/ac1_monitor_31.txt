@@ -1,0 +1,320 @@
+====== Monitor ======
+
+{{:homecomputer:ac1:mon_v31.gif|}}
+
+fa 84/xx, Erweiterte Hinweise fa 85/1
+
+Der Monitor des Amateurcomputers meldet sich mit der Überschrift "AC 1 U 880 -
+MONITOR V 3.1", dem Promptsymbol # (Doppelkreuz) und dem dahinter blinkendem
+Cursor am Anfang der Eingabezeile. Ein Promptsymbol soll dem Bediener zeigen,
+daß der Computer bereit ist, eine Eingabe oder einen Befehl entgegenzunehmen und
+darauf entsprechend seinem Programm zu reagieren. Zur besseren Unterscheidung
+der Programme, in denen man sich gerade befindet, verwendet man meist
+verschiedene Promptsymbole. So benutzt der Mini-Basic-Interpreter z.B. ein >
+(größer als) als Promptsymbol. 
+
+Jeder Befehl wird dem Monitor in Form einer
+Kommandozeile übergeben, die die Form # X aaaa bbbb cccc CR (Wagenrücklauf) hat.
+X ist hierbei ein Zeichen aus dem ASCII-Zeichen­satz, mit dem der Befehl
+abgekürzt wird. Diese Abkürzung basiert meist auf einem Schlüsselwort in
+englischer Sprache. aaaa, bbbb und cccc stellen drei maximal vierstellige
+hexadezimale Argumente zum Befehl dar. Führende Nullen in den Argumenten dürfen
+weggelassen werden. Die einzelnen Argumente sind durch mindestens ein
+Leerzeichen voneinander zu trennen. Zwischen dem Kennzeichen und dem ersten
+Argument braucht kein Leerzeichen zu stehen; es schadet aber nicht. Werden
+weniger Argumente angegeben, als der Befehl erfordert, so wird für die fehlenden
+der Wert 0 angenommen. Das Kommando gelangt erst durch Drücken der CR-Taste zur
+Analyse und Ausführung zum Rechner: das heißt also, bis dahin kann die Eingabe
+mit Hilfe der Backspacetaste (Rückschritt) noch korrigiert bzw. verändert
+werden. Ist der Befehl falsch oder nicht im Monitor enthalten, so quittiert der
+Computer die Eingabe mit der Ausschrift WHAT? #. 
+
+Fügt man dem Kennzeichen anstatt
+der Argumente einen : (Doppelpunkt) an, so kommen die letzten
+zwischengespeicherten Argumente zur Anwendung. 
+
+===== Befehle =====
+
+==== grundlegende Bedienung ====
+
+
+**J aaaa (Jump)**
+
+Dieser Befehl führt ebenfalls zum Ansprung eines Anwenderprogramms ab der
+Adresse aaaa analog dem E-Befehl, jedoch ohne Breakpointaktivierung.
+
+**L aaaa ± (Load from Cassette)**
+
+Der Computer versucht, ein Programm oder eine Datei, kurz File genannt, vom
+Bandgerätinterface in den Speicher zu laden. Das Argument aaaa± bewirkt, das
+File um diesen Offset verschoben vom ursprünglichen Speicherbereich einzulesen,
+zum Beispiel dann, wenn der Speicherbereich, von dem das File abgespeichert
+wurde, im eigenen Computer nicht vorhanden ist. Sonst, also in der Regel, kann
+man dieses Argument weglassen. Wird der Ladevorgang erfolgreich beendet, so
+trägt diese Routine die Startadresse des Files, die auch auf dem Bildschirm
+erscheint, in die Speicherzelle für das erste Argument ein. Das geladene
+Programm läßt sich dann einfach mit J: anspringen.
+
+**S aaaa bbbb cccc name (Save to Cassette)**
+
+Hiermit kann man eine File ab der Adresse aaaa bis zur Adresse bbbb mit der
+Startadresse cccc unter dem Namen name (Länge max 6 Zeichen) auf Magnetband
+abspeichern.
+
+**V (Verify with Cassette)**
+
+Hiermit ist es möglich, ein auf Magnetband abgespeichertes File noch einmal mit
+dem Speicheroriginal zu vergleichen. Dadurch sind z.B. Datenfehler aufgrund
+mangelhaften Bandmaterials vermeidbar.
+
+
+==== Speichereditor ====
+
+
+**D aaaa bbbb (Display Memory; Dump)**
+
+Der Speicherinhalt von der Adresse aaaa bis zur Adresse bbbb wird als Hexdump
+auf dem Bildschirm ausgegeben. Zu Beginn jeder Zeile erfolgt die Ausgabe der
+jeweiligen Anfangsadresse, es folgen 16 Datenbytes.
+
+**C aaaa bbbb cccc (Compare)**
+
+Dieser Befehl vergleicht die beiden Speicherinhalte ab aaaa und bbbb für die
+Länge von cccc Bytes miteinander. Wird eine Ungleichheit gefunden, erscheinen
+die beiden nicht übereinstimmenden Bytes mit den jeweils zugehörigen Adressen
+auf dem Schirm. Mit der CR-Taste kann man die Suche fortsetzen. Jede andere
+Taste führt zum Abbruch.
+
+**M aaaa (Modify Memory)**
+
+Hiermit kann der RAM-Speicher ab der Adresse aaaa byteweise angezeigt und neu
+beschrieben werden. Nach jedem Drücken der CR-Taste erscheinen die aktuelle
+Adresse und das zugehörige Byte. Nach dem Promptsymbol läßt sich ein neues Byte
+oder auch eine Bytefolge, durch Leerzeichen getrennt, eingeben. Drückt man
+laufend nur die CR-Taste, erfolgt die Speicheranzeige Byte für Byte. Bei einer
+Dateneingabe würde diese nach dem Drücken der CR-Taste in den Speicher
+übertragen und der Schreibvorgang überprüft. Sollte das neue Byte nicht vom
+Speicher übernommen worden sein, weil er z.B. im EPROM-Bereich liegt oder gar
+nicht vorhanden ist, so erfolgt eine Fehlermeldung. Man schließt den M-Befehl
+durch die Eingabe eines. (Punkt) ab. Dabei gelangt die zuletzt bearbeitete
+Speicheradresse in die Speicherstelle für das zweite Argument. Dadurch läßt sich
+der bearbeitete Bereich mit D: noch einmal betrachten.
+
+**P aaaa bbbb cc (Pattern)**
+
+Dieser Befehl füllt den Speicher von der Adresse aaaa bis zur Adresse bbbb mit
+dem Bitmuster cc auf.
+
+**F aa bb ce dd ... nn (Find String)**
+
+Hier ist ab Adresse 00aaH die Datenfolge aa bb cc dd ... nn zu suchen. Die zu
+suchende Datenfolge oder Zeichenkette kann dabei maximal so lang sein, daß das
+gesamte Kommando gerade noch auf den Bildschirm paßt. Wird die angegebene
+Zeichenkette vollständig gefunden, springt der Monitor an den M-Befehl, wobei
+die Adresse auf das erste Byte der Datenfolge zeigt. Soll die Suche nach dem M-
+Befehl weitergehen, ist die Folge F: aa bb cc dd ... nn einzugeben. Wird die
+Datenfolge im gesamten Speicher nicht gefunden, erfolgt die Ausschrift NOT FOUND
+#.
+
+**T aaaa bbbb cccc (Transfer)**
+
+Mit diesem Befehl kann der Speicherinhalt ab der Adresse aaaa in den
+Speicherbereich ab der Adresse bbbb für die Länge von cccc Bytes kopiert werden.
+Ein Überlappen der beiden Speicherbereiche ist zulässig.
+Beispiel: T 1900 1901 80 verschiebt den Speicherinhalt ab 1900H für 80H Byte um eines nach oben.
+
+
+==== Debugger ====
+
+
+**I (lnitialize)**
+
+Hiermit ist ein Löschen aller Anwenderregister möglich. Alle Speicherzellen der
+RSA werden (bis auf die für den Stackpointer) Null gesetzt; letzterer so, daß
+das jeweilige Ende des RAM-Speichers im Grundmodul vorsorglich als Anwenderstack
+genutzt wird. Dies deshalb, weil es z.B. für den E-, J- und G-Befehl
+erforderlich ist. Sollte dieser Bereich für den einen oder anderen
+Anwendungsfall nicht günstig sein, kann man den Stack natürlich mit Hilfe des R-
+Befehls auch in einen anderen RAM-Bereich legen. Auf dem Bildschirm erscheint
+die Ausschrift CLR/RSA.
+
+**B aaaa (Breakpoint)**
+
+Dieser Befehl ist nützlich für das Testen von bzw. die Fehlersuche in
+Programmen. Er setzt ein Softwarehaltepunkt auf die Adresse aaaa. aaaa muß dabei
+immer auf das erste Byte eines Befehls zeigen. Ist nach dem Starten des
+Programms diese Adresse erreicht, erfolgt die Ausschrift BREAK AT aaaa # und die
+Kontrolle geht wieder an den Monitor zurück. Zuvor werden alle Registerinhalte
+der CPU in die RSA (Register Save Area) gerettet, so daß sie sich z.B. mittels
+des R-Befehls anzeigen lassen. Das zu testende Programm wird durch den Break-
+Befehl nicht zerstört. Man kann es dann beispielsweise mit dem Go-Befehl
+fortsetzen.
+
+
+**E aaaa (Execute Machine Programm)**
+
+Das Maschinenprogramm ab Adresse aaaa läuft unter Breakpointkontrolle. Das
+heißt, die Register der CPU werden entsprechend der aktuellen Werte der RSA
+geladen, der Softwarebreakpoint wird aktiviert und dann wird zur Adresse aaaa
+gesprungen.
+
+
+**G (Go on)**
+
+Dieses Kommando funktioniert analog dem E-Befehl. Die Programmausführung wird
+hierbei ab der Adresse im PC fortgesetzt. Falls ein Breakpoint zuvor eingegeben
+wurde, wird dieser aktiviert.
+
+
+**R XX (Register Display/Modify)**
+
+Dieses Kommando ermöglicht analog dem M-Befehl die Anzeige und das Verändern der
+Inhalte aller Register der CPU. Hierbei steht XX für das jeweilige Registerpaar.
+Nach dem Drücken der CR-Taste erscheint der Wert des jeweiligen Doppelregisters,
+gefolgt vom # auf dem Bildschirm. Mit der nachfolgenden Eingabe eines Wertes
+läßt sich das Registerpaar dann neu setzen. Folgt dem R ein Doppelpunkt, so
+werden der gesamte Registersatz, der Breakpoint, die Breakpointsequenz (3 Bytes
+ab Breakpointadresse) angezeigt sowie die gesetzten Flaggs zusätzlich anhand
+ihres Symbols dargestellt.
+
+==== Sonstige ====
+
+**A aaaa bbbb c (Arithmetik)**
+
+Es werden Summe, Differenz, wenn möglich das Displacement, (relative Distanz)
+für einen Sprungbefehl aus den ersten beiden Argumenten sowie der dezimale Wert
+des ersten Arguments, berechnet. c gibt die Länge des Sprungbefehls an. Für die
+relativen Sprungbefehle des U­880-Befehlssatzes ist dann c z.B. gleich zwei.
+
+**Z**
+
+Mit diesem Befehl wird in den Mini-BASIC-Interpreter gesprungen, vorausgesetzt,
+daß die dafür erforderlichen beiden EPROMs gesteckt sind.
+
+**u aaaa bbbb cccc (u -Leerzeichen)**
+
+Ein Leerzeichen, gefolgt von Argumenten, speichert deren Werte in den
+entsprechenden Speicherzellen ab, so daß danach mit dem Operator : gearbeitet
+werden kann. Damit ist es z.B. möglich, die Startadresse für den F-Befehl frei
+zu wählen.
+
+
+
+===== Internes =====
+
+Nach dem Einschalten bzw. jedem RESET-Impuls beginnt der Amateurcomputer 
+ab Adresse 0 mit der Ausführung des Programms. Um hier
+universell zu bleiben, und nicht bei jedem Programmwechsel auch die EPROMs
+austauschen zu müssen, bekam dieser Anfangsbereich ein Programm, das nach dem
+Einstellen eines bestimmten Anfangszustandes (Bildschirmlöschen, Fertigmeldung),
+Initialisierung genannt, in den Dialog mit dem Benutzer tritt, so daß dieser
+mittels entsprechender Befehle über die weitere Programmausführung entscheiden
+kann. In seiner Funktion stellt es sozusagen ein minimales Betriebssystem dar.
+
+Das Monitorprogramm enthält Befehle zum Einlesen und Abspeichern von Programmen
+bzw. Speicherinhalten auf Magnetband, zur Anzeige und Modifizierung von
+Speicher- und Registerinhalten, zum Ansprung von Nutzerprogrammen und zur
+ProgrammentwickIung und -testung. Damit ist es also bereits möglich, selbst
+Programme in Maschinensprache zu entwickeln, zu testen und das fertige Programm
+z.B. auf Magnetbandkassetten abzuspeichem bzw. auch Programme für den "AC1"
+einzulesen und abzuarbeiten, die andere Amateure entwickelt haben. Das Einlesen
+der Programme vom Magnetband in den RAM-Speicher des Rechners und der
+nachfolgende Ansprung dieser Programme soll den Regelfall bei der Nutzung des
+"AC1" darstellen. Auf diese Art ist ein relativ schneller Programmwechsel
+möglich, und, weil sich bei diesem Prinzip nur das gerade benötigte Programm im
+Speicher des Rechners befinden muß, braucht dieser auch nur so groß zu sein, wie
+es das jeweilige Programm erfordert.
+
+Das Monitorprogramm für den "AC1" entstand auf der Grundlage von [10]. Dazu
+wurde der dort veröffentlichte hexadezimale Speicherausdruck (Hexlisting)
+rückübersetzt, kommentiert und der Hardware des "AC1" angepaßt; also mit
+entsprechenden Routinen für Tastatur, Bildschirm und Tonbandausgang versehen. 
+
+[10] Krake, H.: ZETBUG - ein komfortabler Z-80-Monitor, Funkschau 52 (1980), H.11
+
+
+**Erweiterte Hinweise zu den Befehlen des Monitor v3.1 Teil 12 (fa 85/1)**
+
+Im Ergebnis der Testphase haben sich beim Monitorprogramm noch einige Erweiterungen ergeben, die im folgenden aufgeführt sind.
+
+1. Nach jedem RESET steht in der RSA ((register save area, Speicherbereich 1861H-187DH)), die mit dem R-Befehl angezeigt werden kann, die Belegung des gesamten Registersatzes der CPU zum Zeitpunkt des RESET bzw. des Ansprungs der Adresse 0. Das kann bei der Fehlersuche in Programmen, die sich z.B. festgelaufen haben, und nur noch mit einem RESET abgebrochen werden können, hilfreich sein. Aus den Registerbelegungen lassen sich dann meist Schlüsse auf die Fehlerursache ziehen.
+
+Im Normalfall erfordert das, daß die RSA nach dem Einschaltreset mit dem I-Befehl zu initialisieren ist. Zumindest ist vor der Benutzung der Befehle E, G und J die Belegung des Stackpointers zu überprüfen. Sollte dieser auf einen nicht real existierenden Kellerspeicher zeigen, wird die Ausführung der oben genannten Testkommandos mit der Ausschrift INIT SP verweigert, da ansonsten die Benutzung dieser Kommandos zum Programmabsturz bzw. zu einer Fehlerausschrift führen würde. Mit dem I-Befehl wird der Stack automatisch auf das vorhandene obere Ende des RAM-Bereiches des Grundmoduls gesetzt. Also auf 2000H bzw. 1C00H, je nachdem, ob der RAM-­Speicher verdoppelt wurde oder nicht. Wird infolge eines Fehlers in einen Speicherbereich gesprungen, der nicht vorhanden oder mit FFH belegt ist, erfolgt die Ausschrift ERROR AT xxxx (xxxx ­ Adresse, auf der der Fehler auftrat). Für den Inhalt der RSA gilt dann das gleiche wie nach dem RESET.
+
+2. Die Befehle des Magnetbandinterface L, S und V können mit Control-C jederzeit abgebrochen werden. Bei den Befehlen L und V müssen dabei Impulse am Interfaceeingang anliegen, um die Abbruchfunktion zu gewährleisten. Beim Abspeichern eines Files mit dem Save-Befehl wird nach dem Abspeichern des Namens noch einmal für etwa 1,5 s der Kennton ausgegeben, und erst danach folgen die eigentlichen Daten. Beim Einlesen kann somit nach dem Erscheinen des Namens auf dem Schirm innerhalb dieses Kenntones mit Control-C abgebrochen werden, ohne daß schon Daten dieses Files im Speicher stehen. Damit soll das Auffinden eines bestimmten Files inmitten des Bandes erleichtert werden. Beim Einlesen eines Files von Kassette in den RAM wird geprüft, ob das jeweilige eingelesene Byte auch wirklich in den entsprechenden Speicherplatz übernommen wurde. Bei fehlerhaftem oder nicht vorhandenem RAM erfolgt dann die Ausschrift aaaa xx ff BREAK, und der Einlesevorgang wird abgebrochen (aaaa - Adresse des Speichers, xx Sollbyte, ff Fehlerbyte).
+
+3. Am Ende des Monitorprogramms ist ein Sprungverteiler angebracht, um z.B. für Erweiterungen des Monitorprogramms oder andere Anwendungen einige bereits im Monitor vorhandene allgemein verwendbare Unterprogramme nutzen zu können, auch wenn in eventuellen späteren Monitorvarianten diese eigentlichen Unterprogramme dann an ganz anderen Stellen im Speicher stehen können. Dieser Sprungverteiler und dessen Reihenfolge wird auch in späteren Veränderungen des Monitorprogramms erhalten bleiben. Aus den genannten Kompatibilitätsgründen sollte man deshalb eine direkte Nutzung dieser bzw. auch weiterer Unterprogramme des Monitors möglichst vermeiden. Alle nachfolgend erläuterten Unterprogramme, ausgenommen den Sprung zur Monitoreingabeschleife, kehren in das aufrufende Programm zurück, siehe Tabelle 12. Das derzeitige Ende der Arbeitszellen des Monitors ist bei 187FH. Um noch etwas Platz für spätere Erweiterungen zu lassen, und um Kollisionen mit diesen Arbeitszellen zu vermeiden, sollten Anwenderprogramme erst ab 1900H beginnen. 
+
+===== Erweiterbarkeit =====
+Zum Abschluß der Beschreibung des Monitorprogramms noch einige Hinweise zu dessen Erweiterbarkeit, die sich ohne Eingriffe in das vorliegende Programm realisieren lassen. 
+
+Die einzelnen Befehlsroutinen des Monitors werden nicht über
+einen Sprungverteiler erreicht, sondern vom Monitor anhand eines Kodemusters im
+Adreßbereich von 0 bis 1FFFH gesucht. Jede Befehlsroutine hat dabei die Form 00
+09 XX 0D ... Routine ... C9. XX ist der ASCII-Kode des entsprechenden
+Kennbuchstabens. Man braucht eigene, z.B. von Magnetband ladbare Ergänzungen,
+also nur in diesen Rahmen zu "packen". Damit ist es ebenfalls möglich, eigene
+Anwenderprogramme über Kennbuchstaben zu starten. Der derzeitige Monitor belegt
+die ersten beiden Kilobyte des EPROM-Bereiches und etwa 128 Byte RAM zu Beginn
+des Arbeitsspeichers. Wenn man noch etwas Spielraum für mögliche Modifikationen
+späterer Monitorversionen läßt, hat man also den Speicherbereich von 1900H bis
+1FFFH für Erweiterungen zur Verfügung. Es ist auch denkbar, auf den Mini-BASIC-
+Interpreter zu verzichten und diesen Bereich für Erweiterungen zu nutzen. Da der
+Monitor am Anfang des Speicher­bereiches liegt, fallen in diesen Bereich auch
+die Ansprungpunkte der RST-Be­fehle und der Beginn der NMI-Routine.
+
+Um nun trotzdem auch diese Möglichkeiten in Anwenderprogrammen nutzen zu können,
+ohne dabei die EPROMs zu wechseln, was auf Dauer auch im Interesse der Fassungen
+nicht zu empfehlen ist, sind die Routine RST8...RST38H sowie der NMI-Ansprung
+über eine Sprungtabelle im RAM geführt. Diese läßt sich vom Anwender
+modifizieren.
+
+^ Systemadressen ^ ^
+| 1800H - 1801H | Speicher für Cursorposition |
+| 1802H - 1804H | Ansprung bei RST 08H	( Sprung zu INCH, Eingabe Zeichen ) |
+| 1805H - 1807H | Ansprung bei RST 10H	( Sprung zu OUTCH, Ausgabe Zeichen ) |
+| 1808H - 180AH | Ansprung bei RST 18H 	( Sprung zu PRNST, Ausgabe Zeichenkette ) |
+| 180BH - 180DH | Ansprung bei RST 20H 	z.Z. vom Monitor nicht belegt |
+| 180EH - 1810H | Ansprung bei RST 28H	z.Z. vom Monitor nicht belegt |
+| 1811H - 1813H | Ansprung bei RST 30H	z.Z. vom Monitor nicht belegt |
+| 1814H - 1816H | Ansprung bei RST 38H	( Fehlermeldung ) |
+| 1817H - 1819H | Ansprung bei NMI, z.Z. vom Monitor nicht belegt |
+| 185BH - 185CH | Speicher für Argument 1 |
+| 185DH - 185EH | Speicher für Argument 2 |
+| 185FH - 1860H | Speicher für Argument 3 |
+
+
+^ nutzbare Unterprogramme ^ ^
+| RST 08H | INCH | holt ein Zeichen von der Tastatur und kehrt mit dem ASCII-Kode des Zeichens im Akku zurück |
+| RST 10H | OUTCH | gibt das im Akku enthaltene Zeichen ( ASCII-Kode ) auf dem Bildschirm aus und rückt den Cursor um eins weiter |
+| RST 18H | PRNST | gibt die dem Unterprogrammaufruf folgende Zeichenkette auf dem Bildschirm aus bis einschließlich dem Byte, bei dem Bit 7 gesetzt ist, bewegt den Cursor weiter, kehrt dann zum folgenden Byte zurück |
+| CALL 07EBH | MS30 | Zeitschleife etwa 30 ms ( wird zur Tastenentprellung genutzt ), Akku bei Return = 0 |
+| CALL 07EEH | OUTHEX | gibt den Akku als zweistellige Hexzahl auf dem Schirm aus\\ kein Register wird zerstört |
+| CALL 07F1H | OUTHL | gibt das HL-Register als vierstellige Hexzahl auf dem Schirm aus\\ kein Register wird zerstört |
+| CALL 07F4H | INLINE | liest eine Zeile, die mit cr abgeschlossen wird, auf dem Schirm ein und legt den Anfang der Zeile in den Zellen 181Ah...181BH ab\\ kein Register wird zerstört |
+| CALL 07F7H | INHEX | wandelt eine maximal vierstellige in ASCII-Zeichen angegebene Zahl ab (DE) abwärts in deren hexadezimalen Wert um, der dann in HL steht. DE wird entsprechend dekrementiert\\ der Akku wird zerstört |
+| CALL 07FAH | TASTE | testet den Tastaturstatus, kehrt bei gedrückter Taste mit dem nach 30 ms anliegenden Kode zurück ( wartet nicht auf loslassen der Taste! ); wenn keine Taste gedrückt, erfolgt sofortige Rückkehr mit gesetztem Zero-Flag |
+| CALL 07FDH | GETCO1 | Sprung zur Monitoreingabeschleife, der Monitorstack wird neu initialisiert |
+
+===== Versionsunterschiede =====
+
+Der Monitor mon_v31_32.bin ist der an 4 Bytes auf den vergrößerten BWS angepasste mon_v31_16.bin. Außerdem wurde die Filenamenslänge auf 16 Zeichen erhöht und der Suchbereich für externe Kommandos erweitert.
+
+<code>
+d:>bdiff.exe mon_v31_16.bin mon_v31_32.bin
+000090:*13 11 FF*13 01 C0*03 ED | ........ |*17 11 FF*17 01 C0*07 ED | ........
+0000B8: 1C C5 01 FF*03 ED B0 22 | ......." | 1C C5 01 FF*07 ED B0 22 | ......."
+0001E0: 01 21 1D 02 01*E3*1D AF | .!...... | 01 21 1D 02 01*E0*FD AF | .!......
+0002D0: 03 3E 55 CD 30 03 06*06 | .>U.0... | 03 3E 55 CD 30 03 06*10 | .>U.0...
+000398: F9 06*06 2A 00 18 CD 26 | ...*...& | F9 06*10 2A 00 18 CD 26 | ...*...&
+0007B8: 07*03*78*B1 28 18 18 F5 | ..x.(... | 07*78*B1*03 28 18 18 F5 | .x..(...
+</code>
+
+Der Quellcode mon_v31_16-as.asm erzeugt auch die Version mon_v31_32.bin, wenn folgende Werte gesetzt werden:
+
+<code>
+LINES		equ	32		; bei 2K BWS
+NAMELEN		equ	16		; max. Länge des Dateinamens bei LOAD/SAVE
+RAMEND		equ	0FFFDh		; Ende f. Kdo-Suche, auf RAM beschränkt
+fkopatch	equ	1		; Korrektur in Find-Kommando
+</code>

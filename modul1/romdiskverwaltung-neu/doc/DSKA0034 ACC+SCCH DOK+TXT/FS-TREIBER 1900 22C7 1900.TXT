@@ -1,0 +1,60 @@
+
+
+
+
+              Anleitung fuer Programm
+                    fs - Treiber
+
+   Das Programm fs-Treiber dient dazu,die bei vielen
+   vorhandene Fernschreibmaschine als preiswerten
+   Ersatz fuer einen Drucker zu nutzen.Es belegt den
+   Adressbereich von 18FFH (Merkzelle fuer Umschalt-
+   zeichen)bis 19E9H.Es erlaubt die Nutzung vom Moni-
+   tor aus und beinhaltet auch eine Routine zum Er-
+   stellen einer Bildschirmkopie.Die Ausgabe erfolgt
+   ueber PIO 1 Port B 4.Dort wird am einfachsten
+   ueber einen Widerstand die Basis eines SF 128 an-
+   geschlossen(Emitter an Masse).In den Kollektorkreis
+   nach 5P wird ein hinreichend schnelles Relais ge-
+   geschaltet,dessen Arbeitskontakt die Fs-stromschleife
+   unterbricht.Den Rest erledigt das Programm.Ab Adresse
+   18F3H(gilt fuer Mon.V8)traegt man C3H;74H;19H; ein.
+   Wird jetzt das I/O-Byte des Monitors ueber Befehl 'H'
+   auf 91 geaendert,wird jede Ausgabe auf den Bild-
+   schirm auch auf den Fernschreiber gegeben.Somit
+   ist es zum Beispiel moeglich,den Basicinterpreter
+   aufzurufen und sich ein vorher geladenes Basicprogramm
+   ueber Fs auflisten zu lassen.
+   Es gibt aber auch die Moeglichkeit ohne die Nutzung
+   der I/O-Schnittstelle des Monitors durch den Monitor=
+   befehl 'i' eine komplette Bildschirmkopie erstellen zu
+   lassen.Dabei wird zuerst der Programmteil 'INIT' auf-
+   gerufen(191BH)welcher 4 mal Zeilenschaltung ausgibt.
+   Wichtige Adressen*
+   1911H;1912H.............Zeitschleifenwert fuer 5Ø Baud
+   1934H bis 1973H.........Tabelle der Zeichen,die ueber
+                           PIO ausgegeben werden
+   18FFH...................Merkzelle fuer Umschaltzeichen
+   19ØØH...................Fs-Zeichenausgabe
+   19ØEH...................Zeitschleife
+   191BH...................Initialisierung
+   1974H...................Druck Akku(eigentlicher Programm-
+                           beginn)
+   19C7H...................Copy
+   Die Fernschreibzeichen werden durch Rotation der Ta-
+   bellenwerte im Akku erzeugt(8 mal RRCA).
+   Dabei wird zuerst L ueber B4 ausgegeben(Relais faellt
+   ab..Startbit).Danach folgen 5 dem FS-Zeichen entsprechende
+   Ausgaben gefolgt von 2 mal H(2 Stoppbits).
+   Mit diesen Angaben sollte jeder User in der Lage sein,
+   die Zeichentabelle entsprechend seinen Wuenschen zu
+   aendern.Die Zeichen sind in der Reihenfolge des ASCII-
+   Codes (ab 21H) in der Zeichentabelle abgelegt.
+   Wer eine FS-Maschine besitzt und auch den Hoellenlaerm
+   aushaelt,kann jetzt das Programm 'fs-treiber' laden
+   und testen*************viel Erfolg!******************
+   DAS PROGRAMM WURDE ERSTELLT VON
+       JUERGEN GIESE
+       FLEMMINGSTR.1Øa
+       W.-P.-St.GUBEN
+       756Ø                               22.Ø7.1988

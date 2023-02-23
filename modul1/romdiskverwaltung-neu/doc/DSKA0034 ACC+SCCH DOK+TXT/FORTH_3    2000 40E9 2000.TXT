@@ -1,0 +1,308 @@
+           Beschreibung  Fig-Forth  fr  den AC1    3.Teil
+           ================================================
+
+3.DAS FORTH-VOCABULAR
+---------------------
+
+Auf die  namentliche  Nennung  des Wortes  folgt  in (runden)
+Klammern  eine formale  Nennung  der Eingangs-  und Ausgangs-
+parameter, die strikt von links nach rechts zu lesen
+ist. Stack-Entries folgen dieser Reihenfolge, so da
+immer rechts auen der TOP-of-Stack (TOS) zu finden
+ist. Links  vom Pfeil sind die Eingangs-Parameter  zu finden.
+Rechts  vom Pfeil werden  die Ausgangs-Parameter  (Resultate)
+dargestellt.Die Parameter werden anhand der folgenden
+Symbole charakterisiert:
+
+addr      Speicheradresse
+b         8-bit-Byte
+c         7-bit-ASCII Charakter
+f         Boolsches  Flag  ( 16 Bit, jedoch liefern alle Bits
+                          gemeinsam  die  Aussage  и (falsch)
+                          bzw.>< и (wahr)). Nachfolgend  wer-
+                          den  die Zustnde  in der verkrz-
+                          ten  Form  ff  bzw.  tf (oder  auch
+                          einfach mit и/1 bezeichnet.
+n          16-bit-Zweierkomplementzahl   (vorzeichenbehaftete
+          Zahl )
+u         16-bit-Absolutzahl
+d         32-bit-Zweierkomplementzahl
+ud        32-bit-Absolutzahl
+
+Falls  nicht  ausdrcklich  anders  gesagt  oder durch  obige
+Symbole  anders  definiert,  ist  bei  Zahlen  immer  der Typ
+n (signed 16-Bit ) gemeint.
+Die Anordnung  der Bytes  auf dem Stack  ist  fr  8-Bit-Bus-
+CPU's wie folgt definiert:
+
+1. das MS-Byte  einer  16-Bit-Zahl  liegt  stets in der Weise
+   auf  dem  Stack  ( und auch  allgemein  im Ram ), wie dies
+   von  der  gegebenen  CPU  natrlicherweise   unterstuetzt
+   wird.
+
+2. im Falle von 32-Bit-Zahlen liegt die hherwertige
+   16-Bit-Gruppe im gleichen Sinn auf dem TOS ( und
+   dort  gilt  fr  das hherwertige  Byte  wiederum  (1)).
+
+3. Falls es sich bei den Zahlen nach (1) bzw. (2) um
+   vorzeichenbehaftete Zahlen handelt, so ist das
+   MS-Bit des MS-Bytes das Vorzeichen-Bit.
+
+
+Stapelnderungen
+----------------
+
+DUP     ( n --> n n )
+        Verdoppeln der obersten Zahl
+DROP    ( n --> )
+        Lschen der obersten Zahl
+SWAP    ( n1 n2 --> n2 n1)
+        Vertauschen der beiden obersten Zahlen
+OVER    ( n1 n2 --> n1 n2 n1 )
+        Zweite Zahl des Stapels auf den TOS kopieren
+ROT     ( n1 n2 n3 --> n2 n3 n1)
+        Zyklisches  Vertauschen   der  drei  obersten  Zahlen
+-DUP    ( n --> n? )
+        Verdoppelt oberste Zahl wenn <> и
+>R      ( n --> )
+        bringt TOS auf Returnstack
+R>      ( --> n )
+        bringt obersten Returnstackwert auf TOS
+R       ( --> n )
+        kopiert obersten Returnstackwert auf TOS
+
+Arithmetische und Logische Befehle
+----------------------------------
+
++       ( n1 n2 --> n )
+        Addiert oberste zwei Stackwerte
+D+      ( d1 d2 --> d )
+        wie + , doppelt genau
+-       ( n1 n2 --> n )
+        bildet n1-n2
+*       ( n1 n2 --> n )
+        multipliziert oberste zwei Stackwerte
+/       ( n1 n2 --> n )
+        bildet n1/n2
+MOD     ( n1 n2 --> n )
+        Rest der Division (modulo)
+/MOD    ( n1 n2 --> r q )
+        Rest r und Quotient q der Division
+*/MOD   ( n1 n2 n3 --> n )
+        bildet n1*n2/n3  mit doppeltgenauem  Zwischenergebnis
+MAX     ( n1 n2 --> max )
+        max ist die grere Zahl von n1 n2
+MIN     ( n1 n2 --> min )
+        min ist die kleinere der beiden Zahlen
+ABS     ( n --> abs )
+        Absolutwert einer 16-bit-Zahl
+DABS    ( d -- abs )
+        Absolutwert einer 32-bit-Zahl
+MINUS   ( n --> -n )
+        16-bit-Zahl wird negativ
+DMINUS  ( d --> -d )
+        32-bit-Zahl wird negativ
+AND     ( n1 n2 --> n )
+        logisches UND bitweise
+OR      ( n1 n2 --> n )
+        logisches OR bitweise
+XOR     ( n1 n2 --> n )
+        logisches EXCLUSIV ODER bitweise
+
+Steuerworte
+-----------
+
+DO...LOOP
+DO      ( end+1 start --> )
+        setzt Schleifenparameter
+LOOP    ()
+        erhht Zhlparameter um 1
+DO...+LOOP  wie DO...LOOP
++LOOP   ( n --> )
+        wie LOOP erhht Zhlparameter um n
+I       ( --> n )
+        kopiert Schleifenindex auf TOS
+LEAVE   ( )
+        erzwingt Schleifenabbruch beim
+        nchsten LOOP +LOOP
+
+IF...ENDIF
+IF...ELSE...ENDIF
+IF      ( f --> )
+        wenn  Flag  vor  IF auf TOS <>и dann  wird  Anweisung
+        zwischen  IF  und  ELSE  (IF...ENDIF)  , anderenfalls
+        zwischen ELSE...ENDIF ausgefhrt
+
+BEGIN...UNTIL
+UNTIL   ( f --> )
+        wenn  Flag  vor UNTIL  <> и wird  Schleife  verlassen
+
+BEGIN...WHILE...REPEAT
+WHILE   ( f --> )
+        Solange TOS vor WHILE <>и ist wird Programm  zwischen
+        BEGIN  und REPEAT  ausgefhrt;  wenn TOS vor WHILE =и
+        Programmfortsetzung nach REPEAT
+
+Speichervernderungen
+---------------------
+
+@       ( adr --> n )
+        holt n von Adresse adr
+!       ( n adr --> )
+        speichert n nach Adresse adr
+C@      ( adr --> b )
+        holt Byte von Adresse adr
+C!      ( b adr --> )
+        speichert Byte b nach Adresse adr
+?       ( adr --> )
+        Inhalt von adr ausgeben
++!      ( n adr --> )
+        Wert in Adresse adr um n erhhen
+P@      ( n --> n )
+        Wert von Port lesen
+P!      (n1 n2 --> )
+        Wert n1 nach Port n2 schreiben
+CMOVE   ( from to u - )
+        u Bytes im Speicher verschieben
+FILL    ( adr u b --> )
+        u Bytes ab Adresse adr mit b fllen
+ERASE   ( adr u --> )
+        u Byte ab Adresse adr mit ии fllen
+BLANKS  ( adr u --> )
+        u Byte ab Adresse adr mit 2иH fllen
+
+Vergleichsbefehle
+-----------------
+
+<       ( n1 n2 --> f )  f=1 wenn n1<n2
+>       ( n1 n2 --> f )  f=1 wenn n1>n2
+=       ( n1 n2 --> f )  f=1 wenn n1=n2
+и<      ( n     --> f )  f=1 wenn n kleiner Null
+и=      ( n     --> f )  f=1 wenn n gleich Null
+
+Zahlensysteme
+-------------
+
+DECIMAL ( --> )     schaltet auf Dezimalsystem
+HEX     ( --> )     schaltet auf Hexadezimalsystem
+BASE    ( --> adr ) Variable, enthlt Zahlenbasis
+
+Definitionsworte
+----------------
+
+: xxx   ( --> )     Beginn der Definition von xxx
+;       ( --> )     Ende der Definition von xxx
+
+VARIABLE  xxx  ( n --> ) Definition  einer Variablen  xxx mit
+                        dem Wert N
+         xxx  ( --> adr )
+CONSTANT xxx  ( n --> ) Definition  einer Konstanten  xxx mit
+                        dem Wert n
+         xxx  ( --> n )
+<BUILDS...DOES>  Definiert  neue  Compilerwrter  mit  unter-
+                schiedlichem  Compile-  und Laufzeitverhalten
+CREATE   xxx    Trgt xxx ins Wrterbuch  ein, mit Parameter-
+                feldadresse  von  xxx in der Codefeldadresse;
+                Bit  7 (Smudge-Bit)  in der Namensfeldadresse
+                von xxx =1 ( Wort noch nicht fertig )
+SMUDGE           invertiert  Bit 7 ( Smudge-Bit  ) im letzten
+                Wrterbucheintrag  ( erklrt  damit  das Wort
+                als fertig )
+
+Ein- und Ausgabe
+----------------
+
+.         ( n --> )     Druckt n aus
+.R        ( n x --> )   Druckt  n mit x Stellen  rechtsbndig
+D.        ( d --> )     Druckt doppelt lange Zahl aus
+D.R       ( d x --> )   Druckt doppelt lange Zahl mit
+                        x Stellen rechtsbndig
+U.        ( u --> )     Druckt vorzeichenlose Zahl
+CR        (   --> )     gibt ein Carriage Return aus
+SPACE     (   --> )     gibt ein Leerzeichen aus
+SPACES    ( n --> )     gibt n Leerzeichen aus
+." xxx"   (   --> )     gibt Text xxx aus
+TYPE       ( adr u --> ) gibt  u Zeichen  ab Adresse  adr aus
+COUNT     ( adr --> adr+1 u ) ndert Lngenbyte  fr Textaus-
+                              gabe
+?TERMINAL ( --> f )     f=1 , wenn Taste gedrckt
+KEY       ( --> c )     wartet auf auf Zeicheneingabe von der
+                        Tastatur
+EMIT      ( c --> )     Ausgabe des ASCII-Zeichens c
+EXPECT    ( adr n --> ) erwartet  Eingabe  von n Zeichen  und
+                        speichert   diese   ab  Adresse   adr
+WORD       ( c --> )     liest  ein Wort,  begrenzt  durch  c
+                        im Eingabepuffer TIB
+
+Ein- und Ausgabeformatierung
+----------------------------
+
+NUMBER     ( adr --> d ) setzt  eine Zeichenkette  ab Adresse
+                        adr in eine  doppelt  lange  Zahl  um
+<#         (  -->  )        Beginn   der  Zeichenformatierung
+#         ( d --> d   ) wandle eine Zeichenstelle in ASCII-Z.
+#S        ( d --> и и ) wandle restliche  Stellen in ASCII-Z.
+SIGN      ( n d --> d ) setze Vorzeichen ein
+#>        ( d --> adr u ) Beende Formatierung
+HOLD      ( c --> )     Fge ASCII-Zeichen  c in Zeichenkette
+                        ein
+
+Wrterbuch
+----------
+
+CONTEXT   ( --> adr  ) bringt Adresse  des CONTEXT-Vocabulars
+CURRENT   ( --> adr  ) bringt Adresse  des CURRENT-Vocabulars
+FORTH     ( --> )      setzt  CURRENT  und CONTEXT  auf FORTH
+VOCABULARY xxx ( --> ) erzeugt Vokabular xxx
+DEFINITIONS    ( --> ) setzt CUURENT und CONTEXT
+VLIST          ( --> ) listet Inhalt des Wrterbuches
+FENCE      ( --> adr  ) Systemvariable,  enthlt  die Adresse
+                       des obersten  geschtzten  Eintrags im
+                       Wrterbuch
+
+Systemworte
+-----------
+
+(         ( -->  )   Beginn  eines  Kommentars,  Ende  ist  )
+FORGET xxx( --> )   Lschen eines und aller spteren Eintrge
+                    im Wrterbuch
+ABORT     ( --> )   Fehlerabbruch
+'xxx      ( --> adr) Suche Codefeldadresse von xxx
+HERE      ( --> adr) Adresse  der nchsten  freien  Stelle im
+                     Wrterbuch
+PAD       ( --> adr) Adresse von PAD ( Ausgabepuffer)
+IN        ( --> n )  Offset zum Eingabespeicher TIB
+SP@       ( --> adr) Adresse des TOS
+ALLOT     ( n -->  ) Speicherreservierung von n Bytes ab HERE
+,         ( n -->  ) speichert n in Adresse HERE ab
+C,        ( b -->   ) speichert  Byte  b in Adresse  HERE  ab
+
+
+Diskettenspeicherung
+--------------------
+( betrifft im AC1-FORTH nur RAM-Disk)
+
+LIST      ( n -->  ) Screen n wird ausgegeben
+LOAD      ( n -->  ) Screen n wird compiliert
+-->       ( --> )    setze Compilierung  mit nchstem  Screen
+                     fort
+BLOCK      ( n -->  adr )  Diskettenblock  n wird  eingelesen
+                         Anfangsadresse  im  Speicher  ab TOS
+FLUSH      ( -->     ) Genderte  Blcke  werden  zur RAMdisk
+                     geschrieben
+UPDATE    ( --> )    augenblicklichen Block als gendert mar-
+                     kieren
+EMPTY-BUFFERS        Alle Blcke im Speicher lschen
+                     ( nicht Ramdisk !!! )
+BLK        ( -->  adr  )  Variable,  enthlt  augenblickliche
+                       Blocknummer
+B/BUF     ( --> n   )  Constante, Blockgre in Byte
+SCR        ( -->  adr  )  Variable,  enthlt  augenblickliche
+                       Textfeldnummer
+
+Soweit  die Beschreibung  des Forth-kerns,  im nchsten  Teil
+werden die mehr oder minder AC1 spezifischen Wrter behandelt
+
+                                         ENDE Teil 3
+
+                                         Teil4 folgt

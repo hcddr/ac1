@@ -1,0 +1,14 @@
+
+ Beschreibung Ramtest fuer Modul 1
+------------------------------------
+
+Ziel dieses Programmes ist es den dyn. Ram von ØØØØH bis
+2ØØØH testen zu koennen. Es handelt sich um den Ramtest
+aus dem FA. mit den noetigen OUT-Befehlen.
+Voraussetzung ist natuerlich, dass der originale Ramtest
+ohne Fehlermeldungen im dyn. Ram lÄuft.
+Das Programm benoetigt 7FFH Byte mit Merkzellen und SP.
+Wenn noetig kann ich die Quelle liefern.
+
+
+             Wolfgang

@@ -1,0 +1,165 @@
+3.       Systemruf
+******************
+
+ Im Gegensatz zum Monitor V3.1 benutzt dies System einen
+zentralen Systemruf (RST 2иh). Dieser wird ebenso gehandhabt
+wie der des Z 1и13. Er enthaelt auch alle Funktionen
+desselben (bis auf die Tastaturumschaltung), so dass Z1и13-
+Programme relativ leicht geaendert werden koennen. Er ist
+jedoch um viele Funktionen erweitert worden.
+
+ Die Syntax lautet :
+
+         RST  2иh    ;Systemruf
+         defb xx     ;Funktionsnummer
+
+ Es werden die Bits и ... 5 fuer die Funktionsnummer
+verwendet. Bit7 und 6 haben eine zusaetzliche Bedeutung :
+
+         Bit 7 = 1   Die Funktion wird nicht mittels CALL
+                     sondern als JP angesprungen.
+
+         Bit 6 = 1   Der Funktion wird in DE noch ein DEFW,
+                     das nach dem DEFB steht uebergeben.
+
+ Somit sind 64 Funktionen moeglich. Davon sind bisher 47
+belegt. Aus Kompatibilitaetsgruenden wurden die RST 8 ... 18h
+und der Sprungverteiler ab 7ebh beibehalten. Es sollte in den
+spaeteren Programmen auf diesen zentralen Systemruf
+orientiert werden.
+
+Bedeutung der Rufe :
+
+Hex Name   Bedeutung
+-----------------------------------------------------------
+ии  scr    Ausgabe von A auf Schirm als ASCII (RST 1иh)
+и1  tasta  Tastaturabfrage (RST 8)
+и2  zkap   Zeichenkettenausgabe (RST 18h)
+и3  inhex  Hexzahl ab DE aufwaerts einlesen
+           output : hex-Wert in HL
+                    DE auf erstem falschen Zeichen
+и4  taste  Tastaturstatus
+           output : z=1 -> keine Taste
+                    z=и und a=Zeichen
+и5  inlin  Ausgabe Laufwerk,Prompt und Leerzeichen
+           Einlesen einer Eingabezeile in den Eingabepuffer
+           ab 1cииh. Der Abschluss erfolgt mit cr. Es koennen
+           maximal 255 Zeichen eingegeben werden. Auf 181ah
+           ist wie im alten System die Adresse des ersten
+           Zeichens zu finden, falls das Promptsymbol nicht
+           in der Eingabe verwendet wurde. Die Einteilung des
+           Puffers wurde schon oben beschrieben.
+и6  outhe  Ausgabe von A in Hexform ab Kursorposition
+и7  outhl  Ausgabe von HL in Hexform ab Kursorposition
+и8  csav   Kassettenausgabe Die Uebergabe der Adressen
+           erfolgt in den Argumentzellen (ARG1 ... ARG3) und
+           die des Namens in einem 16 Bit langen Speicherbe-
+           reich auf dessen Beginn DE zeigt.
+и9  cloa   Kassettenlesen
+иa  disp   Speicher schreiben
+иb  wind   Fenster definieren
+           input : <ARG1> -> Ecke unten rechts  zzss
+                   <ARG2> -> Ecke oben links    zzss
+           Dabei zaehlen die Zeilen (z) von и bis 1fh und die
+           Spalten (s) von и bis 3fh
+иc  othls  gibt <hl> und <hl+1> und space aus
+иd  outdp  wie othls mit vorgestelltem ":"
+иe  outsp  Ausgabe von einem Leerzeichen
+иf  trans  Speichertransfer mit Kontrolle auf Ueberdeckung
+           input : hl -> Quelle
+                   de -> Ziel
+                   bc -> Laenge
+1и  instr  Wie inlin jedoch ohne Vorspann
+11  fill   Speicher fuellen
+12 und 13  nicht belegt
+14  promp  Ausgabe Laufwerk, Promptsymbol und space
+15  ashea  Umwandlung ASCII -> HEX in a
+           input : a -> ASCII
+           output: cy= и und A Hexwert
+                   cy= 1 kein Wert zwischen и .. f
+16  ashe   Umwandlung ASCII-Kette vier Zeichen in Hexwert
+           input : de -> Beginn der Kette
+                   hl -> Beginn Wert
+           output: de = de+4
+                   hl unveraendert
+                   <hl>, <hl+1> -> Wert
+                   cy= и -> Ergebnis o.k.
+                   c = Laenge Ergebnis
+17  ashe1  Umwandlung ASCII-Kette beliebiger Laenge
+           input : b -> Laenge   sonst wie ashe
+18  hexlo  Speicherbereich mit ии fuellen
+           input : hl erste Adresse
+                   b  Laenge
+19  ashe2  Umwandlung ASCII-Zeichen aus a mit Eintrag in
+           <hl>
+           input : hl siehe ashe
+                   a  Zeichen
+                   c  Laenge des Wertebereichs
+           output: cy=1 Fehler
+1a  heas   Umwandlung Hexwert aus a in ASCII-Zeichen ab de
+           input : a  Hexwert
+                   de Zielbereich
+           output: de = Bereichsende+1
+1b  heam   Umwandlung Hexwerte <hl>,<hl+1> in ASCII ab de
+           input : hl -> Hexwertbeginn
+                   de -> ASCII-Beginn
+1c  heam1  Wie heam jedoch Anzahl der Hexbytes in B
+1d  zka    Zeichenkettenausgabe ab <hl> Ende durch gesetztes
+           Bit7
+           output: hl = Zeichenkettenende+1
+1e  argla  Argumente laden
+           output: hl:=<arg1>
+                   de:=<arg2>
+                   bc:=<arg3>
+1f  boot   Warmstart  Verteilertabellen werden neu geladen,
+           PIO und CTC neu initialisiert und der Stack wird
+           neu gesetzt.
+2и  getc   Rueckkehr in de Kommandoschleife
+21  ms1    Zeitschleife 1 ms
+22  ms3и        "       3и ms
+23  msa         "       bc in ms
+24  puff   Puffereingabe
+           input : de -> Pufferbeginn
+                   hl -> Steuerzeichenfilter
+                   a  -> einzugebendes Zeichen
+           aktive Zeichen : dele letztes Zeichen loeschen
+                            delli Puffer loeschen
+           Pufferaufbau :     defw Pufferlaenge-1
+                              defw rel.Pufferzeiger
+                              Daten
+25  dauon  Datenumleitung auf freien Puffer ein
+           Puffer muss vorher aktiviert sein
+26  dauof  Datenumleitung aus
+27  daum   Pufferumleitung aktivieren
+           input : <arg1> -> Pufferbeginn
+                   <arg2> -> Pufferlaenge-1
+28  save   CPU in RSA ablegen
+29  gene   CPU aus RSA laden
+2a  inpko  Warten auf Tastenaenderung
+           input : a -> bisheriges Zeichen
+           output: a -> neues Zeichen + Bit7
+                   b -> altes Zeichen + Bit7
+2b  what   Ausgabe "What ?" und inline
+2c  fehl   Ausgabe "Error" + cr
+2d  chl    Pseudo CALL (HL)
+2e  mod1   Umschalten auf Modul1 (geplant)
+2f  mod2        "      "    "  2 (   "   )
+3и  grund       "      "  Grundseite (Monitor gepl.)
+31  kate   Ausgabe Text "Nach Bandstart <cr> !"
+32  ent    Ausgabe Text " (J/N) : " und Tastaturabfrage
+           output : z=и bei "N" oder "n"
+                    z=1 bei "J" oder "j"
+33  crc    CRC-Berechnung
+           input  : <arg1> -> Beginn
+                    <arg2> -> Ende
+           output : z.Z. Ausgabe "CRC (SDLC) = ...."
+                    hl -> CRC - Rest
+
+ Bis zur Fertigstellung des Systems werden noch einige
+Funktionen hinzukommen. Die Bedeutung der oben genannten
+bleibt jedoch erhalten. Natuerlich tritt durch diesen
+zentralen Systemruf ein Geschwindigkeitsverlust gegenueber
+dem direkten Aufruf mittels CALL bzw. JP ein. Jedoch brauch
+bei der Nutzung von Systemkomponenten nicht mehr im System
+gesucht oder bei Systemaenderung das jeweilige Programm
+mitgeaendert zu werden.

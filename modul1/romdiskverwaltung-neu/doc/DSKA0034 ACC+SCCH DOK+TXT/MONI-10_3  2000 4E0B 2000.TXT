@@ -1,0 +1,391 @@
+Turbo - Tape
+------------
+Es werden 4 Filetypen unterschieden:
+       P    Lauffähiges Maschinenprogramm
+       B    Basicprogramm
+       D    Maschinendatei
+       F    Datenfeld (BASIC)
+Die Filetypen B und F können nur mit BASIC - Interpreter
+V.3.2 geladen werden.Im Monitor erfolgt lediglich Anzeige
+des Namens,Filetyp,Anfangs- und Endadresse.
+
+Ein / Ausgabe
+-------------
+Es stehen jeweils 4 Möglichkeiten zur Verfügung:
+Eingabe: Tastatur, V 24 (RS 232c), Reserve, User.
+Ausgabe: Bildschirm, V 24 (RS 232c), Reserve, User.
+Die Ein/Ausgabe - Kanäle werden über das I/O - Byte
+adressiert (siehe Befehl H).
+Nach Einschalten des Computers wird das Ein/Ausgabebyte
+(Adresse 1821 H) auf 11 gesetzt,somit Tastatureingabe und
+Bildschirmausgabe.
+Setzen der Ein/Ausgabe:
+- Debuggerbefehl 'H' für beliebige Zuordnungen
+- Taste Control + Taste 'X' schaltet zusätzlich Ausgabe über
+  V 24 ein.
+- Taste Control + Taste 'Y' schaltet Ein/Ausgabe auf Standart
+  (11)
+- Taste BREAK/NMI setzt Ein/Ausgabe auf Standart (11)
+Die Ausgabe verarbeitet Datenbytes ØØ - 7F H,womit der ASCII-
+Code (Ø - 7F) verarbeitet wird,bit 7 wird dabei auf Ø gesetzt
+Die Ausgabe lässt sich auf ØØ - FF H umstellen,indem bit 7
+zes V 24 - Kontrollregister gesetzt wird.
+Adressen:   Eingabekanal       Ø8     (dez. 8)
+            Ausgabekanal       1Ø     (dez.16)
+            I/O - Byte       1821
+   V 24 Kontrollregister     182Ø
+          User - Eingabe     18FØ     User - Ausgabe  18F3
+       V 24 - Eingabe UP     Ø1D6  V 24 - Ausgabe UP  ØFE8
+
+
+V 24 - Schnittstelle (RS 232c)
+------------------------------
+Die standardisierte Schnittstelle ermöglicht den Anschluss
+vonDrucker, Modem u.a. Peripheriegeräten und die Kopplung mit
+weiteren Computern.Die Schnittstelle arbeitet mit TTL - Pegel
+zum Anschluss von Peripherie wird in der Regel eine Pegel-
+anpassung (-12V, +12V) benötigt (siehe Schaltbild).
+V 24 ist eine serielle Schnittstelle.Zur Kopplung können
+wahlweise 3 Leitungen (3 Draht - Handshake) oder 5 Leitungen
+(X Draht - Handshake) eingesetzt werden.Letzteres ist zur
+Kopplung mit langsamer Peripherie (Drucker) notwendig.Zur
+Kopplung von 2 Computern genügt der schnelle 3 - Draht Hand-
+shake.
+Über das Kontrollregister werden die Standardwerte der
+Schnittstelle eingestellt (siehe Tabelle). Nach Einschalten
+des Computers sind folgende Werte voreingestellt:
+
+Adresse  Ø2   96ØØ Baud   1 Stop-Bit  ohne Parität
+X-Draht-Handshake  8 Datenbit (Ausgabebit 7 auf Ø gesetzt).
+
+Somit kann übliche Pripherie (Drucker) unmittelbar betrieben
+werden z.B. Schreibmaschine S 6ØØ6.
+
+V 24 - Kontrollregister  (Adr.182Ø H) :
+Bautrate         bit2   bit 1   bit Ø   dez.
+  3ØØ             1      1       1       7
+  6ØØ             1      1       Ø       6
+ 12ØØ             1      Ø       1       5
+ 24ØØ             1      Ø       Ø       4
+ 48ØØ             Ø      1       1       3
+ 96ØØ             Ø      1       Ø       2
+192ØØ             Ø      Ø       1       1
+
+Stop - Bits (Ausgabe)  :       bit 3      dez.
+                1               Ø          Ø
+                2               1          8
+
+Parität (Ausgabe)              bit 5      bit 4     dez.
+8 Datenbit,ohne P.              Ø          Ø         Ø
+7 Datenbit,+ P.ungerade         Ø          1        16
+7 Datenbit,+ P.gerade           1          Ø        32
+
+Handshake (Ausgabe)            bit 6      dez.
+          3 - Draht             1         64
+          X - Draht             Ø          Ø
+
+Ausgabe                        bit 7      dez.
+8 Datenbit                      1         128
+7 Datenbit bit Ø-6 + bit 7-Ø    Ø           Ø
+Der Eingabekanal arbeitet ohne Paritätskennung,eine Ein-
+stellung der Stop - Bits und Handshake ist nicht notwendig.
+Hardware: die serielle Schnittstelle verwendet 4 Kanäle
+(AØ - A3) der PIO 2.Die PIO 2 ist zu erweitern,Adressierung
+über IOSEL 2.
+Die POI hat gegenüber einer SIO den Vorteil des geringeren
+Aufwandes.Die Baudraten werden Softwaremässig getaktet und
+sehr genau eingehalten (+ - Ø%).
+
+PIO 2    AØ Eingang Daten          RxD       Buchse: 1
+         A1 Ausgang Daten          TxD               3
+         A2 Eingang empfangsbereit CTS               4
+         A3 Ausgang sendebereit    DSR               5
+
+Die Leitungen werden auf eine 5 - pol.Diodenbuchse gelegt.
+2 Computer AC 1 können über ein Überspielkabel gekoppelt
+werden.Die Kopplung mit weiteren Computern (z.B. Comodore 64,
++4, KC 85) erfolgt entsprechend der Angaben in den Hand-
+büchern.Es können problemlos Daten ausgetauscht werden.
+
+
+
+Serielle IEC - Schnittstelle
+----------------------------
+Es handelt sich um die standardisierte Comodore - Schnitt-
+stelle.Ermöglicht wird somit die Verbindung der Comodore-
+Peripherie,inbesondere Diskettenlaufwerk Typ 1541, 157Ø,
+1571 und Comodore - Drucker.Im Monitor sind keine Routinen
+zur Unterstützung dieser Schnittstelle enthalten.
+
+
+Hartware                             Buchse 6 Pin
+--------
+    PIO 2    B 7     DATA IN                 5
+             B 6     CLK IN                  4
+             B 5     DATA OUT                5
+             B 4     CLK OUT                 4
+             B 3     ATN                     3
+
+
+EPROM - Programmer  27Ø8 - 27512
+--------------------------------
+Der EPROMER arbeitet mit PIO 2 Port A + B. Zu beachten ist,
+das PIO 2 mehrfach genutzt wird (V 24, IEC).Vor Anschluss
+des Programmers V.1.1/2 ist die Peripherie zu trennen.
+Port A der PIO 2 ist auf Modus 2 zu initialisieren.
+Epromer v.1.1/2 entsprechend erweitern.(Epromer V.1.3 ist
+bereits erweitert!) :
+       LD A,BF H      3EBF
+       OUT PIO 2/A    D3ØA
+
+
+Joystick
+--------
+Es können 1 oder 2 Stück angeschlossen werden,(siehe Schaltb)
+Die Abfrage der Joysticks kann im Anwenderprogrammen über
+UP 'Joy' erfolgen,siehe UP - Verzeichnis.
+
+
+Weitere Betriebssysteme
+-----------------------
+Die weiteren Betriebssysteme werden fest auf EPROM in-
+staliert,entsprechend Bauanleitung Modul 1.Welchen Betriebs-
+system die höchste Priorität zusteht,kann der Anwender frei
+festlegen.Um in das jeweilige Betriebssystem zu gelangen,gibt
+es verschiedene Möglichkeiten.
+- Starten des BASIC - Interpreter V.3.2 :'b' (CR)
+  (Rückkehr in Monitor mit BYE).
+
+- Starten des Programmpaket X
+  1. 'X' (CR)
+  2. Taste 'X' drücken und RESET betätigen.
+  3. Taste 'X' während des Einschaltens des Computers drücken
+
+Betriebssystem  Monitor SCCH
+----------------------------
+Ablauf nach Einschalten des Computers:
+- Interrupt gesperrt
+- SP initialisiert
+- Initialisierung der Peripherie (PIO/CTC)
+- Sprungtabelle für RST,NMI in den RAM übertragen
+- Ein/Ausgabe - Byte,V24 - Kontrollregister in den RAM über-
+  tragen
+- Interruptregister wird gesetzt
+- Abfrage Tastatur auf gedrückter Taste 'X';Taste 'X'
+  gedrückt: Konfigurationsregister für Modul 1 einstellen,
+  Sprung nach EØØØ H.
+
+sonst:
+- Bildschirm löschen und Überschrift
+- Tastaturschleife/Warten auf Eingabe Debugger/Monitor
+
+Betriebssystem, Routinen, Unterprogramme
+----------------------------------------
+Adresse                  Funktion       (verwendete Register)
+ ØØØ8   Eingabekanal,normal Tastatur                (A)
+ ØØ1Ø   Ausgabekanal,normal Bildschirm              (A)
+ ØØ18   Zeichenkettenausgabe bis einschliesslich des
+        Byte,wo bit 7 gesetzt ist.
+ ØØ33   Ausgabe über Bildschirm
+ ØØ38   Breakpoint
+ ØØ66   NMI - Befehl,Programmunterbrechung
+ ØØA5   UP 'Eingabekanal'                           (A)
+ Ø11D   UP 'MS 3Ø'   Zeitschleife 3Ø ms
+ Ø118   UP 'Inline',liest Zeile von Bildschirm ein (Adresse
+        in 181A)
+ Ø146   UP - Routine zu InHex
+ Ø172   UP 'InHex'wandelt eine 4-stellige Zahl im ASCII-Code
+        in Hexzahl um.DE - Zeiger auf Zahl (Bildschirm),
+        Ergebnis in HL (DE,HL)
+ Ø183   UP 'Outhex',gibt A als 2-stellige Hexzahl auf
+        Schirm aus                                   (A)
+ Ø19A   UP 'Out HL',gibt HL - Register als Hexzahl
+        auf Schirm aus                               (HL)
+ Ø1A5   UP, CPU - Register ausräumen nach RSA
+ Ø1BC   UP, CPU - Register einräumen von RSA
+ Ø1D6   V 24 - Eingabe                               (A)
+ Ø1DE   Warteschleife Kommandozeicheneingabe
+ Ø22Ø   Tabelle RST, NMI, Hilfsregister, V 24, I/O
+ Ø24Ø   Einsprung bei Programmfehlern
+ Ø26B   UP 'ERROR', schreibt Zeichenkette 'ERROR'
+ Ø272   UP 'akustisches Signal'
+ Ø287   UP 'Ton',Reg,B = Tonlänge, C = Tonhöhe       (BC)
+ Ø297   UP 'Taste',testet Tastaturstatus,kehrt bei
+        gedrückter Taste nach 18 ms mit dem Kode zum
+        Akku zurück,keine Taste - Rückkehr mit gesetzten
+        Z - Flag und A = Ø Code steht auch in 1822 H (A)
+ Ø2F8   Interruptvektor CTC
+ Ø4CA   Register mit Argumenten laden,aaaa = HL,bbbb = DE,
+        cccc = BC
+
+
+Sprungverteiler
+---------------
+ Ø7E8       V 24         Ausgabe
+ Ø7EB       MS 3Ø        (Ø11D)
+ Ø7EE       OUTHEX       (Ø183)
+ Ø7F1       OUT HL       (Ø19A)
+ Ø7F4       INLINE       (Ø128)
+ Ø7F7       INHEX        (Ø172)
+ Ø7FA       TASTE        (Ø297)
+ Ø7FD       Betco        (Ø1DE)
+ ØAD8       Tabelle Perpherie
+ ØB9Ø       UP 'Zeitschleife 18 ms'zur Tastaturentprellung
+ ØEB4       UP 'Joy'.Abfrage Joystick 1,keine Taste Z - Flag
+            gesetzt und A = Ø,oben bit Ø, unten bit 1,links
+            bit 2, rechts bit 3, Feuerknopf bit 4 vom Akku
+            gesetzt.                                  (A)
+
+
+
+Speicherbelegung (Mamory Map)
+-----------------------------
+Adresse
+ ØØØØ                Betriebssystem
+ 1ØØØ                Bildschirmspeicher
+ 18ØØ                Zwischenspeicher Kursor
+ 18Ø2                Sprungtabelle RST 8  H
+ 18Ø5                Sprungtabelle RST 1Ø H
+ 18Ø8                Sprungtabelle RST 18 H
+ 18ØB                Sprungtabelle RST 2Ø H
+ 18DE                Sprungtabelle RST 28 H
+ 1811                Sprungtabelle RST 3Ø H
+ 1814                Sprungtabelle RST 38 H
+ 1817                Sprungtabelle NMI
+ 181A                Zwischenspeicher 'Inline'
+ 181C                Warmstartcode
+ 182Ø                Kommandocode V 24
+ 1821                Ein/Ausgabebyte
+ 1822                Tastencode der zuletzt gedrückten Taste
+ 1824                Hilfsregister Repetierfuktion Tastatur
+ 1825                Hilfsregister Kursorpositionierung
+                     (CTRL.+ N)
+ 1856                Stack
+ 1857                Hilfsregister UP 'INLINE'
+ 185B                Zwischenspeicher Argument 1
+ 185D                Zwischenspeicher Argument 2
+ 185F                Zwischenspeicher Argument 3
+ 1861                RSA : AF', BC',DE',HL'
+ 1869                RSA : AF, BC, DE, HL
+ 1871                RSA : IX, IY, PC, SP
+ 1879                RSA : BP
+ 187B                RSA : Breakpointsequenz
+ 187E                Speicher Save/Load Turbo - Tape
+ 18D6                freier RAM
+ 18FØ                User Eingaberoutine
+ 18F3                User Ausgaberoutine
+ 19ØØ                Anwenderspeicher bis FFFF
+ 2ØØØ                Modul 1 : Basicinterpreter
+ 6ØØØ                Arbeitsspeicher Basicinterpreter
+ 6ØF7                Anfang Basic RAM
+ CØØØ                Modul 1 : ROM - Bank 1 und 2
+ EØØØ                Betriebssystem Programmpaket X
+ FFFF                RAM - Ende
+
+
+Peripherie
+----------
+  ØØ                 CTC - Kanal  Ø - 3
+  Ø4                 PIO 1
+  Ø8                 PIO 2
+  14                 Modul 1; Konfigurationsregister
+  15                 Modul 3; RAM - Disk / Bank
+
+
+
+
+
+
+
+
+Belegung PIO 1/B  (D17)
+-----------------------
+Kanal                   Belegung
+ BØ                     Ton - Ausgang
+ B1                     Joystick 1 gem.A
+ B2                     Grafiktaste
+ B3                     Bildschirmmode
+ B4                     frei
+ B5                     Start / Stop - Schaltung
+ B6                     TB - Interface - Ausgang
+ B7                     TB - Interface - Eingang
+
+Hinweis : Einige PIO - Kanäle werden vom Epromer doppelt
+          mitbenutzt.Epromer V 1.1/2 sollte daher steckbar
+          sein und nur bei Bedarf angeschlossen werden.
+
+
+Einbau der Grafiktaste (nur Originaltastatur)
+---------------------------------------------
+Der einpolige rastende Schalter kommt an PIO 1/B2 und Masse
+Von PIO 1/B2 ein R = 33Ø Ohm und LED VQA 13 nach 5P an-
+schliessen.Die LED leuchtet bei eingeschalteter Grafiktas-
+tatur.Änderung im Monitor notwendig!
+Adresse Ø2A9 Datenbyte FF in 21 ändern.
+EPROM kann überprogrammiert werden.
+
+
+
+Super - Tape
+------------
+Super - Tape ermöglicht,Programme im Super - Tape - Format
+zu saven.Geladen werden Supertape - Aufzeichnungen normal
+mit der Funktion 'L' des Monitors bzw.'CLOAD'des Basicinter-
+preters.Zum Laden wird Supertape nicht mehr benötigt!
+Das Supertape - Format verfügt über folgende Eigenschaften:
+Titelbild: Kurz nach Anzeige des Programmnamens erscheint
+ein Titelbild,indem sich z.B. Programm und Autor vorstellen
+können.Nach dem Titelbild wird das weitere Programm geladen.
+Streifen: In den unteren 4 Bildzeilen erscheint ein bewegtes
+Muster,welches eine optische Kontrolle des Ladevorgangs
+ermöglicht.
+Autostart: Nach dem Laden erfolgt Autostart des Programms.
+
+
+Start von Super - Tape
+----------------------
+Laden Sie das Programm,welches Sie in Super - Tape - Format
+saven wollen.Falls Sie mit Titelbild arbeiten,ist dieses zu
+gestalten.Möglich sind: Von Hand,über ein kurzes Basic - Pro-
+gramm oder über grafisches Mal/Zeichenprogramm.
+Das Titelbild ist vom Bildschirm in den Bildspeicher von
+Super - Tape zu transferieren,z.B.:'T1ØØØ E8ØØ 8ØØ '(CR)
+Starten Sie Super - Tape ('x'(CR)).
+
+
+
+
+
+
+
+Jetzt werden folgende Eingaben abgefragt:
+Programmname  (bis 16 Zeichen möglich)
+Anfangsadresse :Anfangadresse des Programms
+Endadresse     :Endadresse des Programms
+Adr.Hilflader  :Adresse für Hilfslader möglichst 2ØØ H vor
+                Anfangsadresse.Wenn dies nicht geht (ROM-Ber.
+                /belegter RAM),in beliebigen freien Bereich
+                von 2,2 kByte.
+Startadresse   :Startadresse des Programms für Autostart
+Adr.BREAK/NMI  :Damit wird die Break - Taste automatisch
+                neu belegt
+Adr.RESET      :Wird mit 'CR' übergangen.
+AC 1 /LLC 2    :Es lassen sich Supertape - Aufnahmen für AC 1
+                und LLC 2 herstellen,unabhängig von Ihren
+                Computertyp (die Programme müssen natürlich
+                auf den jeweiligen Computer laufen!)
+Titelbild J/N  :Supertape ist auch ohne Titelbild
+Start Save     :Kassette starten (Aufn.) und CR drücken
+Wiederholung J/N : Mit Wiederholung können unzählige
+                   Kassetten bespielt werden
+
+Hinnweis : Verwenden Sie Supertape nicht bei der Weitergabe,
+           eine Copy wäre nicht möglich.
+
+
+Copyright: SCCH - Monitor und Super - Tape sind
+           (c) by E.Ludwig
+           Alle Rechte vorbehalten.Programme und Anleitungen
+           können zur persönlichen Verwendung kostenlos
+           weitergegeben und vervielfältigt werden,unter
+           Urheberangaben.

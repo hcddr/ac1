@@ -1,0 +1,320 @@
+Beschreibung des AC 1 - Zusatzdebuggers
+***************************************
+
+ Dieser  Debugger ergaenzt und erweitert die Funktionen  des
+AC  1.  Da  auch auf Programmteile im  residenten  Teil  des
+Monitors zurueckgegriffen wird, ist auf die Uebereinstimmung
+der  Versionsnummern zu achten.  Die Version 3.1  entspricht
+der  32-Zeilen-Version des  im FUNKAMATEUR Heft 1/85 veroef-
+fentlichten  Monitors.  Auf besonderen Wunsch ist auch  eine
+16-zeilige Version beziehbar.
+
+1.Hardwarevoraussetzungen
+=========================
+
+ Da  der Debugger einen Umfang von 4 K-Byte (ohne Help) hat,
+muss  also  ein entsprechender  Zusatz-RAM  vorhanden  sein.
+Natuerlich  wird auch der Zeichengenerator mit zusaetzlicher
+Kleinschreibung nach FUNKAMATEUR 1/86 u. 6/86 vorausgesetzt.
+Weiterhin sollte eine entprellte NMI-Taste installiert sein,
+um definierte Unterbrechungsmoeglichkeiten zu nutzen.
+
+ Fuer  den  Betrieb mit Next ist das Programm  auf  Speicher
+ohne WAIT-Generierung ausgelegt.  Falls dies notwendig  ist,
+muessen  alle Speicherbereiche die gleiche  WAIT-Generierung
+haben.  Weiterhin ist in folgendem Programmteil eine Taktan-
+passung durchzufuehren:
+
+Ladeadr.+ Øe1e  3e Ø7         ld   a,97h     ;CTC-Steuerwort
+          Øe2Ø  d3 ØØ         out  (ctc),a
+          Øe22  3e Øf         ld   a,zk      ;Zeitkonstante
+          Øe24  ØØ            nop            ;Reservebyte
+          Øe25  d3 ØØ         out  (ctc),a
+          Øe27  ØØ            nop            ;Fuellbefehl
+          Øe28  ØØ            nop            ;Fuellbefehl
+
+ Dies ist mit Hilfe der Zeitkonstante,  des Reservebytes und
+der Fuellbefehle zu realisieren.
+
+
+2.Software
+==========
+
+ Das Programm ist zwar auf eine bestimmte Adresse grundgela-
+den,  kann  jedoch auf alle Adressen geladen  werden.  Dabei
+sollte  jedoch  auf glatte 1ØØh jeweils als Ladeadresse  ge-
+achtet werden,  um die richtige Funktion des Reasemblers  zu
+garantieren.  Ein integrierter Linker stellt nach dem ersten
+Programmstart  die  aktuellen Adressen ein.  Danach ist  das
+Programm  nicht mehr verschiebbar,  da auch der Linker  zer-
+stoert  ist.  Dies  muss bei der  Weitergabe  des  Programms
+beachtet werden.
+
+ Der  Kommandoaufruf und die Benutzung der Systemzellen  er-
+folgt analog zum Monitor. Es werden jedoch einige Systemzel-
+len mehr benoetigt.  Eine Aufstellung erfolgt gesondert. Die
+Interrupttabelle befindet sich auf 188Øh fuer die CTC.
+
+
+
+3.Kommandobeschreibung
+======================
+
+ Es  werden hier nur die geaenderten  bzw.  neuen  Kommandos
+beschrieben.  Die  nicht  erwaehnten Kommandos arbeiten  wie
+gewohnt.
+
+ Nachdem  der Debugger geladen und mittels "J Ladeadr."  ge-
+startet  wurde,  meldet er sich mit seiner  Speicherbelegung
+und dem Promptsymbol "&". Dieses Symbol darf bei Zeichenket-
+teneingaben nicht verwendet werden. Im Gegensatz zum Monitor
+ist es nicht mehr moeglich das Promptsymbol durch  Backspace
+zu loeschen.
+
+ Leerzeichen
+ Das  zuvor  gegebene Kommando wird  mit  seinen  Argumenten
+nochmals  ausgefuehrt.  Dies  bringt bei  einigen  Kommandos
+Vorteile.
+
+ ": Äarg1 Äarg2 Äarg3ÜÜÜ"
+ Es  koennen Argumente eingegeben werden.  Wenn anstelle der
+Argumente ein weiterer Doppelpunkt ( & ::) eingegeben  wird,
+werden die gerade gueltigen Argumente zur Anzeige gebracht.
+
+ "B ÄadrÜ"
+ Mit diesem Kommando koennen Haltepunkte eingegenben werden.
+Fuer  adr  kommen nur RAM-Adressen als Haltepunkt in  Frage.
+Nach  der Aktivierung wird auf diese Adresse ein RST3Ø (F7h)
+eingetragen.  Es  ist eine Eingabe bis zu  255  Haltepunkten
+moeglich.  Falls  keine Adresse oder die Adresse Ø angegeben
+wurde, werden die Haltepunkte mit den dazugehoerigen Adress-
+inhalten zur Anzeige gebracht.
+
+ Weiterhin werden die Argumente so vorgeladen,  dass mittels
+S: "Name" die Breaktabelle auf Kassette  ausgelagert  werden
+kann.Dies kann fuer spaetere Tests eines Programmes guenstig
+sein.  Allerdings  muss dann zu jenem Zeitpunkt der Debugger
+auf die gleiche Adresse geladen werden.
+
+ "b ÄadrÜ"
+ Hiermit koennen die Haltepunkte geloescht werden. Wenn eine
+Adresse  angegeben wird,  wird nur der entsprechende  Halte-
+punkt  geloescht.  Ansonsten  werden  alle  Haltepunkte  ge-
+loescht.
+
+ "c aadr eadr"
+ Es wird analog FUNKAMATEUR 11/86 S.565 eine CRC-Wertberech-
+nung durchgefuehrt.
+
+ "D aadr Äeadr ÄoptÜÜ"
+ Mit  diesem Kommando koennen Speicherbereiche angezeigt und
+beschrieben werden.  Dabei bedeutet aadr die Anfangsadresse,
+eadr die Endadresse und opt moegliche Optionen. Als Optionen
+kommen
+          A -> Anzeige Hex und Zeichensatz
+          B ->    "    Hex und Pruefbyte FUNKAMATEUR H 11/86
+     keine  ->    "    Hex und ASCII
+
+in Frage. Nach der kompletten Anzeige wird noch der CRC-Wert
+ueber die vorgegebene Laenge ausgegeben.  Der Dump wird  je-
+doch  immer ueber ganze 16 Byte angezeigt.  Das bedeutet bei
+der  Option mit Pruefbyte,  dass das letzte Pruefbyte  eben-
+falls ueber die gesamte Zeile berechnet wird.  Dies ist  bei
+der  nachfolgenden Kontrolle von Speichereingaben von Bedeu-
+tung.  Falls bei der Anzeige mehr als eine Bildschirmflaeche
+benoetigt  wird,  wird  nach 31 Zeilen gestoppt  und  ein  +
+ausgegeben.  Wenn die Ausgabe fortgesetzt werden soll,  muss
+cr  betaetigt werden.  Bei einer anderen Taste wird die Aus-
+gabe abgebrochen.  Dies gilt fuer alle Ausgaben die mehr als
+eine Bildschirmflaeche ausmachen.
+
+ Falls  als Argument zu D nur die  Anfangsadresse  angegeben
+wird,  ist der Modus fuer Speicherbeschreiben eingeschaltet.
+Es  wird  die Adresse,  der Speicherinhalt als Hex-Zahl  und
+wenn moeglich die Interpretation als ASCII angezeigt. Darauf
+folgt das Promptsymbol "&".  Die Eingabe erfolgt analog  wie
+im  Monitor.  Jedoch sind folgende Ergaenzungen  vorgenommen
+worden :
+
+     '   ->  Es  folgt eine Zeichenkette (sie  muss  mit  cr
+             beendet werden).
+
+     ^   ->  Eine Adresse zurueck
+
+ Nach  Beendigung  der Eingabe mittels "."  kann  ueber  ein
+nochmaliges "cr" der Anzeigemodus mit Pruefbyteausgabe  auf-
+gerufen  werden.  Hierbei kann es - wie oben  erwaehnt  - zu
+Abweichungen des letzten Pruefbytes kommen.
+
+ "E adr"
+Es  wird  ein Anwenderprogramm ab einer  bestimmten  Adresse
+angesprungen.  Dabei  werden die gesetzten Pruefpunkte akti-
+viert.
+
+ "G"
+ Das  Programm wird ab Anwender-PC  fortgesetzt.  Es  werden
+ebenfalls alle Haltepunkte aktiviert. Das Programm kann auch
+von  einem Haltepunkt aus fortgesetzt werden.  Ein "cr"  be-
+wirkt eine Wiederholung des Go-Kommandos.
+
+ "I"
+ Alle  Register der Anwender-CPU werden auf Ø  gesetzt.  Der
+Anwender-SP wird auf RAM-Ende+1 gesetzt.
+
+ "J adr"
+ Wie E jedoch ohne Haltepunktaktivierung.
+
+ "N ÄanzÜ"
+Es  erfolgt ein Schrittbetrieb .  Dabei  kann die Anzahl der
+Schritte  angegeben werden.  Nach jedem Schritt erfolgt eine
+Registeranzeige.  Bei  erneutem "cr" werden wieder die  vor-
+gegebenen Schritte durchgefuehrt.
+
+ "R reg"
+ Mit diesem Kommando koennen Register analog wie im  Monitor
+angezeigt  und beschrieben werden.  Zusaetzlich koennen auch
+Einzelregister  und  mit "& Ff" (f fuer ein Flag)  auch  die
+Flags des Vorder- und Hintergrundes beschrieben werden.  Der
+Hintergrund  wird durch ein nachgesetztes Hochkomma  gekenn-
+zeichnet.
+
+z.B.: & R FH' -> es kann das Hintergrundflag H beschrieben
+                 werden
+      & R B   -> es wird B im Vordergrund beschrieben
+
+ Die Registeranzeige wurde geaendert.  Es werden die  Anzahl
+der gesetzten Haltepunkte angezeigt und der Befehl,  auf den
+der PC zeigt, reassembliert. Weiterhin  werden  die  Inhalte
+der Zellen, auf die Doppelregister als Zeiger weisen zur An-
+zeige gebracht.
+
+ "@ aadr Äeadr ÄofsÜÜ"
+ Es  werden ab der Anfangsadresse (aadr) bis zur  Endadresse
+(eadr)  die  Befehle  mit einem Offset  (ofs)  reasembliert.
+Dabei werden nur die definierten Befehle dargestellt.
+
+ "?ÄKÜ"
+ Ueber  dies Kommando ist eine Helpausgabe  moeglich.  Falls
+ein Kommandobuchstabe angegeben wird,  bezieht sich das Help
+auf dies Kommando.
+
+
+4.Nutzbare Routinen
+===================
+
+ Nach  dem Linkvorgang wird ab Ladeadresse ein Sprungvertei-
+ler aufgebaut. Dieser hat folgendes Aussehen:
+
+Lad.adr.+Ø     jp   debug          ;Sprung zum Debugger
+        +3     jp   reas           ;    "    " Reassembler
+        +6     jp   inline         ;    "    " Eingabe
+        +9     jp   next1          ;    "    " Schrittbetrieb
+        +12    jp   crcent         ;    "    " CRC-Berechnung
+
+Reassembler (reas)
+ Es  wurde  der  Reassembler nach RFE Heft  7/82  S.419  als
+Grundlage benutzt. Er wurde jedoch stark modifiziert, um die
+nicht definierten Befehle auszublenden.  Weiterhin wurde  er
+auch  den  Eigenheiten des AC1 angepasst.  Er  hat  folgende
+Schnittstellen:
+
+Adresse      Inhalt
+aktadr    -> aktuelle Adresse
+ofsadr    -> Adressoffset
+
+tmemn     -> Tabulator fuer Memnonik
+tkom      -> Tabulator fuer Kommentar
+
+ In  diesen Zellen muessen die Werte uebergeben werden.  Der
+Reassembler  uebergibt  in  aktadr  die  Anfangsadresse  des
+naechsten Befehls.
+
+Zeicheneingabe (inline)
+ Es wird ab Kursorposition folgende Zeichenkette ausgegeben:
+
+" & "
+
+ Die eingegebenen Zeichen werden geechot.  Ein Backspace ist
+nur bis zu Beginn der Eingabe moeglich. Es werden b, c und e
+zerstoert.  Es  kann  in <prompt> ein  anderes  Promptsymbol
+eingegeben werden.
+
+Output    : bc -> Anzahl der eingegebenen Zeichen
+            e  -> letzes Zeichen von Tastatur
+ Der Kursor steht bedingt durch den Abruch auf dem naechsten
+Zeilenanfang.
+
+next1
+ Hiermit  ist es moeglich ein bestimmtes Programm nach Abar-
+beitung eines Befehls anzuspringen. Dieses Programm befindet
+sich in der gleichen Ebene wie der Aufruf.
+
+Input     : hl -> Adresse des nachfolgenden Programms
+
+CRC-Berechnung (crcent)
+ Es kann der CRC-Wert ueber einen Bereich berechnet werden.
+
+Input     : <arg1>  -> Anfangsadresse
+            <arg2>  -> Endadresse
+
+Output    : Ausgabe auf Schirm ab Kursorposition
+
+ Die Programme reas,  inline und crcent muessen mittels CALL
+aufgerufen  werden.  Beim Aufruf von next1 richtet sich  die
+Art nach dem Nachfolgeprogramm.
+
+5.Benutzte Adressen vom AC 1
+============================
+
+OUTH1   equ    18ch         ;Ausg. des unteren Nibbels aus a
+SAVE    equ    1a5h         ;retten AW-CPU
+GENE    equ    1bch         ;generieren AW-CPU
+ARGLA   equ    4cah         ;Argumente laden
+TRANS1  equ    4f4h         ;Transfer
+PRSP    equ    579h         ;Ausgabe SP
+PRIX    equ    58bh         ;   "    IX
+PRIY    equ    585h         ;   "    IY
+REGA    equ    5f3h         ;   "    Register und Flags
+MS3Ø    equ    7ebh         ;Zeitschleife 3Ø ms
+OUTHEX  equ    7eeh         ;Ausgabe von a
+OUTHL   equ    7f1h         ;   "     "  hl
+LEZEI   equ    7f7h         ;Einlesen einer Hexzahl
+TASTE   equ    7fah         ;Tastenabfrage
+GETCO   equ    7fdh         ;Rueckkehr in Monitor
+kurs    equ    18ØØh        ;Zelle fuer Kursorposition
+Vtast   equ    18Ø2h        ;Verteiler fuer Tastaturroutine
+Vbsa    equ    18Ø5h        ;    "       "  Bildschirmausgabe
+Vzka    equ    18Ø8h        ;    "       "  Zeichenkettenausg.
+Vrst3Ø  equ    1811h        ;    "       "  rst 3Øh
+Vnmi    equ    1817h        ;    "       "  nmi
+koadr   equ    181ah        ;Merkzelle fuer Kommandozeichen
+kozei   equ    181ch        ;    "       "  Kommandozeichen
+aktadr  equ    181dh        ;    "       "  akt.Adresse (Reas.)
+ofsadr  equ    181fh        ;    "       "  Offsetadr. (Reas.)
+tmemn   equ    1821h        ;    "       "  Tabulator Memnonik
+tkom    equ    1822h        ;    "       "      "     Kommentar
+prompt  equ    1823h        ;    "       "  Promptsymbol
+stack   equ    1856h        ;oberes Kellerende
+spze1   equ    stack        ;Merkzellen
+spze2   equ    stack+2      ;Merkzellen
+arg1    equ    spze2+3      ;Zellen fuer Argument 1
+arg2    equ    arg1+2       ;  "     "      "     2
+arg3    equ    arg1+4       ;  "     "      "     3
+savafh  equ    1861h        ;Anwender-CPU-Bereich af hint.gr.
+savbch  equ    1863h        ;   "      "     "    bc    "
+savdeh  equ    1865h        ;   "      "     "    de    "
+savhlh  equ    1867h        ;   "      "     "    hl    "
+savaf   equ    1869h        ;       "       " "    af
+savbc   equ    186bh        ;       "       " "    bc
+savde   equ    186dh        ;       "       " "    de
+savhl   equ    186fh        ;       "       " "    hl
+savix   equ    1871h        ;       "       " "    ix
+saviy   equ    1873h        ;       "       " "    ix
+savpc   equ    1875h        ;       "       " "    pc
+savsp   equ    1877h        ;       "       " "    st
+meze1   equ    1879h
+meze2   equ    187bh        ;Merkzellen fuer next und go
+meze3   equ    187dh        ;       "     "  Display
+bws     equ    17ffh        ;Bildwiederholspeicher
+memn    equ    64-23        ;Position fuer Memnonik
+kom     equ    64-53        ;  "        "  Kommentar

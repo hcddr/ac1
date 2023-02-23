@@ -1,0 +1,235 @@
+
+
+           Kurzbeschreibung TDL-BASIC fuer AC1
+          -------------------------------------
+
+
+Dem 12 kByte-Basicinterpreter liegt das "TDL-BASIC",
+veroeffentlicht in: Klein,R.D.:BASIC-Interpreter, Muenchen
+1982, S.1ÿ3ff., zugrunde. Dort (wie auch in: Kramer,M.:
+Praktische Mikrocomputertechnik, Berlin,1987) findet man
+eine ausfuehrlichere Befehlsbeschreibung, als sie hier
+erfolgen kann.
+
+Das Programm benoetigt eine 16kByte-Speicherweiterung ab
+4ÿÿÿH und belegt den Speicher von 4ÿÿÿH bis 71FFH,
+mit 16k-Speicher stehen etwa 4kByte fuer BASIC-Programme
+zur Verfuegung.
+
+Kaltstart und Warmstart erfolgen mit J4ÿÿÿ, nach dem Kalt-
+start wird der hoechste Speicherplatz abgefragt, bei
+CR wird der gesamte freie Speicher genutzt. Bei unvoll-
+staendiger Adressdekodierung (RAM erscheint doppelt)
+muss auf Adresse 4ÿE2H der Speichertest begrenzt werden
+(statt FFFFH z.B.BFFFH).
+Zahlen koennen immer auch hexadezimal angegeben werden und
+sind dann mit "&" zu kennzeichnen.
+Ein Teil des Interpreters wird anschliessend zerstoert und
+mit als Programmspeicher genutzt, deshalb muessen
+Magnetbandkopien des Interpreters unbedingt vor dem ersten
+Start angefertigt werden!
+
+Das BASIC rechnet mit 11 Stellen und erweist sich besonders
+fuer mathematische Berechnungen als sehr geeignet. Es
+verfuegt ueber keine "grafischen" Befehle.
+
+
+Zusammenstellung aller Befehle:
+-------------------------------
+
+1. Allgemeine Systembefehle
+
+AUTO ƒStartzeile,Abstand‹
+CLEAR ƒStringspeichergroesse‹
+CONTINUE
+DELETE
+KILL       - Rueckgewinnung des Speicherpl. von Matrizen
+LOAD"name" - Laden eines Programms von Kassette
+LOADGO"name"   "   und Starten eines Programms
+DLOAD"name"- Laden von Daten
+SAVE"name" - Abspeichern eines Programms
+DSAVE"name"-     "       von Daten
+NEW
+PRECISION ƒ1...11‹
+RENUMBER ƒNeuzeile,Abstand,Startzeile‹
+RUN
+EDIT
+
+2. Befehle fuer die Konsole
+
+LIST
+LVAR       - Ausgabe aller aktuellen Variablen(werte)
+NULL ƒAnzahl,Zeichen‹ - nach CR,LF werden n Zeichen gesendet
+POS(A)     - (A ist Scheinvariable)
+PRINT bzw.SPEAK
+PRINT USING
+SPC
+SWITCH     - Befehl hat in dieser Anpassung keine Bedeutung,
+             da keine Konsolzuweisungen zu aendern
+TAB
+TRACE1
+TRACEÿ
+WIDTH Anzahl - legt die Ausgabelaenge fest, nach der CR,LF
+               eingefuegt wird (15...255)
+CLS
+
+3. Befehle fuer Zeilendrucker
+
+Dazu ist auf Adresse 4315H ein Sprung zur Druckerroutine
+einzutragen. Das Zeichen wird in C uebergeben.
+
+LLIST
+LLVAR
+LNULL
+LPRINT
+LPRINT USING
+LTRACE
+LWIDTH
+LPOS
+SPC
+TAB
+
+4. Befehle fuer Datentransport
+
+LET
+DATA
+READ
+RESTORE ƒZeilennummer‹
+LINE INPUT
+INPUT bzw. LISTEN
+INP(Port)
+OUT(Port)
+DIM
+WAIT A,B,C   - Warteschleife fuer Ports
+PEEK
+POKE
+COPY neue Zeile,Abstand=Zeilenbereich
+EXCHANGE     - schneller Datenaustausch
+
+5. Befehle zur Programmsteuerung
+
+GOTO
+GOSUB
+RETURN
+ON x GOTO
+CALL adresse,ƒargument1,argument2,...‹
+             - die Argumente werden nach folgendem Schema
+               uebergeben:
+               SP --> argument n
+                      ...
+                      argument 1
+               HL --> Return-Adresse
+               BC --> Zahl der Argumente
+
+FOR, TO, STEP, NEXT
+IF, THEN, ELSE
+
+6. Funktionen/Operatoren
+
+ATN
+COS
+SIN
+TAN
+ABS
+EXP
+FRE
+INT
+LOG
+SGN
+SQR
+RND
+RANDOMIZE
+(),^,*,/,+,-,=,<>,<,>,<=,>=,NOT,AND,OR
+
+DEF FN      - Definition von Nutzerfunktionen, eine Funktion
+              muss mit FN beginnen, gefolgt von Variablen-
+              namen, in Klammern steht ein Parameter
+              Funktion kann sich ueber mehrere Zeilen er-
+              strecken und rekursiv sein!
+FNEND funktionswert
+            - schliesst Definition einer Funktion ab,
+              Gleichheitszeichen wird hier weggelassen
+FNRETURN funktionswert
+            - vorzeitiger Abbruch einer Funktion
+
+7. Stringverarbeitung
+
+ASC
+CHR$
+LEFT$
+LEN
+MID$
+RIGHT$
+STR$
+VAL
+INSTR
+
+8. sonstige Befehle
+
+END
+REM bzw. '
+STOP
+USR
+BEEP
+
+9. Steuerzeichen
+
+,        - zur naechsten TAB-Position
+;        - nicht fortschreiten
+:        - mehrere Anweisungen in einer Zeile
+7FH      - Loeschen des Zeichens in "÷÷"
+CTRL-S   - Anhalten der Ausgabe
+CTRL-Q   - Fortsetzen "   "
+CTRL-C   - Abbrechen des Programms
+CTRL-U   - Loeschen der gerade eingegebenen Zeile
+CTRL-X   - zum Monitor zurueck
+CTRL-O   - Unterdruecken der Konsolausgabe
+CTRL-R   - Ausgabe der aktuellen Zeile
+CTRL-T   - waehrend des Programmlaufs wird die gerade
+           abgearbeitete Zeilennummer ausgegeben
+
+
+Besonderheiten:
+---------------
+
+1. Veraenderungen gegenueber Original:
+
+Es entfallen: ASAVE, ALOAD, ALOADC, AMERGE, AMERGEC
+veraendert:   SAVE, LOAD, LOADGO
+zusaetzlich aufgenommen:
+              DSAVE, DLOAD, CLS, BEEP
+
+SAVE "name" dient zur Programmabspeicherung auf Magnetband,
+            der Name kann 15 Zeichen enthalten.
+LOAD "name" laedt ein Programm von Kassette, dabei wird NEW
+            ausgefuehrt, alle in "" eingeschlossenen Zeichen
+            sind fuer die Suche signifikant, wird nur ""
+            angegeben, wird das naechste Programm geladen.
+LOADGO "name" analog LOAD, das Programm wird sofort gestartet
+DSAVE "name" dient der Abspeicherung von Daten (nur Variablen
+             und Felder) und kann auch waehrend des Programm-
+             laufes genutzt werden, allerdings ist die
+             Angabe von Variablen als Name nicht zulaessig.
+DLOAD "name" Laden von Daten, analog oben
+
+2. EDIT - Befehl:
+
+   fuer EDIT gibt es weitere Befehle, die aus Buchstaben
+   und Zahlen von 1...255 bestehen:
+   A    - laedt den EDIT-Buffer vom Programmspeicher neu
+   nD   - n Zeichen werden geloescht
+   E    - beendet EDIT und ersetzt die Zeile
+   nFx  - setzt den Cursor vor das n-te Zeichen x
+   H    - loescht alles rechts des Cursors und geht in
+          INSERT-Mode
+   I    - fuegt alle Zeichen ein, bis CR oder ESC
+   nKx  - loescht Zeichen vom Cursor bis zum n-ten Zeichenx
+   L    - Ausgabe der Zeile
+   Q    - verlaesst EDIT ohne Ersetzung
+   nR   - ersetzt die folgenden n Zeichen durch n vorhandene
+   X    - Cursor ans Zeilenende und INSERT
+   SPACE- Cursor nach rechts
+   DEL  -   "     "   links
+   ESCAPE Ende des INSERT-Mode
+
+                          Viel Erfolg!   Frank,Y56UL

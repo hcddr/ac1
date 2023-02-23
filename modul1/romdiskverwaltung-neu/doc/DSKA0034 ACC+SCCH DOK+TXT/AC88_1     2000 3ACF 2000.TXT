@@ -1,0 +1,211 @@
+        ***********************************
+        *                                 *
+        *        AC 1  MONITOR 88         *
+        *                                 *
+        ***********************************
+        *                                 *
+        *    vorlaeufige Beschreibung     *
+        *                                 *
+        *    Stand : и9.и8.88             *
+        *                                 *
+        *    Bearbeiter : U. Zellner      *
+        *                                 *
+        ***********************************
+
+
+
+1.      Allgemeines
+*******************
+
+ Das neue Betriebssystem des AC 1 besteht aus 4 Komplexen :
+
+        * Bildschirmtreiber
+
+        * Tastaturtreiber
+
+        * zentraler Systemruf mit diversen Funktionen
+
+        * Kommandointerpreter
+
+ Es wurde davon ausgegangen, dass ein Betriebssystem als
+Hauptaufgabe die Verwaltung der einzelnen Komponenten des
+Rechners hat. Im Gegensatz zum Monitor V3.1 wird konsequent
+mit einem Puffer gearbeitet. Die Eingaben, sowohl von der
+Tastatur wie auch von den Datentraegern laufen zuesrt immer
+ueber einen Puffer. Auch die Kommandoarbeit und Datenausgaben
+werden ueber einen Puffer geleitet. Die Puffer haben immer
+folgenden Aufbau :
+
+        defw max.Pufferlaenge-1
+        defw rela.Datenzeiger
+             Daten
+
+ Daduch ist es moeglich beliebige Puffer im Speicher zu
+definieren.
+
+ Der RAM-Bereich von 18ииh bis 1fffh ist dem Betriebssystem
+vorbehalten. Programme duerfen erst ab 2иииh geladen und
+abgearbeitet werden. Die RAM-Einteilung ist dem Anhang zu
+entnehmen.
+
+ Der Aufruf eines Druckertreibers erfolgt durch einen
+Sprungverteiler auf den folgenden Adressen :
+
+        1bии  Druckerinitialisierung
+        1bи3  Zeichenausgabe auf den Drucker im Register A
+
+ Die Rueckkehr hat mit einem RET zu erfolgen. Es duerfen
+keine Register veraendert werden. Als Zeilenvorschub wird
+иdh im Register A uebergeben.
+
+
+2.      Bildschirmtreiber
+*************************
+
+ Der Bildschirmtreiber hat die Aufgabe, Zeichen zur Ausgabe
+zu bringen. Es wurde auf eine Maskierung des Bit7 verzichtet,
+um z.B. auch den Grafiksatz zur Anzeige bringen zu koennen.
+Die ASCII-Zeichen von и bis 1fh werden als Steuerzeichen fuer
+den Bildschirm interpetiert. Es werden zum gegenwaertigen
+Zeitpunkt folgende Steuerzeichen verarbeitet :
+
+CTRL   hex  Symbol Wirkung
+--------------------------------------------------------
+A       и1  home   Kursor auf Schirmbeginn
+B       и2  liba   Kursor auf Beginn der aktuellen Zeile
+D       и4  dellp  Zeile ab Position loeschen
+E       и5  ins    Einfuegen ein/aus (nur in akt. Zeile)
+F       и6  delsc  Schirm ab Position loeschen
+H       и8  left   Kursor 1 Position nach links
+I       и9  right  Kursor 1 Position nach rechts
+J       иa  down   Kursor eine Zeile tiefer
+K       иb  up     Kursor eine Zeile hoeher
+L       иc  scl    Schirm loeschen und home
+M       иd  cr     RETURN, ENTER
+P       12  dele   linkes Zeichen loeschen und nachruecken
+S       13  delpo  Position loeschen und nachruecken
+T       14  tabb   Tabulation nach links
+W       17  tab    Tabulation nach rechts
+Ф       1b  setku  Beginn einer Kursorpositionierung
+^       1e  delli  aktuelle Zeile loeschen Kursor auf Beginn
+                   der Zeile
+
+ Die Startadressen der Bildschirmsteuerroutinen sind in einer
+Tabelle im RAM untergebracht. Die nicht installierten Zeichen
+haben als Startadresse die Adresse eines "ret". Somit koennen
+problemlos Routinen ergaenzt oder die Steuerzeichenbedeutung
+geaendert werden. Die Tabelle beginnt ab 19ииh. Die Position
+der Startadresse kann nach folgender Formel berechnet werden:
+
+        adr=19ииh+2*hex  des Steuerzeichens
+
+ Da mit Fenstertechnik gearbeitet wird beziehen sich alle
+Bildschirmfunktionen immer auf das aktuelle Fenster. Damit
+ist auch der gesamte Schirm als ein Fenster zu verstehen.
+Daraus resultiert auch die etwas langsamere Bildschirmarbeit.
+
+ Kurz noch zur Kursorpositionierung. Hiermit kann der Kursor
+auf eine beliebige Position innerhalb des Fensters gebracht
+werden. Dazu ist dem Bildschirmtreiber folgende Sequenz zu
+uebergeben :
+
+        1bh, Zeilennummer, Spaltennummer
+
+Dabei ist zu beachten, dass die Nummerierung bei и beginnt.
+
+z.B.:   rst  18h   ;Zeichenkettenausgabe
+        defb 1bh,1,6
+        defm "Hallo"
+
+setzt das Wort "Hallo" in die 2.Zeile auf die 7.Position
+bezogen auf das aktuelle Fenster. Der Kursor steht dann wie
+gewohnt auf der Position nach der Ausgabe.
+
+ Die Zeichenuebergabe erfolgt wie bisher im Register A.
+Ebenso wurden die Aufrufe ueber RST 1иh und RST 18h
+beibehalten. Es werden keine Register veraedert.
+
+ Der Treiber enthaelt jedoch noch weitere Funktionen. Diese
+werden von der Zelle scrta (194иh) gesteuert. Dabei haben die
+einzelnen Bits folgende Funktionen :
+
+Bit и,1 Kursorpositionierung
+    2   Insert
+    3   Zeilencopy
+    4   Hardcopy
+    5   Zeichenumleitung in Eingabepuffer
+    6   Zeichenumleitung frei waehlbar
+    7   keine Zeichenausgabe auf Schirm
+
+ Dabei bedeutet ein gesetztes Bit, dass die jeweilige
+Funktion eingeschaltet ist. So wird z.B. bei der Kommandoein-
+gabe das Bit5 gesetzt.
+
+
+
+
+3.      Tastaturtreiber
+***********************
+
+ Der Tastaturtreiber hat die Aufgabe die Zeichen von der
+Tastatur in den Rechner zu holen. Er bietet jedoch noch einen
+weiteren Komfort :
+
+        * Repetierautomatik nach и,6s im и,1s-Raster
+
+        * Ueberwachung der Kursorform fuer Programmier-,
+          Schreibmaschinen- und Grafikmodus
+
+        * Funktionen wie Hardcopy ein/aus, Zeilencopy,
+          Veraenderung des Arbeitsmodus
+
+ Zur Zeit sind nur die Funktionen Hardcopy ein/aus (CTRL-P),
+Zeilencopy (CTRL-L) und Kursorumschaltung (CTRL-Ф)
+installiert. Es koennen jedoch noch weitere Funktionen
+egaenzt werden. Die entsprechende Tabelle im RAM "stvert"
+hat folgendes Aussehen :
+
+        defb Tastenkode (mit Bit7)
+        defw Startadresse
+
+Das Ende dieser Tabelle wird durch "defb и" gekennzeichnet.
+Der Aufruf erfolgt ueber RST 8. Der Tastenkode wird im
+Register A uebergeben. Es wird sonst kein Register
+veraendert.
+
+ Mittels CTRL-L (иch) kann die Funktion Zeilencopy aufgerufen
+werden. Es erscheint nach loslassen der Taste auf dem Beginn
+der letzten Zeile der Kursor in schmaler Ausfuehrung. Es kann
+in dieser Zeile editiert werden. Falls eine andere Zeile
+gewuenscht wird, kann der Kursor mittels erneutem Betaetigen
+von CTRL-L in die gewuenschte Zeile hochgefahren werden. Nach
+Betaetigen von cr wird die Zeile auf die urspruengliche
+Kursorposition uebernommen. Falls Hardcopy eingeschaltet
+war, wird sie auch auf den Drucker ausgegeben. Waehrend des
+Editierens in Zeilencopy ist ein eventuelles Hardcopy
+ausgeschaltet.
+
+ Durch die Betaetigung der Taste CTRL-Ф wird die Kursorform
+veraendert. Der Kursorform hat dabei folgende Bedeutung :
+
+Programmiermodus  : dicker waagerechter Strich mit Strich
+                    nach oben (a2h)
+                    Die Buchstaben werden ohne Shift gross
+                    und mit Shift klein ausgegeben
+
+Schreibmaschinenm.: dicker waagerechter Strich mit Strich
+                    nach unten (a4h)
+                    Die Buchstaben werden ohne Shift klein
+                    mit Shift gross ausgegeben
+
+Programmiermodus  : dickes Kreuz (a6h)
+                    Der Tastenkode (aиh ... ffh) wird direkt
+                    auf die Kursorposition ausgegeben. Die
+                    Position wird nicht geaendert. Der Kursor
+                    muss mit den Steuertasten gefuehrt werden
+
+ Die Repetierautomatik arbeitet folgendermassen. Das Zeichen
+erscheint sofort nach Betaetigen der Taste auf dem Schirm.
+Wird die Taste innerhalb von etwa и,6s nicht losgelassen,
+gibt die Routine das entsprechende Zeichen alle и,1s an das
+aufrufende Programm.

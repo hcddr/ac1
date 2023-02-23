@@ -1,0 +1,147 @@
+;------------------------------------------------------------------------------
+; AC1-2010-Modul-1 (1M-Modul mit max. 2 ROMBANK-ROMs)
+; (c) V. Pohlers 2023
+;------------------------------------------------------------------------------
+; Modulverwaltungssoftware
+;------------------------------------------------------------------------------
+
+
+;------------------------------------------------------------------------------
+ROMs:
+
+es gibt 3 (4) ROMs:
+	paket_x.bin			Verwaltungssoftware, 	8K-ROM "Paket X"
+	GrafikBasic3.2ROM.bin		Grafik-BASIC V3.2,	8K-ROM "BASIC"
+	rom_1.bin			ROM-Disk ROM 1		512k-ROM "ROM 1"
+	rom_2.bin			ROM-Disk ROM 2		512k-ROM "ROM 2"
+
+als BASIC-ROM kann auch eine andere Version genommen werden; es muss nicht diese
+gepatchte Version aus dem Paket "Modul X V.2" sein.
+
+Zusätzlich gibt es den ROM
+	jkcemu_xrom.bin			spezieller ROM zum Testen im Emulator, s.u.
+
+;------------------------------------------------------------------------------
+Startkommando
+	X
+	X nnn
+"X" ohne Parameter startet die ROM-Disk-Verwaltung.
+"X" gefolgt von der dezimalen Programmnummer lädt und startet das gewünschte
+Programm direkt.
+
+	---------------------------------------------------------------------
+		     * * *  ROM - Disk Verwaltung VP 02/2023 * * *
+		
+		001  P CP/M-2.2                D000-FEFF,E600  JE600
+		002  P HRCPM-12                D000-FEFF,E600  JE600
+		003  P DVU-21                  4000-531F,4000  d
+		004  P DVHD-31                 4000-57EB,4000  d
+		005  P Gide-Check              2000-2FE7,2000  g
+		006  P EDAS-4                  4000-544F,4000  J4000
+		...
+		023  P CHESSMASTER V.2.        4000-73D0,0000
+		024  P CLIST-TURBO             1900-1C70,0000
+		
+		  Cr = weiter
+		  Z  = zurück
+		  M  = Monitor
+		  oder Kennzahl                                             
+	---------------------------------------------------------------------
+  
+;------------------------------------------------------------------------------
+Zum Selbstkompilieren benötig man
+ - den Arnold-Assembler http://john.ccac.rwth-aachen.de:8000/as/
+   	Achtung: ich nutze die Windows-Version asw.exe, umbenannt in as.exe
+   	Die DOS-Version läuft unter Windows XP etc. nicht!
+ - eine Perl-Installation, z.B. http://www.activestate.com/activeperl
+ 	Hier sollte die Version egal sein; ich nutze noch v5.14.2
+
+Im Makefile sind die Pfade zu den Programmen as, pbin und perl anzupassen.
+
+assemblieren
+
+	make z80files.inc
+	make depend
+	make
+	make roms		für Modul 1 (2 ROMs)
+
+testen
+	jkcemu 0.9.8.2 AC1 (www.jens-mueller.org/jkcemu/, gepatcht)
+	**Achtung** das Original emuliert nur 16 Bänke und max 256K-ROMBANK!
+	Konfiguration AC1-SCCH, 64K RAM, SCCH-Modul 1
+	ROM-Datei f. Programmpaket X: 	paket_x.bin
+	ROM-Datei f. ROM-Disk: 		jkcemu_xrom.bin
+	alternativer BASIC-ROM: 	-
+
+Als BASIC-ROM wird ein Grafik-BASIC 3.2 genommen
+Es funktionieren das Orgiginal als auch die gepatchte Version der Modul-X-V2-Pakete.
+
+;------------------------------------------------------------------------------
+make z80files.inc
+
+Das perl-Skript create_z80filesinc2.pl erzeugt eine Datei z80files.inc, die
+alle gefundenen Z80-Dateien enthält. Diese Liste kann als Quelle genutzt werden,
+um die MegaROM-Inhalts-Datei packedroms.asm individuell anzupassen.
+Momentan wird einfach die Datei z80files.inc eingefügt.
+
+;------------------------------------------------------------------------------
+Programme hinzufügen:
+
+die Progamme sind im ROM hintereinander weg abgelegt (ROM1 und 2; freie Lücken
+sind natürlich möglich) konkrete Banknummern und absolute Adressen im ROM bzw.
+releativ in der Bank interessieren nicht.
+
+	align 40h
+	Header
+binary
+Header (40h lang), auf 
+	db	0D3h,0D3h,0D3h	; +00h 0..2 Kopfkennzeichen 3x D3
+	db	typ		; +03h +3 Typkennzeichen
+	db	compressed	; +04h +4 "Z" komprimiert, 00 nicht komprimiert
+	ds 	3		; +5..7 System "AC1", "LC2", Z13"
+	dw	offs		; +08h +8 Lade-Offset
+	dw	aadr		; +0ah +10 Anfangsadresse 
+	dw	eadr		; +0ch +12 Endadresse
+	dw	sadr		; +0eh +14 Startadresse
+	db	name		; +10h +16 name. max 32 Zeichen , mit leerzeichen aufgefüllt
+	db 	comment		; +30h +46 kommentar, max 16 Zeichen , mit leerzeichen aufgefüllt
+
+
+Meine Verwaltungssoftware durchsucht den ROM-Bereich und entnimmt alle
+notwendigen Daten aus dem Header. Beim Ergänzen eigener Programme bleibt die
+Software im ROM Paket X unverändert!
+
+Lade-Offset normalerweise 0, wird beim Laden zu aadr addiert und später Programm
+verschoben. Wichtig bei aadr < 1900h! Dann kein Autostart! 
+
+;------------------------------------------------------------------------------
+Packen:
+
+Programme können mit zx7 gepackt werden und belegen dann weniger Speicher.
+gepackte Programme müssen im Header an Offset 4 ein "Z" bekommen.
+;------------------------------------------------------------------------------
+packedroms.asm:
+
+Die Programme in den ROMs werden anhand der Zusammenstellung in packedroms.asm
+bzw. z80files.inc aufgenommen. Ein Makro "addfile" erzeugt den korrekten Header.
+
+um ein bin-File komprimiert zu speichern, muss einfach die Endung .zx7 angehängt werden
+Der Make-Prozess übernimmt die Konvertierung von .Z80 zu .bin bzw. zu bin.zx7,
+man muss die Konverter und Packer nicht selbst zusammenstellen.
+;------------------------------------------------------------------------------
+Historie:
+
+16.02.2023: erste Alpha-Version:
+
+Ich hatte einfach ein paar Programme zusammengesucht, damit ich die 
+Modulsoftware im Emulator testen konnte. Diese Software ist ohne weitere Tests 
+zusammengestellt. 
+
+Maschinencode-Programme starten automatisch, wenn eine Startadr. angegeben ist 
+oder aber, wenn sie die Autostartkennung "SCHnnnn" am Anfang besitzen.
+BASIC-Programme (Grafik-BASIC 3.2) starten ebenfalls automatisch.
+;------------------------------------------------------------------------------
+
+Ordnernamen: kein _ , kein Leerzeichen!
+Dateinamen: kein Leerzeichen!
+Adressraum 1880..18FF wird von der Paket-Software genutzt

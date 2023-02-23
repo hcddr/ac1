@@ -1,0 +1,127 @@
+                                       Berlin, September 1988
+
+
+             CP/M fuer AC-1 (RAM-Disk-Version)
+             ---------------------------------
+
+ Kopie der Musterkassette des Amateurcomputerclubs Berlin
+(CP/M --> eingetragenes Warenzeichen von Digital Research)
+
+Mit der auf dieser Kassette  enthaltenen  Software (Betriebs-
+system  CP/M  und einigen  Programmen)  und den auf der Juli-
+bzw. Septemberveranstaltungen  des ACC-Berlin gezeigten mini-
+malen Hardwareaenderung am 64k-AC-1 (zusaetzlich 4 Dioden und
+ein halber DL и74) ist ein erstes Kennenlernen und Nutzen des
+Betriebssystems CP/M auf dem AC-1 moeglich.
+
+Speicheraufteilung des AC-1 mit Umschaltung auf CP/M:
+
+
+  FFFF ------------     FFFF ------------
+       I          I          I   BIOS   I
+       I          I     F6ии ------------
+       I          I          I   BDOS   I
+       I          I     E8ии ------------
+       I          I          I   CCP    I
+       I   RAM    I     Eиии ------------
+       I          I          I   RAM-   I
+       I          I          I   DISK   I
+       I          I          I..........I
+       I          I          I          I
+       /          /          /          /
+       /          /          /          /
+       I          I          I          I
+  2иии ------------          I          I     -----------
+       I  S-RAM   I          I   TPA    I     I  S-RAM  I
+  17FF ------------          I          I     -----------
+       I   BWS    I          I          I     I   BWS   I
+  1иии ------------          I          I <-> -----------
+       I          I          I          I     I         I
+       I   ROM    I      1ии ------------     I   ROM   I
+       I          I          I   Page и I     I         I
+     и ------------          ------------     -----------
+
+                             OUT (1CH),1      OUT (1CH),и
+
+       AC-1  normal          AC-1 mit CP/M-Betriebssystem
+
+
+Was geht damit nun schon ?
+
+Alles  was mit grossen  Dateien und vielen Overlays  arbeitet
+natuerlich  nicht, leider auch nicht 'Wordstar'.  Aber dieses
+Textprogramm  hat einen kleinen Bruder 'Wordmaster',  der ca.
+12k lang ist, nur ein Helpmenue  hat und trotzdem  schon eine
+Menge kann. Ausprobiert wurden schon  Turbo-Pascal,   MBasic,
+POWER, NSWEEP, WORDMASTER und einige Spiele. So bietet Turbo-
+Pascal  bei 16k RAM-Disk  immernoch  488и freie Bytes an. Zum
+Lernen reicht  das vorerst  aus. Bei MBasic  sind es mehr als
+das Doppelte an frei verfuegbarem  Speicher. Die Spiele brau-
+chen fast alle 8и Zeichen  pro Zeile,  aber sie lohnen  meist
+nicht der Muehe sie anzupassen.
+Alle bisher probierten Programme liefen ohne jede Aenderung !
+Weitergehende Informationen  sind vorerst den Vortraegen beim
+ACC bzw. der Literatur zu entnehmen.
+
+Diese Musterkassette enthaelt folgende Programme:
+  Vorwort    - Nutzungshinweise
+  CLIST'^'@' - Kassetten - Listprogramm
+  CP/M AC-1  - CCP/BDOS/BIOS fuer AC-1
+  POWER.COM  - Dienstprogramm
+  TURBO.MSG
+  TURBO.COM  - Turbo-Pascal
+  TURBO.OVR
+  WM.HLP
+  WM.COM     - Textverarbeitung
+  MBASIC.COM - Basic-Interpreter
+  BRUN.COM   - Laufzeitmodul fuer kompilierte Basic-Programme
+  PIP.COM    - Dienstprogramm
+  ED.COM     - Zeileneditor
+  IRR.COM    - 3D-Labyrint (Spiel)
+
+
+                       H I N W E I S
+                       -------------
+Die auf dieser Musterkassette  enthaltene  Software  ist aus-
+schliesslich fuer den  p e r s oe n l i c h e n  Gebrauch auf
+dem AC-1 bestimmt. Die kostenlose  (!) Weitergabe ist gestat-
+tet und erwuenscht.  Jedwede  gewerbliche  oder  kommerzielle
+Nutzung,  Verkauf  usw. (auch gegen sogenannter  Unkostenbei-
+traege)  ist  verboten.  Eine  teilweise  oder  vollstaendige
+Uebernahme  der Software  oder Beschreibungen  von dieser Mu-
+sterkassette  (egal,  ob modifiziert  oder nicht)  bedarf der
+Zustimmung der Autoren und Herausgeber.  Aenderungen,  Strei-
+chungen und Zusaetze in diesem Textfile sind nicht gestattet.
+Eine Uebernahme  auf Kassetten  oder andere Datentraeger  des
+bzw. durch  den 'SCCH'  ist aus den oben  genannten  Gruenden
+nicht gestattet.  Bei der kompletten  bzw. teilweisen Weiter-
+gabe der Software  von dieser  Kassette  ist dieses  Textfile
+weiterzugeben.  Alldies  gilt in gleicher  Weise fuer die zu-
+gehoerige Hardwaremodifikation.
+Wir bitten um Verstaendnis fuer diese Massnahmen, aber leider
+zwingen uns schlechte Erfahrungen (z.Bsp. mit dem SCCH) noch-
+mals zu diesen Hinweisen.
+
+
+              Viel Erfolg bei der Arbeit mit
+
+               dem AC-1 und dieser Software
+
+                 wuenschen die Autoren und
+
+                      der ACC Berlin.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.

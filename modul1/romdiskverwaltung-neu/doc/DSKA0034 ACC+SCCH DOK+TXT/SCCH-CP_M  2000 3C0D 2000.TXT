@@ -1,0 +1,222 @@
+
+          Beschreibung des Betriebssystems CP/M fuer AC1
+          ==============================================
+          Version: CPMAC1/V:2.и
+
+Das auf dem AC1 implementierte CP/M entspricht weitgehend der
+Version  CP/M 2.2 . Es wurde ein spezielles BIOS fuer den AC1
+geschaffen.
+Voraussetzung fuer die Lauffaehigkeit auf dem AC1 ist ein auf
+64 kByte  ausgebauter RAM , die Speicherverwaltung nach
+Bauanleitung Modul1/SCCH und die Ramdisk nach Modul3/SCCH.
+Es wird Modul3 mit 64k,128k,256k und 512k unterstuetzt.
+Das BIOS benutzt den Monitor fuer die Realisierung der
+Tastatur-,Bildschirm- und Kassettenroutinen. Fuer die Arbeit
+mit Kassette wurden die residenten Kommandos im  CCP
+erweitert (LOAD,CSAV).Da die Diskette Voraussetzung fuer eine
+sinnvolle  Arbeit mit CP/M ist wurde ein Diskettenlaufwerk
+im RAM simuliert.
+Die Groesse der Ramdisk kann entsprechend den jeweiligen Be-
+dingungen vor dem Start des CP/M modifiziert werden.
+Auf RAM-Adresse F63Eh wird je nach verwendetem Modul3 die
+Anzahl der 64k Speicherbloecke angeben:
+
+   Bestueckung Modul3      I   RAM-Adr. F63Eh
+   ------------------------------------------
+     1 *  64k              I       и1
+     2 *  64k              I       и2
+     1 * 256k              I       и4
+     2 * 256k              I       и8
+
+Der Start des CP/M erfolgt mit " J F6ии " vom Monitor aus.  Bei
+Erststart muss die Ramdisk initialisiert werden ( Taste "Y").
+Ansonsten  bleibt der Inhalt der Ramdisk bei wiederholtem Start
+erhalten ( jede andere Taste ).
+Beim Initialisieren der Ramdisk wird absteigend von der
+hoechsten Spur/Sektor jeder Sektor mit E5h beschrieben und
+sofort kontrollgelesen ( "Ramdisk-Error"). Anschliessend wird
+das CCP auf Spur и geschrieben.
+Noch vor der Abfrage "Initialisieren....." wird die RAM-Zelle
+F63Eh kontrolliert ("Ramdisk-Error") und der Diskettenpara-
+meterblock spezifiziert.
+
+Das  Betriebssystem CP/M besteht aus des drei Hauptteilen BIOS
+(Basic  Input/Output  System),   BDOS  (Basic  Disk  Operating
+System) und CCP (Console Command Processor).Dabei sind BDOS und
+CCP  voellig unabhaengig von der konkreten Hardware des
+Rechners.  Die Verbindung zur Hardware wird ausschliesslich
+durch das BIOS  hergestellt.
+
+ Aufteilung des 64k RAM's:
+
+ ииииh - ииFFh : CP/M Verstaendigungsbereich
+ и1ииh -       : TPA-freier Programmbereich
+ Eиииh - E8ииh : CCP
+ E8ииh - F5FFh : BDOS
+ F6ииh - FFFFh : BIOS
+
+
+ Tastatur: CNTRL+S   - Stop der laufenden Bildschirmausgabe
+
+           CNTRL+P   - Einschalten Drucker parallel zur
+                       Bildschirmausgabe
+
+           BREAK-NMI - fuehrt zu Warmstart. Aber nur wenn
+                       gerade der Monitor zugeschaltet ist,
+                       da im CP/M-RAM die NMI-Adresse nicht
+                       nutzbar ist.
+
+
+Der Druckerkanal ist in der Version 2.и mit der V24-Schnitt-
+stelle des Monitors V:8.и mod:6/88 verbunden.
+
+Die Tastaturroutine wurde gegenueber Version 1.и verbessert.
+
+Im vorliegenden BIOS wird die Steuerung ueber das I/O-Byte
+(Adr .иии3h)  nicht unterstuetzt. Die Bildschirm-Steuerzeichen
+sind SCP-kompatibel, zusaetzlich existieren einige
+Erweiterungen:
+
+ Steuerzeichen  Wirkung
+ --------------------------------------------------------------
+
+ ииh            NOP (keine Wirkung)
+ и1h            Cursor links oben (home)
+ и7h            akustisches  Zeichen an  Tastatur  (i.a. nicht
+                vorh.,  dann  Blinken  der Lampen  neben  Stop-
+                Taste bzw. der Statuszeile beim PC1715)
+ и8h            Cursor zurueck
+ иah            Linefeed (neue Zeile)
+ иch            Bildschirm  loeschen (verzoegert zum Lesen  der
+                zuletzt ausgegebenen Bildschirmzeilen), Cursor
+                links oben
+ иdh            Carriage Return (an Zeilenanfang)
+ иeh            Umschalten auf 2. Zeichensatz (nur PC1715)
+ иfh            Umschalten auf 1. Zeichensatz (nur PC1715)
+ 14h            Rest des Bildschirms loeschen
+ 15h            Cursor nach rechts
+ 16h            Rest der Zeile loeschen
+ 18h            Zeile loeschen, Cursor an Zeiilenanfang
+ 1ah            Cursor eine Zeile hoch
+ 1bh            Einleitung  Cursorpositionierfolge, die naech-
+                sten beiden Bytes beinhalten Zeile und  Spalte
+                Offset ииh oder 8иh
+ 7fh            Delete (streichen Zeichen links vom Kursor)
+ и4h            nicht invers
+ и5h            invers
+ и6h            nicht invers
+ 87h            invers
+
+ Feste Adressen im unteren Hauptspeicher
+
+      ииh..и2h       JP   BIOS+3    (Warmstart)
+           и3h       IOBYTE
+           и4h       User/Defaultdrive
+      и5h..и7h       JP   BDOS
+      и8h..37h       frei           (fuer RST-Routinen nutzbar)
+           38h       JP   Break
+      3bh..3fh       reserviert
+
+Als  Scratch-Bereich des BIOS sind in CP/M die Zellen 4иH  bis
+4FH freigehalten.
+
+ Besonderheiten des CCP
+
+Das CCP enthaelt gegenueber der Version CP/M 2.2 einige Erwei-
+terungen. Es existieren zusaetzliche residente Kommandos:
+
+
+LOAD "name" : Es wird die unter name angegebene Datei von
+              Kassette  geladen (TURBO-TAPE). Die Dateien
+              werden in den RAM  geladen und danach nach TPA
+              (1ииh) verschoben. Da zum   Einlesen der MONITOR
+              zugeschaltet wird, muss die Ladeadresse >=
+              2иииh sein. Achtung, bei zu grosser Dateilaenge
+              >48k kann das CP/M ueberschrieben werden!
+              Das Programm kann nach fehlerfreier Einlesung
+              mit dem Kommando GO gestartet werden. Es kann
+              auch vorher mit dem SAVE-Kommando auf die
+              RAM-Disk abgespeichert werden und von dort
+              wiederholt gestartet werden .
+
+CSAV filename : Die unter filename auf der Diskette befind-
+                liche Datei wird nach TPA(2иииh) geladen und
+                auf Kassette ausgegeben. Es wird die Laenge
+                der Datei angezeigt. Die maximale Filelaenge
+                ist dabei 48kByte ( Eиииh-2иииh ). Laengere
+                Files koennen nicht auf Kassette ausgegeben
+                werden.
+
+INIT        : Initialisierung der Ramdisk wie bei Kaltstart.
+
+BYE         : Ruekkehr zum Monitor.
+
+
+aus CP/A resultierende Erweiterungen:
+-------------------------------------
+
+GO <beliebige Parameter>
+              Das letzte geladene Programm wird ohne Neuladen
+              aktiviert. Parameter koennen wie beim
+              Direktaufruf  angegeben werden.
+
+EXT filename
+              Das angegeben COM-File wird zu  einem  residenten
+              Kommando erklaert,  indem es vor BDOS, CCP und
+              vor  evtl. schon residenten zusaetzlichen
+              Kommandos im Hauptspeicher abgelegt wird, um bei
+              Aufruf statt von   Diskette von dort nach 1ииh
+              geladen zu werden. Hierdurch verringert sich
+              jedoch der TPA entsprechend. Da residente
+              Kommandos nur maximal 4 Zeichen lang    sein
+              duerfen, trifft dies auch auf <filename> zu.
+
+RES           Streichen aller zusaetzlich residenten Kommandos
+
+HELP          Ausgabe einer Liste aller z.Zt. residenten
+              Kommandos
+
+Die anderen CCP-Kommandos entsprechen den bekannten Funktionen
+CP/M 2.2:
+
+ - REN  : Umbennen einer Datei
+ - ERA  : Loeschen von Dateien
+ - TYPE : Anzeigen des Inhaltes einer Datei
+
+ - SAVE nn filename
+
+          TPA wird in Laenge nn Speicherseiten von 1ииh
+          auf die Ramdisk gespeichert. nn wird bei LOAD
+          bereitgesellt.
+
+Mit Version CPMAC1/V2.и sind bisher folgende Programme erprobt:
+
+ - POWER,STAT,TURBO-PASCAL,DU(ZSID),REDABAS,SUPERCALC,
+   ASM,LINKMT,REASM,BASI,TP
+
+Prinzipiell muessten alle CP/M-Programme laufen.
+
+In Version 2.и laufen auch Programme die den CCP ueberlagern
+und mit Warmstart enden, da das CCP von der einen Sytem-
+spur nachgeladen wird, z.B. LINKMT.
+
+Die auf der Musterkassette befindlichen Programme SuperCalc
+,TP,REDABAS und TURBO-PASCAL wurden auf das Bildschirmformat
+32*64 des installiert.
+
+Es empfiehlt sich bei haeufiger Anwendung des CP/M den
+Zeichengenerator mit den Sonderzeichen "eckige und ge-
+shweifte Klammer" zu benutzen, da diese oft benutzt werden.
+
+Entgegen sonstigen Gepflogenheiten wird die Quelle des BIOS
+mit veroeffentlicht ! Dies soll denjenigen helfen, die auf
+Grund anderer Hardware im BIOS Aenderungen vornehmen
+moechten (Drucker oder Ramdisk).
+
+Ich moechte mich bei Juergen Beisler fuer seine Mitarbeit
+am BIOS bedanken, ebenso bei Andreas Hengst fuer Modul3.
+
+
+
+
+  Quedlinburg, den 2и.7.88        Manfred Richter

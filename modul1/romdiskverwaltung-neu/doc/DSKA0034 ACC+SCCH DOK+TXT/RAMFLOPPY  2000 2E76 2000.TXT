@@ -1,0 +1,115 @@
+              -----------------------
+              R A M  -  Floppy   SCCH
+              -----------------------
+
+Um die vom SCCH  entwickelte  Ramfloppy  auch  von der Monitor-
+ebene besser  ausnutzen  zu können,  werden  im folgenden  zwei
+Programme vorgestellt.
+Die Schaltung  arbeitet  nach  dem Prinzip  des Memory-Mapping,
+welches  im Heft  MP 3/87  auf  Seite  83 gut beschrieben  ist.
+In der  Floppy  des   SCCH  hat das Konfigurationsregister  die
+Portadresse  15H.  Mit  Bit  Ø-3  kann  die jeweilige  64k-Bank
+ausgewählt  werden,  Bit  6 wird  1, wenn  die  Floppy  gelesen
+und Bit 7 wird 1, wenn sie beschrieben wird.
+Die Ram-Floppy  wird  z.B. vom CP/M V.2.Ø  von Manfred  Richter
+genutzt.  Zur  wesentlichen  Erhöhung  des Komforts  trägt  das
+folgende Programm bei.
+
+              SAVE/LOAD FLOPPY
+              ----------------
+
+Mit diesem  kann unter  Angabe  von der Länge  in einer glatten
+dezimalen  Zahl und der Angabe des Namens der Inhalt der Floppy
+im Turbotapeformat  auf Kassette ausgeschoben  werden. Das File
+bekommt automatisch den Typ X.
+Start des Programms: f - cr
+
+Es erscheinen folgende Menüpunkte:
+
+           - 1...Ramdisk retten
+           - 2...Ramdisk laden
+           - 3...Aufzeichnung testen
+           - 4...Anfang suchen
+           - 5...Monitor
+
+     zu 1
+
+     Es wird  immer  vom  Anfang  der Ramdisk,  das heisst  von
+     der 1. 64k-Bank  und von Adresse  Ø die anzugebende  Länge
+     auf Kassette  gesavt.  Dazu  werden  immer  32 Byte in den
+     Ram  transferiert,  entsprechende  Zeiger  auf diese  Ram-
+     adresse  gesetzt  und  der  Block  unter  einer  laufenden
+     Nummer auf Kassette ausgegeben.
+
+     zu 2
+
+     Bei Angabe  des Filenamens  reichen  soviel  Zeichen,  wie
+     zur Kennung nötig sind.
+     Wurde das File gefunden, erscheint auf einer Zeile
+     ständig  die  Ausschrift  "laden".  Bei  Ladefehlern  wird
+     das überschrieben mit "Fehler! korrigieren (N)?".
+     Mit N erreicht  man, daß dieser  Block  fehlerhaft  einge-
+     lesen  bleibt.  Mit  jeder  anderen  Taste  kann  man ver-
+     suchen, den Block zu korrigieren.
+     Erscheint   "zurück",  ist  die  Kassette  zurückzuspulen.
+
+     zu 3
+
+     Aufzeichnung testen entspricht dem 'Verify'.
+
+     zu4
+
+     Weiß man z.B. nach dem Einlegen einer Kassette,  die nicht
+     gerade  auf  den Anfang  gespult  ist nicht,  ob man näher
+     am Anfang  oder  am Ende  ist, immerhin  dauern  128 kbyte
+     fast  7 Minuten,  kann  man sich  so die aktuellen  Block-
+     nummern anzeigen lassen. Mit Tastendruck Sprung
+     ins Menü.
+
+Das Programm wurde mit Hilfe von "TURBO LOAD/COPY"
+(c)  E.Ludwig,  Halle  von   J.Beisler,   Leipzig  geschrieben.
+
+              FLOPPYVERWALTUNG
+              ----------------
+
+Bei diesem Programm gibt es 3 Kommandobuchstaben:
+
+     z  cr     Sprung ins Menü unter gleichzeitiger
+               Suche  nach  Files  aller  Typen  auf der Floppy
+               und Auflistung  derselben
+
+     z. cr     nur Menü
+
+     zB cr     wie z cr, Auflistung nur Files vom Typ B
+
+     kaaaa eeee ssss"P  NAME  Abspeichern  auf  Floppy  von
+                              aaaa bis bbbb Startadr. ssss
+                              eines   Programmes   vom   Typ  P
+     k:"D name                Abspeichern einer Datei
+
+     k"B name                 Abspeichern  eines  Basiclistings
+                              keine   Angabe   von   Adressen!!
+
+Bei Files  vom  Typ  P kann  als Argument  3 eine  Startadresse
+angegeben werden. Nach dem Laden erfolgt ein CRC-Test
+mit Vergleich.  Ist durch  ein Fehler  auf der Floppy  das File
+nicht mehr in Ordnnung, wird das angezeigt und Autostart unter-
+drückt.
+Vor dem  Laden  eines  Basiclistings  vom  Typ  B muß ein evtl.
+vorhandenes  Programm  mit NEW gelöscht werden, ansonsten  wird
+das File von der Floppy  dahintergeladen  und die Zeiger  auto-
+matisch angepasst. Somit kann man auch Programme zusammenfügen.
+
+     qoooo"P  NAME            Laden   eines  Files unter Angabe
+                              einer   Ofsetadresse,   die   zur
+                              Ladeadresse   dazuaddiert   wird.
+                              Dabei  wird  ein evtl.  Autostart
+                              unterdrückt.
+
+Das Programm wurde von S.Kretzler, Leipzig geschrieben
+und für die spezielle Hardware der Ramfloppy des SCCH
+von mir angepasst.
+Bei Interesse  bin ich gern  bereit,die  mit EDAS geschriebenen
+Qellen zur Verfügung zu stellen
+
+                                    Jürgen Beisler

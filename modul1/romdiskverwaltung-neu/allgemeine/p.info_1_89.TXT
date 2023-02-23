@@ -1,0 +1,95 @@
+---------------------------------------------------------------
+ I N F O   1/89                AC1-Club Leipzig
+---------------------------------------------------------------
+
+Zuerst möchte ich mich bei den AC1-Freunden bedanken, die
+am Zustandekommen dieser Musterkassette beigetragen haben
+sowie bei denen, die sich bereit erklärt haben, die Kassette
+zu verbreiten.
+Man kann aber ungefähr einschätzen, daß die nächste Muster-
+kassette nicht vor Mai dieses Jahres herausgegeben wird. Wer
+also die 2. Kassette bestellen will, es hat vor April keinen
+Sinn. Programme dagegen sind jederzeit gefragt. Ihr könnt auch,
+um sicher zu gehen, daß Eure Kassette hier angekommen ist,
+eine an Euch selbst adressierte Postkarte beilegen, die ich nur
+in den Briefkasten zu stecken brauche.
+
+Kassetten bitte   o h n e  Hülle verschicken !!
+
+Diese scharfkantigen Hüllen zerschneiden die Umschläge !
+Es ist manchmal ein Wunder, daß in diesen kaputten Umschlägen
+die Kassetten noch darin sind. Am besten geht es, wenn sie
+zwischen zwei zusammengeklammerten Pappen liegen.
+
+Zu einigen Programmen der Mustekassette noch ein paar Hinweise:
+
+Es sind Programme dabei, die vom ACC-Berlin geschrieben wurden
+sowie auch welche, die den Zeichensatz des ACC benötigen.
+Letztere laufen mit dem 4-k-Zeichengenerator, der durch den
+SCCH verteilt wurde.
+Für die Berliner Programme ist es besten, wenn der Monitor 3.1
+als Ram-Monitor verwendet wird  (siehe Info 11/88).Es wird
+z.B. bei Forth zur Nutzung der Kassettenroutine  mitten in
+diesen hinein gesprungen.
+Zu dem Ram-Monitor noch folgendes:
+Das Flip-Flop wird auch durch den Befehl IN A,(16 bzw.17h)
+umgeschaltet, da die Logik nicht mit /RD verknüpft ist. Des-
+halb kommt es bei der Anwendung des Kommandos 'U' ,der ja
+jede mögliche I/O Adresse aussendet, zu Fehlschaltungen.
+Zu diesen kommt es auch, wenn jetzt Programme gestartet werden,
+die Interrupt verwenden. Bei der Bestätigung eines Interrupts
+durch die CPU sendet diese /IORQ sowie /M1 aus, wodurch z.B.
+/IOSEL 5 aktiv werden kann. Deshalb muß noch auf der AC1-
+Grundleiterplatte die /IOSEL-Bildung mit /M1 verknüpft werden.
+
+                    ---
+                  -!D18!
+                  -!   !
+                  -!   o--->D2
+       /A5 -!<-+---!   !
+               !    ---
+       /M1 -!<-+
+
+Diese Zusatzlogik verwendet der ACC-Berlin mit zum Ausblenden
+der unteren 8 kbyte.
+Wir haben in Leipzig die Schaltung zum Betreiben eines Ram-
+Monitors  noch erweitert. Es kann mit einem Out-Befehl ein
+Schreibschutz für den Bereich Ø-FFFh eingeschaltet werden
+womit dann dieser Monitor wie auf einem Rom steht und alle
+Programme laufen. Bei Bedarf kann ich diese Schaltung ver-
+vielfältigen lassen und gegen Freiumschlag zuschicken.
+
+Auf der Musterkassette befindet sich ein Monitor 1Ø/88.
+Es handelt sich im Prinzip um den Monitor V.8.Ø des SCCH, das
+heißt, er ist bis auf den Betriebssystemwarmstart voll
+kompatibel. Wir in Leipzig verwenden ihn fast alle. Das
+bedeutet aber nicht, daß Ihr ihn nehmen müßt. Es fehlt darin
+die AC1-Kassettenroutine, dafür sind aber eine wesentlich
+verbesserte 'F' und 'D' Routine soviel vieles andere enthal-
+ten.Außerdem kommt man mit Reset wieder  aus jedem Programm
+heraus.
+
+Mit dem ZX-Loader kann man vom ZX-Spectrum generell alles
+einlesen. Es legt die Programmteile ab 2ØØØh ähnlich Multi-
+copy nacheinander durch 32 Sterne getrennt ab. Aus dem Header
+kann man dann die Originaladressen erfahren.
+
+Das Programmpaket X von E.Ludwig ist auch technisch und
+optisch neu überarbeitet. Der größte Vorteil ist, daß nicht
+mehr die Romdiscnummer Ø,1 oder 2 eingetragen wird, sondern
+das direkte Ausgabebyte auf den DS8212. Damit kann sich jeder
+weitere Rom's an die noch freien Bit's des 8212 anschließen.
+Größere Eproms sollten nicht unter 8ØØØh eingeblendet werden,
+damit kann z.B. beim Einsatz eines 27512 die Adresse A15
+an das Bit 1 des 8212 angeschlossen werden. Beim Einblenden
+der oberen 32 kbyte ist dann zwar der Basicrom mit eingeschal-
+tet, aber das Umladen der Programme in den Ram erfolgt ja
+auch unter den Rom.
+Bei dem Programmpaket X V.2  können ab Adresse E1D2h die
+Startroutinen bzw. Anwenderprogramme eingetragen werden. Die
+Überschriften, die jetzt dastehen, dienen nur zur optischen
+Information und können mit dem 'P'-Befehl gelöscht werden.
+
+                   Viel Spaß mit der Musterkassette
+
+                   wünscht der AC1-Club Leipzig

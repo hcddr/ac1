@@ -1,0 +1,170 @@
+                 * AC-1 *  Musikprogramm
+                 -----------------------
+
+        Quelle: "Ein Musikprogramm fuer den Computer"
+                 von Walter Krautzig
+                 Funkschau 1979, Heft 2, S.1Ø5-1Ø9
+
+
+     Das im Folgenden beschriebene Programm kann belie-
+     bige Melodien, bis hin zu klassischen Solostuecken
+     spielen. Die  Moeglichkeiten, die dieses  Programm
+     bietet, sind  bereits recht erstaunlich, wovon man
+     sich anhand der  "kleinen Nachtmusik"  ueberzeugen
+     kann. Die Melodie wird  anhand einer  Melodieliste
+     abgearbeitet, die  an einer  beliebigen  Stelle im
+     RAM stehen kann. Die  Melodieliste enthaelt  neben
+     den Noten- und  Tonlaengencodes diverse Steuerzei-
+     chen, die z.Bsp. eine Umschaltung Legato/Staccato,
+     Pauseneinfuegung oder die Wiederholung ganzer Pas-
+     sagen moeglich machen. Das Tempo kann ebenfalls an
+     jeder Stelle geaendert werden. Die  entsprechenden
+     Spielanweisungen werden noch erlaeutert. Die Ton-
+     ausgabe erfolgt ueber den Tonbandkanal (Tastatur-
+     PIO Kanal B, Bit 6).
+
+     Das Programm belegt den Speicherbereich von 5ØØØ-
+     51FF. Die Melodieliste der  kl.Nachtmusik beginnt
+     bei 52ØØ und  endet bei  53FF. Diese ist, wie be-
+     reits gesagt, frei  verschieblich. Das  Musikpro-
+     gramm  dagegen ist speicherplatzgebunden. Es  be-
+     noetigt auch noch Arbeitszellen, die von 4FFØ bis
+     ca. 4FFF liegen.
+
+
+      Die Melodieliste
+      ----------------
+
+     Der Aufbau der Melodieliste soll an einem kleinen
+     Beispiel erlaeutert werden. Am  Beginn stehen im-
+     mer  4 Byte, die  grundlegende Informationen  zum
+     Spielverlauf tragen. Es folgen die  Bytes mit der
+     Codierung der Tonhoehen und  Laengen  bzw. Spiel-
+     anweisungen. Das ØF-Byte bildet den Abschluss der
+     Melodieliste.
+
+     Beispiel:  1. Byte   Ø1  - Anzahl  der  Strophen,
+                                wird vom  Programm aus
+                                eingetragen ,  m u s s
+                                aber als Speicherplatz
+                                reserviert werden
+                2. Byte   ØC  - Kennbyte   Spieltempo,
+                                besagt,  dass das fol-
+                                gende  Byte  das Tempo
+                                angibt
+                3. Byte   ØA  - gibt das Tempo an, mit
+                                dem die Melodie abge-
+                                spielt wird (Hex-Zahl)
+                                wird auch vom Programm
+                                eingetragen, Speicher-
+                                platz freihalten
+                4. Byte   Ø8  - Kennbyte  Diskant oder
+                                Bass, beim  AC-1  ohne
+                                Bedeutung
+                5. und folgende Bytes  beinhalten  die
+                   Informationen ueber  Ton und Laenge
+                   der Noten bzw. die Spielanweisungen
+          letztes  Byte   ØF  - Abschluss der Melodie-
+                                liste
+
+     Beispiel Tonleiter:  (eine Oktave ohne Halbtoene)
+
+     ØØ ØC ØA Ø8  11 21 31 39 49 59 69 71 ØF
+                 (c  d  e  f  g  a  h  c)
+
+     Diese Bytefolge wird in einen  freien RAM-Bereich
+     mittels  M-Befehl  eingetragen  und das  Programm
+     mit 'm' angesprungen. Nacheinander  werden nun im
+     Dialog die  Anfangsadresse der  Melodieliste, das
+     gewuenschte Tempo und die Anzahl der Wiederholun-
+     gen eingegeben (alles in HEX). Nach dem Abspielen
+     der Melodie meldet sich der Rechner wieder im Mo-
+     nitor und das Programm kann erneut gestartet wer-
+     den ('m').
+
+
+      Spielanweisungen
+      ----------------
+
+     Die  nachfolgend  aufgefuehrten  Spielanweisungen
+     koennen an einer beliebigen  Stelle in der  Melo-
+     dieliste stehen. Sie werden im Programm wie folgt
+     verarbeitet:
+
+     Ø8 - Umschaltung auf Diskant (nicht im AC-1)
+     Ø9 - Umschaltung auf Bass    (nicht im AC-1)
+     ØA - Anfang des  Wiederholungsteils
+     ØB - Ende   des  Wiederholungsteils.  Sind  beide
+          Durchgaenge gleich lang, so ist am  Ende des
+          Wiederholungsteils 2x ØB zu  setzen. Hat der
+          Wiederholungsteil unterschiedliche Endungen,
+          ist ØB am  Anfang und am  Ende des Teils  zu
+          setzen, der beim ersten Durchgang anders ge-
+          spielt wird, als bei der Wiederholung.
+     ØC - Tempo.Das gewuenschte Tempo ist als Hex-Zahl
+          hinter ØC anzufuegen.
+     ØD - Staccato-Umschaltung  (kann  durch ØE wieder
+          aufgehoben werden). Die  Toene  klingen  nur
+          kurz an, der Rhytmus  bleibt aber  erhalten.
+     ØE - Legato-Umschaltung, ist  erforderlich,  wenn
+          Staccato abgeschaltet werden soll. Das  Pro-
+          gramm startet im Legato.
+     ØF - Strophenende. Muss stets als letztes Byte in
+          der Melodieliste stehen.
+
+
+      Notencodes
+      ----------
+
+     Die Notencodes beinhalten neben der Frequenz auch
+     die Laengeninformation. Das erste Halbbyte traegt
+     die Tonhoeheninformation und das zweite  Halbbyte
+     die Tonlaenge. Die Laengen u. Frequenzen sind den
+     Tabellen zu entnehmen.Sollen die Noten durch Pau-
+     sen getrennt werden, so ist anstatt der Frequenz-
+     information eine Ø in das 1.Halbbyte einzutragen.
+     Die  Laenge  der Pausen ist analog der Tonlaengen
+     anzufuegen.
+
+     Tonhoehentabelle:       ö         (2.Teil)
+                             ö
+     Ton   Frequenz   Code   ö   Ton   Frequenz   Code
+                             ö
+     c 1    261,6      1o    ö   dis    622,2      8+
+     cis    277,2      1+    ö    e     659,3      9o
+     d      293,7      2o    ö    f     698,5      9+
+     dis    311,1      2+    ö    fis   74Ø,Ø      Ao
+     e      329,6      3o    ö    g     784,Ø      A+
+     f      349,2      3+    ö    gis   83Ø,7      Bo
+     fis    37Ø,Ø      4o    ö    a     88Ø,Ø      B+
+     g      392,Ø      4+    ö    ais   932,3      Co
+     gis    415,3      5o    ö    h     987,8      C+
+     a      44Ø,Ø      5+    ö    c 3  1Ø46,5      Do
+     ais    466,2      6o    ö    cis  11Ø8,7      D+
+     h      493,9      6+    ö    d    1174,7      Eo
+     c 2    523,2      7o    ö    dis  1244,5      E+
+     cis    554,3      7+    ö    e    1318,5      Fo
+     d      587,3      8o    ö    f    1396,9      F+
+
+
+     Tonlaengentabelle:
+
+                    1    1    3    1    3    1    3
+     Notenlaenge    -    -    -    -    -    -    -
+                   16    8   16    4    8    2    4
+
+     2.Halbb. = o   1    2    3    4    5    6    7
+     2.Halbb. = +   9    A    B    C    D    E    F
+
+
+     Beispiele:  1/4  Note c 2   = 74
+                 1/8  Note dis 3 = EA
+                 3/16 Note e 1   = 33  u.s.w.
+
+
+
+     So, das war's. Bleibt  nur noch  viel Spass beim
+     Programmieren zu wuenschen. Und nicht vergessen:
+
+     ES IST NOCH KEIN MEISTER VOM HIMMEL GEFALLEN !!!
+     .

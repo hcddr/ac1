@@ -1,0 +1,64 @@
+
+            Kurzbeschreibung Flugsimulator AC1
+            ----------------------------------
+
+Quelle   : Simul-X (Chip 8/84)
+
+
+Tasten   : Triebwerk    (alle Tasten etwas laenger druecken)
+           1 - max. Schub
+           Q - Schub + 1
+           A - Schub - 1
+           Y - Gegenschub (reverse)
+
+           Steuerknueppel
+           G - links
+           J - rechts
+           Z - hoch
+           N - runter
+           H - Maschine waagerecht
+
+           sonstige Funktionen
+           W - Fahrwerk rein/raus
+           F - Landeklappen rein/raus
+           B - Bremsen fest/los
+
+           V - Funkfeuerfrequenz eingeben
+           K - Kurs eingeben
+           C - Autopilot ein/aus
+           M - Karte/Cockpit
+           P - Durchstarten bei Landeanflug
+
+
+Funkfeuer: Ort       Kurs     Frequenz
+          -----------------------------
+           Paris     81       111.2 MHz
+           Bruessel  45       114.6 MHz
+           Lyon      168      116.3 MHz
+           Mailand   352      113.7 MHz
+           Marseille 138      117.1 MHz
+
+
+Start    : Bremsen loesen
+           max. Schub einstellen
+           Maschine gerade halten
+           ab 15и Knoten hochziehen
+           Fahrwerk rein
+           ab 2ии Knoten Landeklappen rein
+           Schub reduzieren
+
+Landung  : auf 16ии bis 18ии Ft runtergehen, Kurs halten
+           Geschwindigkeit reduzieren
+           unter 24иKn Klappen raus
+           Achtung! unter 15иKn schmiert die Maschine ab
+           bei Erscheinen des Markers(##) (DME ca.1) Maschine
+           in Mitte des ILS halten
+           bei 5и...3и Ft Maschine waagerecht stellen
+           nach Landung Bremse fest, Gegenschub
+
+
+
+
+
+
+.

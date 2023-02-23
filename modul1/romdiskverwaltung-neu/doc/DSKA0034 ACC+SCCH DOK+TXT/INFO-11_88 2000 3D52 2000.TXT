@@ -1,0 +1,284 @@
+
+
+** INFO 11/88 **
+
+
+A.  A L L G E M E I N E S
+=========================
+Der SCCH wird die weitere Betreuung des AC1 nicht mehr über-
+nehmen und sie überraschend dem AC1-Club Leipzig übergeben.
+Natürlich ist er sich im klaren darüber, daß das AC1-Konzept
+des SCCH weitergeführt werden muß und daß es auch eine Stel-
+le geben muß, wo die Fäden zusammenlaufen.
+Trotzdem wird sich in der Art und Weise der Zusammenarbeit
+der AC1-Freunde etwas ändern, da er nicht das gleiche Fiasko
+mit den Musterkassetten erleben will und auch nicht die Mög-
+lichkeiten hat, viel zu Kopieren oder Ausdrucke in großen
+Mengen herzustellen.
+Schwerpunkte bei der weiteren AC1-Entwicklung sollen sein:
+
+  1. Modul1: Aktualisierung
+  2. Modul2: Vollgrafik des ZX-Spectrum
+             Ausbau bis zur vollen Kompatibilität bis auf
+             die Taktfrequenz
+  3. Modul3: RAM-Floppy 64 bis512 KByte
+
+
+B.  S O F T W A R E A U S T A U S C H
+=====================================
+Statt des Versendens von Musterkassetten hat sich der Club
+folgendes gedacht:
+Alle AC1-Freunde, die Programme haben, die von Interesse für
+die anderen sein könnten und die nicht auf den Musterkasset-
+ten des SCCH erschienen sind, schicken sie zur zentralen Erfas-
+sung nach Leipzig. Das könnte z.B. auch mit TPG geschriebene
+Hinweise oder Erweiterungen des AC1 sein, die aber nicht mit
+dem Konzept des AC1 kollidieren dürfen.
+Dort werden diese Programme gesammelt bis eine Kassette voll
+ist. Weiterhin können leere Kassetten zum Bespielen mit der
+Musterkassette versand werden. Eine bestimmte Menge von Kas-
+setten werden auch bespielt, gleichzeitig wird dann dieser
+Name auf eine Liste gesetzt. Andere AC1-Freunde erhalten dann
+bloß noch die Namensliste. Es wird erwartet, daß jeder, der
+kostenlos Programme überspielt bekommt, auch bereit sein muß,
+ein bischen Zeit zu opfern. Mit Multi-COPY ist das ja kein so
+großes Problem. Die Kontakte zwischen den AC1-Freunden werden
+dazu auch noch gefördert.
+Wenn also ein AC1-freund eine Kassette zum Bespielen nach
+Leipzig schickt, kann ihm folgendes passieren:
+
+  1. Es geschieht eine Weile garnichts, weil noch keine neue
+     Musterkassette fertig ist.
+  2. Es kann passieren, daß er die Musterkassette bespielt
+     bekommt und sein Name für diese eine Kassette auf einer
+     Verteilerliste erscheint
+  3. Er bekommt auf der Kassette ein Inhaltsverzeichnis der
+     Musterkassette mit einer Verteilerliste.
+
+
+C.  M O D U L  1
+================
+Es hat ich im Nachhinein gezeigt, daß auf Grund der noch et-
+was anderen als geplanten Entwicklung im Modul1 einige Ände-
+rungen nötig bzw. vorteilhaft sind.
+
+  1. Geblieben ist die Ansteuerung des 8212 und 82Ø5.
+
+  2. Entfallen können folgende Funktionen:
+     + DS8212 Bit4: Einblendn Farbspeicher
+     + DS8212 Bit5: Hintergrund Blau
+     + DS8212 Bit6: Einblenden Zeichengenerator
+
+  3. Folgende Funktionen können vereinfacht werden:
+
+     + Einblenden 2764 (Programmpaket X)
+     -----------------------------------
+
+                      --
+       Bit 3 8212----!Ø2!
+                     !  o-----
+       Pin 7 82Ø5----!  !    !
+                      --     !    --
+                             ----!ØØ!    --
+                                 !  o----CE 2764
+       Bit Ø 8212----------------!  !
+                                  --
+
+
+     + Einblenden BASIC-ROM (2764 oder 2718)
+     ---------------------------------------
+
+                      --
+       Pin14 82Ø5----!ØØ!
+                     !  o-----
+       Pin13 82Ø5----!  !    !
+                      --     !    --
+                             ----!ØØ!    --
+                                 !  o----CE BASIC
+       Bit 1 8212----------------!  !
+                                  --
+
+
+     + Einblenden ROM-Disk 27256
+     ---------------------------
+
+                      --
+       Pin 9 82Ø5----!ØØ!
+                     !  o-----
+       Pin 7 82Ø5----!  !    !
+                      --     !    --
+                             ----!ØØ!    --
+                                 !  o----CE 27256
+       Bit 3 8212----------------!  !
+                                  --
+
+
+     + Die /MEMDI-Steuerung muß zum funktionieren der
+       RAM-Floppy schneller gemacht werden
+     ------------------------------------------------
+
+                     --                --
+       --           !Ø4!              !Ø3!    -----
+       RD-----------!  o--------------!  o----MEMDI
+                    !  !              !  !
+                     --           !---!  !
+                     --    !------!    --
+       /CE Basic----!1Ø!   !
+                    !  !   !
+       /CE 27256----!  o----
+                    !  !
+       /CE  2764----!  !
+                     --
+
+
+     + Einblenden BWS und Farbattributspeicher ZX-Spectrum
+     -----------------------------------------------------
+       (eingeblende wird von #4ØØØ bis #5BFF)
+
+
+
+       Bit 7 8212-----------!
+                            !     --
+                      --    !----!1Ø!
+                     !Ø4!        !  !           ----
+       Pin13 82Ø5----!  o--------!  o---o-------ZCPU
+                     !  !        !  !   !
+                      --    !----!  !   !       -----
+                      --    !     --    ---!<---MEMDI
+       AB 1Ø---------!1Ø!   !
+                     !  !   !
+       AB 11---------!  o---!
+                     !  !
+       AB 12---------!  !
+                      --
+
+
+
+
+Zu der folgenden Schaltung noch ein paar Worte:
+Es ist nicht mehr möglich die beiden verschiedenen Konzeptio-
+nen des AC1, verbreitet durch ACC und SCCH, unter einen Hut
+zu bringen. Da es zwei Konzepte gibt, ist es ja auch nicht
+unbedingt ein Nachteil. Der Beweis ist z.B. der 4K-Zeichenge-
+nerator. Dieser "Konkurenzkampf" hat den AC1 weit nach vorn
+gebracht. Angekündigt ist durch den ACC-Berlin auch ein völ-
+lig anderer Monitor. Da damit zu rechnen ist, daß für diesen
+Monitor auch gute Anwenderprogramme kommen, gibt es eigent-
+lich nur eine Lösung: (Es handelt sich um eine Idee von Hanno
+Polzin, Leipzig)
+
+Es werden von Modul1 aus folgende Konfigurationen eingestellt
+
+    #ØØØØH -  #ØFFFH  dyn. RAM
+    #1ØØØH -  #1FFFH  BWS und stat. RAM
+    #2ØØØH - #ØFFFFH  dyn. RAM
+
+Damit kann ab sofort jeder Monitor der kommt in den RAM ab
+Adresse Ø transferiert und angesprungen werden. Bedingung ist
+natürlich, daß von U.Zellner oder anderen nicht wieder kleine
+Gehässigkeiten eingebaut werden. Aber so etwas läßt sich ja
+wieder entfernen.
+Weiterhin laufen keine Programme, die mit einem RAM-Test be-
+ginnen, da die Routine nie auf einen ROM stößt. Man kann als
+Trick bei solchen Programmen (z.B. TPG) mit dem Kommando
+W14 1 (CR) den 2764 ab Adresse #ØEØØØH einblenden. Die Konfigu-
+ration wird geschaltet:
+
+      Ein - OUT-Befehl auf Portadr. #16
+      Aus - OUT-Befehl auf Portadr. #17
+
+Beispiel des Startens eines RAM-Monitor's:
+Ein ab Adr.Ø  laufender Monitor steht auf #2ØØØH - #2FFFH.
+Ab Adr. #3ØØØH tippt man folgendes Programm ein:
+
+D3 16 21 ØØ 2Ø 11 ØØ ØØ Ø1 ØØ 1Ø ED BØ C3 ØØ ØØ
+
+Dann kann derMonitor mit J 3ØØØ gestartet werden.
+
+
+
+Die Schaltung realisiert auch das totale Ausblenden von
+#ØØØØH - #1FFFH
+-----------------------------------------------------------
+
+                      -------
+RESET----------------!R      !
+                     !  '74  !
+                --   !       !
+               !Ø4!  !       !
+A Ø------------!  o--!D      !
+               !  !  !       !
+          --    --   !       !
+A1-------!Ø4!  !Ø2!  !       !   --
+         !  o--!  o--!C     Q!--!ØØ!
+/IOSEL5--!  !  !  !   -------   !  o--
+          --    --            --!  ! !
+                         --   !  --  !
+                        !Ø4!  !      !
+A 12--------------------!  o--!      !
+                        !  !         !   --
+                         --      --  !--!Ø8!
+Bit 2 8212----------------------!Ø2!    !  o--o---AC1 Grundpl.
+                                !  o----!  !  !
+Pin15 82Ø5----------------------!  !     --   !
+                                 --           !   --
+                                              o--!Ø3!    -----
+                                              !  !  o----MEMDI
+                                              !--!  !
+                                                  --
+
+
+D.  M O D U L  2
+================
+Durch eine Fehlinformation stand in der letzten Info des SCCH
+zur Vollgrafik, daß die Speicher U6516 verwendet werden. Das
+stimmt nicht, sie eignen sich durch die getakte Adressenüber-
+nahme nicht. Die Schaltung der ZX-Spectrum kompatiblen Vollgra-
+fik des AC1 wurde von Manfred Richter,Quedlinburg, entwickelt.
+Die Vollgrafik wird in verschiedenen Ausbaustufen vorgestellt,
+die sogar soweit bis zur extra Tastatur gehen. Dadurch laufen
+aber alle (!) Anwenderprogramme des Spectrum.
+Wer schon mit dem Aufbau beginnen will, es handelt sich im
+Prinzip um die Schaltung aus der Practic 2/88 erweitert mit
+Farbe, Blinken, etc. Das Betriebssystem und die ersten Anwen-
+derprogramme werden auf der nächsten Musterkassette sein.
+
+
+E.  M O D U L  3
+================
+Für die RAM-Floppy existiert bis jetzt das CP/M von M.Richter
+mit den Anwenderprogrammen SUPERCALC, REDABAS, TURBO etc.
+Weiterhin ein Programm zum Ausschieben der gesamten Floppy auf
+Kassette, sowie eine Verwaltung vom Monitor aus.
+
+Leider gibt es bei W.Andreas aus Halle Schwierigkeiten mit der
+Herstellung der Leiterplatten.
+Nachfragen dahingehend sind an ihn zu richten.
+
+
+
+F.  K O N T A K T A D R E S S E  (in Leipzi)
+============================================
+    Jürgen B e i s l e r
+    Gärtnerstraße 83
+    L E I P Z I G
+    7 Ø 6 2
+
+
+Abschrift des INFO 11/88 des AC1-Club Leipzig
+
+
+G.  H I N W E I S
+=================
+Entsprechende Informationen über Schaltung Modul2 wurden beim
+AC1-Freak M.Richter von mir angefordert und hoffe diese bald
+zu erhalten. Ich werde wie bisher die Schaltpläne als Licht-
+pause weiterreichen. (A4: -.4ØM; A3: -.7ØM). Eine Kassette ist
+ebenfalls zur oben genannten Kontaktadresse unterwegs, so das
+nach Erhalt die Programme weitergegeben werden.
+
+
+Michael Behrens
+Herrmann-Schuldt-Str.5Ø/5Ø1
+R O S T O C K   4Ø
+2 5 4 Ø

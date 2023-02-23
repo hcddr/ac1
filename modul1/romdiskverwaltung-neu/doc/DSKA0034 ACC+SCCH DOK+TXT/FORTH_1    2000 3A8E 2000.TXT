@@ -1,0 +1,264 @@
+             Beschreibung Fig-Forth fuer den AC1
+            =====================================
+
+Inhaltsverzeichnis
+------------------
+1. Allgemeine Beschreibung von FORTH
+2. Der Forth-Aufbau
+3. Das Forth-Vokabular
+4. AC1-Anpassungen
+
+
+
+
+
+
+1. Implementierung von Forth auf dem AC1
+----------------------------------------
+Die vorliegende  Forth-Implementierung  entstand  in der Zeit
+von 7/87-5/88.  Sie  ist  vollstndig  Fig-Forth  kompatibel,
+wurde  jedoch  um einige  leistungsfhige  Befehle  sowie  um
+einen  Editor  erweitert. Durch  das  Einbinden  des  Editors
+ist  erst  die  vernnftige  Arbeit  mit  einem  Forth-System
+mglich geworden.
+
+1.1 Speicherplan von Forth
+--------------------------
+Der  Forth-Kern  sowie  die  Erweiterungen  belegen  den  RAM
+von 4ØØØH  bis  5FFFH. Ab 6ØØØH  benutzt  Forth  2ØH RAM fuer
+die  Organisation  des  Return-Stackpointers  sowie  fr  das
+Linken  von Vocabularen. Ab 6Ø2ØH  aufwrts  wchst  das neue
+Wrterbuch ,das durch den User angelegt werden kann.
+Von der Adresse  8ØØØH  bis FFFF  befindet  sich der RAMdisk-
+bereich. Die  Ramdisk ist  Forth-typisch  in  Blcke  zu  128
+Bytes eingeteilt.
+Von 7FFFH  rckwrts  befindet  sich  der Diskpuffer-bereich.
+Dieser  ist 42ØH  gro ,daran  schliet  sich nach unten  der
+Variablen-bereich sowie der Forth-Stack an.
+Der Bereich  von  6Ø2ØH  bis zur Stapel-Spitze  ist also  der
+nutzbare  Bereich  fuer  den User, um darin ein Forthprogramm
+zu compilieren und abzuarbeiten.
+
+An dieser  Stelle  sei  dem  Autor  der Hinweis  gestattet ,
+da  diese  Dokumentation  keine  Programmieranleitung   sein
+kann , dazu sei auf die Beitrge in der rfe, MP sowie auf das
+voraussichtlich  im  3.Quartal  erscheinende  Forth-Buch  von
+G.U.Vack verwiesen.
+Auerdem  erscheint  demnchst  in  der  MP  ein  Forth-Kurs.
+Ebenfalls  mchte  ich hier darauf  hinweisen, da in der DDR
+eine   Forth-Amateur-Interessengemeinschaft  existiert,  die
+es sich  zum  Ziel  gesetzt hat, die Verbreitung  der Sprache
+Forth  unter  Amateuren  zu  frdern. Nhere Ausknfte  bitte
+ber den Autor dieses Beitrags einholen. Adr. s.u.
+
+2. Aufbau des Wrterbuches
+--------------------------
+
+Das zentrale  Element  eines  Forth-Systems  ist  das Wrter-
+buch (Dictionary).  Alle im System  vorhandenen  Wrter  sind
+in ihm zusammengefat.
+
+2.1 Allgemeiner Aufbau eines Forth-Wortes im Wrterbuch
+-------------------------------------------------------
+
+    +---------------+
+    !               !
+    ! Codebody      !
+    !               ! PFA  Parameterfeld (-adresse)
+    +---------------+------------------------------
+    ! Zeiger        ! CFA  Codefeld      (-adresse)
+    +---------------+------------------------------
+    ! Zeiger        ! LFA  Linkfeld      (-adresse)
+    +---------------+------------------------------
+    !1!             !
+    ! Name im       !
+    ! ASCII-Code    !
+    !               !
+    !1!P!S!Lnge    ! NFA  Namensfeld    (-adresse)
+    +---------------+------------------------------
+
+Abb.1: Wort im Wrterbuch
+
+2.1.1. Namensfeld
+-----------------
+
+Das erste Byte des Namensfeldes hat folgenden Aufbau:
+
+Bit7            =1
+Bit6    P-Bit   =1  das Wort ist IMMEDIATE d.h. wenn es im
+                    Compilermode aufgerufen wird entfaltet
+                    es eigene Aktivitten, statt passiv
+                    compiliert zu werden.
+        P-Bit   =Ø  im Interpretermode ausfhrbares Wort
+Bit5    S-Bit   =1  Smudge-Bit, das Wort ist noch nicht
+                    fertig, es kann nicht aufgerufen werden,
+                    da es beim Durchsuchen des Wrterbuches
+                    nicht gefunden wird
+        S-Bit   =Ø  ausfhrbares Wort
+Bit4-BitØ           Lnge des Wortnamens (max. 31 Zeichen)
+
+Die folgenden Bytes im Namensfeld  enthalten den Wortnamen im
+ASCII-Code, wobei Bit 7 des letzten Zeichens =1 ist.
+
+2.1.2. Linkfeld
+---------------
+
+Das zwei Byte lange Linkfeld enthlt die NFA (Namensfeldadr.)
+des unterstehenden  Wortes.  Auf diese  Art und Weise  werden
+alle Wrter im Wrterbuch verknpft.
+
+     !            !
+     !            !
+     +------------+
+ LFA ! Zeiger-----!--+
+     +------------+  !
+     !            !  !
+ NFA !            !  !
+     +------------+  !
+ LFA ! Zeiger-----!--!--+
+     +------------+  !  !
+     !            !  !  !
+ NFA !            !<-+  !     ^
+     +------------+     !     ^
+     !            !     !     ^ steigende Adressen
+
+Abb.2. Verkettung des Wrterbuches ber LFA
+
+Das  Wrterbuch  wird,  von  oben  beginnend,  durchsucht.Das
+Linkfeld  der untersten  Eintragung  im Wrterbuch  enthlt Ø
+um das  Ende  zu kennzeichnen.  Der  Aufbau  von Namens-  und
+Linkfeld  ist bei jedem Worttyp  gleich.  Das Namens- und das
+Linkfeld  werden als Wortheader  bezeichnet.  Vom Worttyp ab-
+hngig ist der Aufbau des Code- und Parameterfeldes.
+
+2.1.3 Codefeld
+--------------
+
+Das zwei  Byte lange  Codefeld  enthlt  in jedem  Falle  die
+Startadresse  eines  ausfhrbaren   Maschinenprogramms.   Die
+spezielle Adresse ist vom Worttyp abhngig.
+
+2.1.4. Aufbau von Code- und Parameterfeld
+-----------------------------------------
+
+Folgende Worttypen sind mglich:
+-primitive Funktionen
+-komplexe  Funktionen
+-Konstanten
+-Variable
+-User-Variable
+
+2.1.4.1 Primitive Funktionen
+----------------------------
+
+Der Funktionsinhalt  des  Wortes  ist  ein Maschinenprogramm.
+Das Wort hat im Wrterbuch folgenden Aufbau:
+
+     +-----------+
+     ! JMP NEXT  !
+     !           !
+     ! Maschinen-!
+     ! code      !
+ PFA !           !<--+
+     +-----------+   !
+ CFA ! Zeiger    !---+
+     +-----------+
+
+Abb.3: Primitive Funktion im Wrterbuch
+
+Der Zeiger  im Codefeld  zeigt  auf  die  Anfangsadresse  des
+Parameterfelds,  in welchem  der Maschinencode  abgespeichert
+ist.  Dieses  Maschinenprogramm  hat  einige  Besonderheiten:
+- Der Hardwarestack  des Prozessors  wird  nur zur Parameter-
+  bergabe  genutzt,  in ihm sind keine Returnadressen  abge-
+  speichert,  Parameter  werden  mit POP vom und mit PUSH zum
+  Parameterstack gebracht
+- Das Programm wird nicht mit RET, sondern mit JMP NEXT abge-
+  schlossen
+- Das Register BC darf nicht verndert werden.
+
+2.1.4.2. Komplexe Funktionen
+----------------------------
+
+Eine komplexe  Funktion  wird durch  die Kombination  anderer
+Wrter realisiert.  Eine komplexe  Funktion hat im Wrterbuch
+folgenden Aufbau:
+
+     +-----------+
+     ! CFA ;S    !
+     ! CFA n     !
+     !   :       !
+ PFA ! CFA 1     !
+     +-----------+
+ CFA ! Adr DOCOL !
+     +-----------+
+
+Abb.4. Komplexe Funktion im Wrterbuch
+
+Das Parameterfeld  enthlt  eine  Adressliste  der CFA's  der
+Wrter, welche die Funktion  des Wortes im Namensfeld  reali-
+sieren. Als letzte Adresse einer komplexen  Funktion  ist die
+Adresse  von  ;S  (SEMIS)  in das  Parameterfeld  compiliert.
+Das Codefeld  enthaelt  die  Adresse  des  Maschinenprogramms
+DOCOL, welches zusammen mit SEMIS die Abarbeitung der Adress-
+liste ber den Returnstack  realisiert. Dieses Verfahren wird
+indirekt gefdelter Code genannt.
+
+2.1.4.3. Konstanten
+-------------------
+
+Eine Konstante hat im Wrterbuch folgenden Aufbau:
+
+     +------------------+
+ PFA ! 16-Bit-Konstante !
+     +------------------+
+ CFA ! Adr. DOCON       !
+     +------------------+
+
+Abb.5: Konstante im Wrterbuch
+
+Das Codefeld enthlt die Adresse des Maschinenprogramms DOCON
+Bei Aufruf  des Wortes  legt  DOCON  die 16-Bit-Konstante  im
+Parameterfeld auf den Parameterstack.
+
+2.1.4.4. Variable
+-----------------
+
+Eine Variable hat im Wrterbuch folgenden Aufbau:
+
+     +---------------------------+
+ PFA ! Platz fr 16-Bit-Variable !
+     +---------------------------+
+ CFA ! Adr. DOVAR                !
+     +---------------------------+
+
+Abb.6: Variable im Wrterbuch
+
+Das Codefeld enthlt die Adresse des Maschinenprogramms DOVAR
+Beim Aufruf  des Wortes  legt DOVAR die PFA (d.h. die Adresse
+der  Variablen  ) auf  den  Parameterstack.  Der  eigentliche
+Variablenwert   kann  ber  FORTH-Worte  verarbeitet  werden.
+
+2.1.4.5. User-Variablen
+-----------------------
+
+Die User-Variable hat im Wrterbuch folgenden Aufbau:
+
+     +----------------+
+ PFA ! Offset         !
+     +----------------+
+ CFA ! Adr. DOUSER    !
+     +----------------+
+
+Abb.7: User-Variable im Wrterbuch
+
+Das  Codefeld  enthlt  die  Adresse  des  Maschinenprogramms
+DOUSER.  Bei Aufruf  legt es ebenso wie DOVAR eine Variablen-
+adresse auf den Parameterstack.  Diese Adresse wird wie folgt
+gebildet:
+
+Adr:= User-Area-Pointer + Offset im Parameterfeld
+
+
+                        ENDE TEIL 1
+                        TEIL 2 FOLGT

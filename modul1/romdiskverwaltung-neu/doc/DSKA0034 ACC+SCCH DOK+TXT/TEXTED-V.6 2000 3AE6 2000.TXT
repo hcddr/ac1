@@ -1,0 +1,264 @@
+              Beschreibung TPGAC1
+            -----------------------
+
+Der im FuA H. 7 u. 8 1987 veroeffendlichte Texteditor
+wurde um nachstehende Funktionen erweitert. Alle
+bisher erstellten Textfiles sind nach wie vor ohne
+Einschraenkungen verwendbar. Das veraenderte Programm
+belegt jetzt den Bereich von 6иииH- 78FF. Der Text-
+speicher beginnt ab 8иииH und geht bis zum jeweiligen
+RAM-Ende. Eine Begrenzung des RAM durch den Anwender
+ist nicht vorgesehen.
+
+Fuer eine, vom Anwender einzugebende Druckroutine, kann der
+Bereich von 79ииH bis 7EFFH genutzt werden.
+Der Bereich von 7FииH bis 7FFFH ist mit variablen
+Arbeitszellen des Editors belegt und darf nicht
+ueberschrieben werden.
+
+  Alle Anpassungsadressen des Texteditors werden im
+Anhang aufgefuert. Zur Anpassung an die jeweilige
+Hardware werden alle Spruenge ueber einen Sprungver-
+teiler gefuehrt. Die Anpassung an den entsprechenen
+Tastaturcode bzw. Drucker erfolgt ueber TAB3 und TAB4.
+
+  Die folgende Beschreibung bezieht sich nur auf die
+neuen Funktionen. Alle Funktionen werden im Menuebild
+angezeigt. Die Belegung der Steuertasten werden
+bei Bedarf als Fenster im Text eingeblendet.
+
+  Als Ergaenzung wurde ein Spalten- und Zeilenende-
+gloeckchen, sowie ein schaltbarer Tastenklick eingefuegt.
+Die im Menuebild angegebene Zeilenzahl gibt die noch
+zur Vefuegung stehenden freien Zeilen an.
+Wird anstelle der Zeilenzahl "ERROR" angezeigt,
+wurde das Programm oder Teile dessen zerstoert.
+Es ist in diesem Falle neu zu laden und ein
+Restart aus zu fuehren. Der Text wird nicht zerstoert.
+
+
+1. Programmstart: J 6иии oder "t" vom Monitor
+
+2. Wort suchen  : Es kann eine max. 2и Zeichen lange
+                  beliebige Zeichenkette im gesamten
+                  beschriebenen Textspeicher oder
+                  durch Seitenzahl begrenzten RAM
+                  gesucht werden. Zur Kontrolle
+                  wird die zu suchende Zeichenkette
+                  in der unteren Bildschirmzeile
+                  ausgegeben und das Suchergebnis
+                  dort angezeigt.
+
+3. Text anfuegen: Es wird ein beliebiger komprimierter
+                  Text ab aktueller Kursorposition
+                  an bzw. bei entsprechenden Frei-
+                  raum eingefuegt.
+
+4. Text trennen : Ein im Textspeicher stehender Text
+                  wird ab aktueller Kursoradresse
+                  bis zum Textende in einen frei-
+                  waehlbaren Speicherbereich umgelagert
+                  und steht dort als eigenstaendiges
+                  File (wie bei "Komprimieren").
+                  Die entsprechende Textstelle im
+                  RAM wird geloescht.
+
+5. File einlesen: Diese Funktion ermoeglicht ein
+                  Textfile von Kassette einzulesen,
+                  ohne den Editor zu verlassen.
+                  Da die Laderoutine des Monitors
+                  benutzt wird, wird ein Ueberschreiben
+                  des Editor nicht ueberwacht.
+                  Mit folgenden Programmen erstellte
+                  Texte werden akzeptiert:
+                  EDITOR V3/4; TEDIT 4/5; CLIST@
+                  und TPG-AC1.
+
+6. File ausgeben: Es wird mit Hilfe der Savefunktion
+                  der im Textspeicher stehende Text
+                  als komprimiertes File ausgegeben.
+                  Der Name wird bei Neustart (A)
+                  angefordert oder kann durch "O"
+                  geaendert werden.
+                  Die gesetzten Tabulatoren sowie
+                  die eingestellte Formatierung wird
+                  mit ausgegeben und beim Einlesen
+                  wieder eingestellt.
+
+7. Druck:         Es wurde eine Druckroutine
+                  auf Basis des Programmes FSA5и
+                  implementiert. Die Ausgabe erfolgt
+                  ueber PIO- Port B1. Damit ein
+                  Format A4 entsteht, sind
+                  4и Zeilen/Seite im Treiber eingestellt.
+
+8. Zeichen-       Durch eine Vielzahl von unterschiedlichen
+   umcodierung    Zeichengeneratore ist, besonders bei
+                  den Sonderzeichen, eine Kompatibilietaet
+                  der Texte nicht mehr gegeben.
+                  Auf Grund dessen werden alle in der
+                  Tabelle ZGCODE vorhandenen Zeichen
+                  umgeschluesselt. Die Funktion kann
+                  durch "CTRL Y" ein oder ausgeschaltet
+                  werden und ist bei Dekomprimieren
+                  sowie bei der Tastatureingabe
+                  wirksam. Ausserdem ist es dadurch
+                  moeglich, Grafikzeichen oder
+                  ESC- Folgen fuer andere Druckertypen
+                  einzugeben. Es koennen max. 15 Zeichen
+                  veraendert werden.
+                  Bei der Tastatureingabe wird das erste
+                  Zeichen durch das zweite Zeichen ersetzt.
+                  Beim Dekomprimieren erfolgt es
+                  umgekehrt.
+
+
+
+Geaenderte und neue Steuertastenfunktionen:
+-------------------------------------------
+
+CTRL (^) F      Shiftlook
+
+        ^X      Setzen bzw. Loeschen eines Tabulators (!)
+                auf der Grundlinie
+
+        ^W      Sprung bis zu gesetzten Tabulator
+
+        ^G      Klick off/on
+
+        ^P      Zeile formatieren
+
+        ^O      Zeile reformatieren
+
+        ^L      Zeile zentrieren
+
+        ^N      Steuertastenbelegung einblenden
+
+        ^Y      Umcodierung aus/ein
+
+      ^R^E      Einfuegen einer beliebig langen Zeichen-
+                kette. Bei Erreichen des eingestellten
+                Zeilenendes erfolgt ein automatischer
+                Zeilenumbruch. Alle bisherigen Zeichen
+                werden nach rechts verschoben.
+
+      ^R^S      Loeschen einer Zeichenkette bis zum
+                naechsten Leerzeichen. Es erfolgt
+                ebenfalls ein Zeilenumbruch.
+
+      ^R^U      Blaettern nach oben
+
+      ^R^Q      Blaettern nach unten
+
+Adressbelegung:
+---------------
+
+    6иии BEGINN JP   START         ;Start des TPG
+    6ии3 Fи     JP   STDRU         ;Druckausgabe
+                                   ;(Zeichen in A- Reg.)
+    6ии6 C9     JP   DRUINI        ;Druckinitialisierung
+    6ии9 DRUEND JP   ENDDRU        ;Druckendebehandlung
+                                   ;(z.Z. "RET")
+         ;
+         ;Einspruenge in  Monitor V3.1
+         ;
+    6ииC RST8   JP   иии8H
+    6ииF RST1и  JP   ии1иH
+    6и12 RST18  JP   ии18H
+    6и15 CSAVE  JP   и2BAH
+    6и18 CLOAD  JP   и364H
+    6и1B MS3и   JP   и7EBH
+    6и1E OUTHEX JP   и7EEH
+    6и21 OUTHL  JP   и7F1H
+    6и24 INLINE JP   и7F4H
+    6и27 INHEX  JP   и7F7H
+    6и2A TASTE  JP   и7FAH
+    6и2D GETCO1 JP   и7FDH
+         ;
+         ;Merkzellen fuer Druck (Uebergabe an Druckertreiber)
+         ;
+    6и3и SEIZAE DEFB и           ;Seite
+    6и31 ZEIZAE DEFB и           ;Zeile
+    6и32 TTYINI DEFB и           ;Druckinitialisierung
+                                 ;и= keine Initalisierung
+                                     erfolgt
+         ;
+         ; Def. Steuertasten
+         ;
+    6и33 FINAME DEFW FINAE       ;Adr. Filename
+    6и35 LANAME DEFW 1иH         ;Laenge Filename
+    6и37        DEFB 4иH         ;Zeilen pro Seite
+    6и38 KUR    DEFB 7FH         ;Kursorzeichen
+    6и39 TAB3   DEFB "R-4иH      ;Shiftlook
+    6и3A        DEFB "M-4иH      ;wrl+zv
+    6и3B        DEFB "B-4иH      ;Zeile loeschen
+    6и3C        DEFB "F-4иH      ;Shiftlook
+    6и3D        DEFB "C-4иH      ;Menue
+    6и3E        DEFB "H-4иH      ;Kursor links
+    6и3F        DEFB "I-4иH      ;Kursor rechts
+    6и4и        DEFB "J-4иH      ;Kursor nach unten
+    6и41        DEFB "K-4иH      ;Kursor nach oben
+    6и42        DEFB "Q-4иH      ;Bild rollen hoch
+    6и43        DEFB "U-4иH      ;Bild rollen tief
+    6и44        DEFB "A-4иH      ;Zeile einfuegen
+    6и45        DEFB "T-4иH      ;Wagenruecklauf
+    6и46        DEFB "W-4иH      ;Tabulatorsprung
+    6и47        DEFB "E-4иH      ;Zeichen einfuegen
+    6и48        DEFB "S-4иH      ;Zeichen loeschen
+    6и49        DEFB "X-4иH      ;Tabulator setzen
+    6и4A        DEFB "Z-4иH      ;Kursor Textanfang
+    6и4B        DEFB "Y-4иH      ;kursor Textende
+    6и4C        DEFB "G-4иH      ;Klick on/off
+    6и4D        DEFB "L-4иH      ;Zeile zentrieren
+    6и4E        DEFB "P-4иH      ;Zeile formatieren
+    6и4F        DEFB "O-4иH      ;Zeile reformat.
+    6и5и        DEFB "Y-4иH      ;Umwandlung ein/aus
+    6и51        DEFB "V-4иH      ;frei
+         ;
+         ;Umwandlung Sonderzeichen (Istzeichen/Sollzeichen)
+         ;
+    6и52 ZGCODE DEFB и,и         ;TAB3
+    6и54        DEFB и,и         ;Zeichen alt->neu
+    6и56        DEFB и,и         ;in HEX
+    6и58        DEFB и,и
+    6и5A        DEFB и,и
+    6и5C        DEFB и,и
+    6и5E        DEFB и,и
+    6и6и        DEFB и,и
+    6и62        DEFB и,и
+    6и64        DEFB и,и
+    6и66        DEFB и,и
+    6и68        DEFB и,и
+    6и6A        DEFB и,и
+    6и6C        DEFB и,и
+    6и6E        DEFB и,и
+         ;
+         ;nicht druckbare Zeichen
+         ;(werden durch Leerzeichen ersetzt)
+         ;
+    6и7и TAB4   DEFB и
+    6и71        DEFB и
+    6и72        DEFB и
+    6и73        DEFB и
+    6и74        DEFB и
+    6и75        DEFB и
+    6и76        DEFB и
+    6и77        DEFB и
+    6и78        DEFB и
+    6и79        DEFB и
+    6и7A        DEFB и
+    6и7B        DEFB и
+    6и7C        DEFB и
+    6и7D        DEFB и
+    6и7E        DEFB и
+    6и7F        DEFB и
+    6и8и        DEFB и
+
+
+  Fuer Anregungen, Hinweise und Verbesserungen bin
+ich jederzeit dankbar.
+
+
+                         vy 73
+
+                      Rolf Y22MC
