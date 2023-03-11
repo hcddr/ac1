@@ -19,9 +19,9 @@ bnkende		equ	0FFFFh
 firstbnk	equ	08h
 lastbnk		equ	0F9h	; Bänke 0..31, erst ROM1 dann ROM2
 
-tstsch		equ	0A7Bh	; in V8, 1088
+;tstsch		equ	0A7Bh	; in V8, 1088, Test Autostart
 
-nr_minibasic 	equ 0FH		; aus packedroms.inc
+;nr_minibasic 	equ 0FH		; aus packedroms.inc
 
 
 ; Portwerte modul1-Port
@@ -902,6 +902,26 @@ start1		ld	a,XROM+BASICROM
 		dephase
 ;------------		
 rstartend
+
+;------------------------------------------------------------------------------
+; Test Autostart
+;------------------------------------------------------------------------------
+
+tstsch:		ld	hl, aSch	; "SCH"
+		ld	b, 3
+tstsch1:	ld	a, (de)
+		cp	(hl)
+		ret	nz		; nicht gefunden
+		inc	hl
+		inc	de
+		djnz	tstsch1
+		; Adresse hinter "SCH" in HL
+		ld	a, (de)
+		ld	l, a
+		inc	de
+		ld	a, (de)
+		ld	h, a		; HL=Autostartadr.
+		ret
 
 		db	"V.Pohlers ",VERSIONSDATUM
 

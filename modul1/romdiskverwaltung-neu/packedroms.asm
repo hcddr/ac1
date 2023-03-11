@@ -123,7 +123,7 @@ file_bis
 	addfile	"software/RAM-TEST_2000_26BF_2000.bin"		,02000h,026BFh,02000h,'P', ,"g"
 	addfile	"software/DISK-1F_3000_3BF1_3000.bin"		,03000h,03BF1h,03000h,'P', ,"d"
 	addfile	"software/OCEAC1_4000_5D44_4000.bin"		,04000h,05D44h,04000h,'P', ,"J4000"
-	addfile	"software/FDC-iA_2000_27FF_0000.bin"		,02000h,027FFh,00000h,'P', ,""
+	addfile	"software/FDC-iA_2000_27FF_0000.bin"		,02000h,027FFh,00000h,'P', ,"s,l,d,k,f,i,x"
 	else ; komprimiert
 	addfile	"software/CP_M-2.2_D000_FEFF_E600.bin.zx7"	,0D000h,0FEFFh,0E600h,'P',"CP/M-2.2","JE600"
 	addfile	"software/HRCPM-12_D000_FEFF_E600.bin.zx7"	,0D000h,0FEFFh,0E600h,'P', ,"JE600"
@@ -138,7 +138,7 @@ file_bis
 	addfile	"software/RAM-TEST_2000_26BF_2000.bin.zx7"	,02000h,026BFh,02000h,'P', ,"g"
 	addfile	"software/DISK-1F_3000_3BF1_3000.bin.zx7"	,03000h,03BF1h,03000h,'P', ,"d"
 	addfile	"software/OCEAC1_4000_5D44_4000.bin.zx7"	,04000h,05D44h,04000h,'P', ,"J4000"
-	addfile	"software/FDC-iA_2000_27FF_0000.bin.zx7"	,02000h,027FFh,00000h,'P', ,""
+	addfile	"software/FDC-iA_2000_27FF_0000.bin.zx7"	,02000h,027FFh,00000h,'P', ,"s,l,d,k,f,i,x"
 	endif
 	
 
