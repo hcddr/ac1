@@ -24,3 +24,7 @@ Es gibt Quellcodes der SCCH-Monitore V8, 10/88 und der angepassten Version für 
 - monitor/mon_v8-fdc-rfl.asm: AC1-MONITOR V8 E. Ludwig SCCH, Monitor Version Nov. 1987, Version AC1-2010 * FARBMONITOR * FDC/RFL (jkcemu-Version)
 - monitor/mon-10122011.asm: mon_v8-fdc-rfl.asm, verändert auf Version "AC1-2010 * MONITOR * 12/2011"
 - modul1/romdiskverwaltung-neu: meine Modul1-Software, incl. Softwarepaket u.a.m.
+
+10.3.2023
+
+- cpm/v22-funkamateur:	Das CP/M aus dem Funkamateur 10/89. Ein CPM mit Kassette und RAM-Disk für mp3/88-RAM-Floppy. BDOS ist von CP/A, CCP von DR (modifiziert), BIOS nach Kramer
