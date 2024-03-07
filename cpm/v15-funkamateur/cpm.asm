@@ -1,9 +1,9 @@
 ;-----------------------------------------------------------------------------
 ; Mini-CP/M für den AC1 ohne Floppy (zum Reinschnuppern)
 ; mit kleiner RAM-Disk
-; 02.08.2016 V.Pohlers
+; 20.02.2023 V.Pohlers
 ;
-; letzte Änderung 02.08.2016
+; letzte Änderung 23.02.2023
 ;-----------------------------------------------------------------------------
 
 		cpu	z80
