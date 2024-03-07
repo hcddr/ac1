@@ -1,0 +1,86 @@
+         Beschreibung   AC1-Fig-Forth            Teil4
+         ============================
+
+4.Beschreibung  der  nicht  Fig-Forth kompatiblen Wrter
+-------------------------------------------------------
+
+.CPU       druckt   im  Gegensatz  zum   Fig-Standard   nicht
+           den CPU-Namen, sondern den des Systems
+
+BYE        kehrt   in   die   Monitoraufrufschleife   zurck,
+CLS        lscht den Bildschirm
+
+EDIT     ( n --> )
+         Aufruf  des  Screen-editors  fr  die  Eingabe  von
+         Quelltext und deren Korrectur
+
+Folgende Tastaturcodes sind wirksam:
+
+Code     Tastenbed.       Wirkung
+-------------------------------------------------------------
+Ø1h      ctrl+A           Cursor Home
+Ø2h      ctrl+B           Clear   ab   Cursor   Screen
+Ø3h      ctrl+C           verlassen  des  Edit  und Ersetzen
+Ø4h      ctrl+D           delete   ab   Cursor   Line
+Ø5h      ctrl+E           insert in Line
+Ø7h      ctrl+G           Cursor   an   Zeilenanfang
+Ø8h      ctrl+H           <--
+Ø9h      ctrl+I           -->
+ØAh      ctrl+J           Cursor down
+ØBh      ctrl+K           Cursor up
+ØCh      ctrl+L           Clear screen + home
+ØDh      ctrl+M           CR+LF
+ØFh      ctrl+O           tab   auf   nchstes   no  Blank
+14h      ctrl+T           Cursor auf Textende
+15h      ctrl+U           insert im screen
+16h      ctrl+V           delete im screen
+17h      ctrl+W           Line ab Cursor clear
+18h      ctrl+X           clear Line Cursor  auf beginn Line
+19h      ctrl+Y           delete   ab   cursor   screen
+1Ah      ctrl+Z           DEL
+1Bh      ESC              verlassen  des Edit  ohne  Ersetzen
+-------------------------------------------------------------
+
+DINPUT    ( -->  d )    Eingabe  einer  doppelt-genauen  Zahl
+INPUT     ( -->  n )    Eingabe  einer  einfach-genauen  Zahl
+DEPTH     (  -->  n  )  Ausgabe   der  Parameterstacktiefe
+.S       ( -->   )    druckt  zerstrungsfrei  den Stack  aus
+DUMP     (n1 n2 -->)  Hexdump von n1 bis n2
+VLIST      (   -->  )  Auflisten   des   Wrterbuches
+SAVE-SCREENS ( n1 n2 --> ) Kassettenausgabe
+                      Saven ab Screen  n1 fuer die Anzahl  n2
+                      bei der Aufforderung  zur Namenseingabe
+                      kann  ein  bis  zu  16  Zeichen  langer
+                      Name  eingegeben   werden.   Das  Saven
+                      geschieht   im   AC1-Standardformat
+                      Dabei  ist auf die bereinstimmung  der
+                      Monitorversionsnummern  zu  achten,  da
+                      auf Monitorroutinen notgedrungenermaen
+                      zurckgriffen   werden   mute.
+
+
+
+Soweit die Beschreibung des Forth-Systems.
+Ich hoffe, damit  dem  AC1  eine  neue  sehr  leistungsfhige
+Programmiersprache  erschlossen  zu haben  und  bin jederzeit
+fuer  Anfragen,  Hinweise  und  Erfahrungsaustausch  dankbar.
+
+Denjenigen   unter   den  AC1-Usern,  die  sich   ernsthafter
+mit Forth  beschftigen  wollen,  kann ich jetzt  schon  mit-
+teilen,  da  als nchstes  der Standard  FORTH  83 fuer  den
+AC1 implementiert  wird .  Dieser  wird  erstmals  fuer  alle
+in der DDR verfuegbaren  Z8Ø-Rechner  ebenfalls  gleich sein,
+um den  Datenaustausch  von Forth-Programmen  zu ermglichen.
+Zur  wird  noch  ber  ein  einheitliches  Kassettenverfahren
+diskutiert,ab 9/1Ø 88 soll das neue Forth aber verfgbar sein
+
+
+
+Zum Schluss noch meine Adresse:
+
+       W.R. Jrgens
+       Strasse der Einheit 9
+       Stafurt 3
+       325Ø
+
+       Tel: von 7-16 Uhr  Stafurt 663131

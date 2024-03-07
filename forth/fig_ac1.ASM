@@ -1,0 +1,4984 @@
+	cpu Z80
+		TITLE	'8080 FIG-FORTH 1.1 VERSION A0 17SEP79'
+
+;---------------------------------------------------------
+;	fig-forth AC1 f. Monitor 3.1
+;	W.R. J¸rgens
+
+; File Name   :	d:\hobby3\ac1-2010\forth\FORTH-AC1  4000 5FFF 0000.BIN
+; Format      :	Binary file
+; Base Address:	0000h Range: 4000h - 6000h Loaded length: 2000h
+;reass + commented vpohlers 17.01.2024
+;based on Z80fied 8080 FIG-FORTH 1.1 VERSION A0 17SEP79 (FORTH110.ASM)
+; Unterschiede zu orig:
+; - User Var Space 60H bytes
+; - kein Debug support, aber NEXT kann umgebogen werden (6016)
+; - teilw. andere Reihenfolge der Codeblˆcke
+; - RAMdisk statt CP/M-Disk
+; - Zusatzworte wie EDIT, VLIST, DUMP etc. s. Doku Teil 4
+
+;---------------------------------------------------------
+;
+;	FIG-FORTH  RELEASE 1.1  FOR THE 8080 PROCESSOR
+;
+;	ALL PUBLICATIONS OF THE FORTH INTEREST GROUP
+;	ARE PUBLIC DOMAIN.  THEY MAY BE FURTHER
+;	DISTRIBUTED BY THE INCLUSION OF THIS CREDIT
+;	NOTICE:
+;
+;	THIS PUBLICATION HAS BEEN MADE AVAILABLE BY THE
+;		     FORTH INTEREST GROUP
+;		     P. O. BOX 1105
+;		     SAN CARLOS, CA 94070
+;
+;	IMPLEMENTATION BY:
+;		JOHN CASSADY
+;		339 15TH STREET
+;		OAKLAND,CA 94612
+;		ON 790528
+;	MODIFIED BY:
+;	   	KIM HARRIS
+;	ACKNOWLEDGEMENTS:
+;		GEORGE FLAMMER
+;		ROBT. D. VILLWOCK
+;
+;---------------------------------------------------------
+;	LABELS USED WHICH DIFFER FROM FIG-FORTH PUBLISHED
+;	8080 LISTING 1.0:
+;
+;	REL 1.1		REL 1.0
+;	-------		-------
+;	ANDD		AND
+;	CSPP		CSP
+;	ELSEE		ELSE
+;	ENDD		END
+;	ENDIFF		ENDIF
+;	ERASEE		ERASE
+;	IDO		I
+;	IFF		IF
+;	INN		IN
+;	MODD		MOD
+;	ORR		OR
+;	OUTT		OUT
+;	RR		R
+;	RPP		RP
+;	SUBB		SUB
+;	XORR		XOR
+;
+;	SEE ALSO:
+;		RELEASE & VERSION NUMBERS
+;		ASCII CHARACTER EQUATES
+;		MEMORY ALLOCATION
+;		DISK INTERFACE
+;		CONSOLE & PRINTER INTERFACE
+;
+		NEWPAGE
+;
+;----------------------------------------------------------
+;
+;	RELEASE & VERSION NUMBERS
+;
+FIGREL		EQU	1	; FIG RELEASE #
+FIGREV		EQU	2	; FIG REVISION #
+USRVER		EQU	0	; USER VERSION #
+;
+;	ASCII CHARACTERS USED
+;
+ABL		EQU	20H	; SPACE
+ACR		EQU	0DH	; CARRIAGE RETURN
+ADOT		EQU	02EH	; PERIOD
+BELL		EQU	07H	; (^G)
+BSIN		EQU	08H	; INPUT BACKSPACE CHR = RUBOUT
+BSOUT		EQU	08H	; OUTPUT BACKSPACE (^H)
+DLE		EQU	10H	; (^P)
+LF		EQU	0AH	; LINE FEED
+FF		EQU	0CH	; FORM FEED (^L)
+;
+;	MEMORY ALLOCATION
+;
+EM		EQU	8000H	; TOP OF MEMORY + 1 = LIMIT
+NSCR		EQU	1	; NUMBER OF 1024 BYTE SCREENS
+KBBUF		EQU	128	; DATA BYTES PER DISK BUFFER
+US		EQU	60H	; USER VARIABLES SPACE
+RTS		EQU	0A0H	; RETURN STACK & TERM BUFF SPACE
+;
+CO_		EQU	KBBUF+4	; DISK BUFFER + 2 HEADER + 2 TAIL
+NBUF		EQU	NSCR*400H/KBBUF	; NUMBER OF BUFFERS
+BUF1		EQU	EM-CO_*NBUF-1	; ADDR FIRST DISK BUFFER
+INITR0		EQU	BUF1-US		; (R0)
+INITS0		EQU	INITR0-RTS	; (S0)
+;
+		NEWPAGE
+;
+;-------------------------------------------------------
+;
+		ORG	4000H
+
+ORIG:		NOP
+		JP	CLD	; VECTOR TO COLD START
+		NOP
+		JP	WRM	; VECTOR TO WARM START
+		DB	FIGREL	; FIG RELEASE #
+		DB	FIGREV	; FIG REVISION #
+		DB	USRVER	; USER VERSION #
+		DB	0EH	; IMPLEMENTATION ATTRIBUTES
+off_400C:	DW	unk_5E64	; TOPMOST WORD IN FORTH VOCABULARY
+		DW	BSIN	; BKSPACE CHARACTER
+word_4010:	DW	INITR0	; INIT (UP)
+;<<<<<< FOLLOWING USED BY COLD;
+;	MUST BE IN SAME ORDER AS USER VARIABLES
+word_4012:	DW	INITS0	; INIT (S0)
+word_4014:	DW	INITR0	; INIT (R0)
+		DW	INITS0	; INIT (TIB)
+		DW	20H	; INIT (WIDTH)
+		DW	0	; INIT (WARNING)
+		DW	INITDP-1	; INIT (FENCE)
+		DW	INITDP		; INIT (DP)
+		DW	unk_6012+2	; INIT (VOC-LINK)
+;<<<<<< END DATA USED BY COLD
+;		DW	5H,0B320H	; CPU NAME	( HW,LW )
+;				  ( 32 BIT, BASE 36 INTEGER )
+		db    0,0,51h,34h ; "AC1"
+
+;------------------------------------------------------------------------------
+;
+;------------------------------------------------------------------------------
+
+ci:		jp      sub_5AC0
+sub_4029:	jp      7FAh            ; TASTE
+co:		jp      10h             ; outch
+sub_402F:	jp      sub_5810	; R/W
+sub_4032:	jp      loc_5814	; R/W
+
+;------------------------------------------------------------------------------
+;
+;------------------------------------------------------------------------------
+;
+;
+;			+---------------+
+;	B +ORIGIN	| . . .W:I.E.B.A|	IMPLEMENTATION
+;			+---------------+	ATTRIBUTES
+;			       ^ ^ ^ ^ ^
+;			       | | | | +-- PROCESSOR ADDR =
+;			       | | | |     { 0 BYTE | 1 WORD }
+;			       | | | +---- HIGH BYTE AT
+;			       | | |       { 0 LOW ADDR |
+;			       | | |	     1 HIGH ADDR }
+;			       | | +------ ADDR MUST BE EVEN
+;			       | |	   { 0 YES | 1 NO }
+;			       | +-------- INTERPRETER IS
+;			       |	   { 0 PRE | 1 POST }
+;			       |	   INCREMENTING
+;			       +---------- { 0 ABOVE SUFFICIENT
+;					     | 1 OTHER DIFFER-
+;					     ENCES EXIST }
+;
+		NEWPAGE
+;
+;------------------------------------------------------
+;
+;	FORTH REGISTERS
+;
+;	FORTH	8080	FORTH PRESERVATION RULES
+;	-----	----	------------------------
+;	IP	BC	SHOULD BE PRESERVED ACROSS
+;			  FORTH WORDS
+;	W	DE	SOMETIMES OUTPUT FROM NEXT
+;			MAY BE ALTERED BEFORE JMP'ING TO NEXT
+;			INPUT ONLY WHEN 'DPUSH' CALLED
+;	SP	SP	SHOULD BE USED ONLY AS DATA STACK
+;			  ACROSS FORTH WORDS
+;			MAY BE USED WITHIN FORTH WORDS
+;			  IF RESTORED BEFORE 'NEXT'
+;		HL	NEVER OUTPUT FROM NEXT
+;			INPUT ONLY WHEN 'HPUSH' CALLED
+;
+;UP:		DW	INITR0	; USER AREA POINTER
+;RPP:		DW	INITR0	; RETURN STACK POINTER
+
+;------------------------------------------------------
+;
+;	COMMENT CONVENTIONS:
+;
+;	=	MEANS	"IS EQUAL TO"
+;	<-	MEANS	ASSIGNMENT
+;
+;	NAME	=	ADDRESS OF NAME
+;	(NAME)	=	CONTENTS AT NAME
+;	((NAME))=	INDIRECT CONTENTS
+;
+;	CFA	=	ADDRESS OF CODE FIELD
+;	LFA	=	ADDRESS OF LINK FIELD
+;	NFA	=	ADDR OF START OF NAME FIELD
+;	PFA	=	ADDR OF START OF PARAMETER FIELD
+;
+;	S1	=	ADDR OF 1ST WORD OF PARAMETER STACK
+;	S2	=	ADDR OF 2ND WORD OF PARAMETER STACK
+;	R1	=	ADDR OF 1ST WORD OF RETURN STACK
+;	R2	=	ADDR OF 2ND WORD OF RETURN STACK
+;	( ABOVE STACK POSITIONS VALID BEFORE & AFTER EXECUTION
+;	OF ANY WORD, NOT DURING. )
+;
+;	LSB	=	LEAST SIGNIFICANT BIT
+;	MSB	=	MOST SIGNIFICANT BIT
+;	LB	=	LOW BYTE
+;	HB	=	HIGH BYTE
+;	LW	=	LOW WORD
+;	HW	=	HIGH WORD
+;	( MAY BE USED AS SUFFIX TO ABOVE NAMES )
+;
+		NEWPAGE
+;
+;--------------------------------------------------
+;
+;	NEXT, THE FORTH ADDRESS INTERPRETER
+;	  ( POST INCREMENTING VERSION )
+;
+DPUSH:		PUSH	DE
+HPUSH:		PUSH	HL
+
+NEXT:		jp      6016h
+
+
+NEXT0:		LD	A,(BC)	;(W) <- ((IP))
+		INC	BC	;(IP) <- (IP)+2
+		LD	L,A
+		LD	A,(BC)
+		INC	BC
+		LD	H,A	; (HL) <- CFA
+NEXT1:		LD	E,(HL)	;(PC) <- ((W))
+		INC	HL
+		LD	D,(HL)
+		EX	DE,HL
+		JP	(HL)	; NOTE: (DE) = CFA+1
+;
+		NEWPAGE
+;
+;		FORTH DICTIONARY
+;
+;
+;	DICTIONARY FORMAT:
+;
+;				BYTE
+;	ADDRESS	NAME		CONTENTS
+;	------- ----		--------
+;					  ( MSB=1
+;					  ( P=PRECEDENCE BIT
+;					  ( S=SMUDGE BIT
+;	NFA	NAME FIELD	1PS<LEN>  < NAME LENGTH
+;				0<1CHAR>  MSB=0, NAME'S 1ST CHAR
+;				0<2CHAR>
+;				  ...
+;				1<LCHAR>  MSB=1, NAME'S LAST CHR
+;	LFA	LINK FIELD	<LINKLB>  = PREVIOUS WORD'S NFA
+;				<LINKHB>
+;LABEL:	CFA	CODE FIELD	<CODELB>  = ADDR CPU CODE
+;				<CODEHB>
+;	PFA	PARAMETER	<1PARAM>  1ST PARAMETER BYTE
+;		FIELD		<2PARAM>
+;				  ...
+;
+;
+DP0:		DB	83H	; LIT
+		DB	'LI'
+		DB	'T'+80H
+		DW	0	; (LFA)=0 MARKS END OF DICTIONARY
+LIT:		DW	$+2	;(S1) <- ((IP))
+		LD	A,(BC)	; (HL) <- ((IP)) = LITERAL
+		INC	BC	; (IP) <- (IP) + 2
+		LD	L,A	; LB
+		LD	A,(BC)	; HB
+		INC	BC
+		LD	H,A
+		JP	HPUSH	; (S1) <- (HL)
+;
+		DB	87H	; EXECUTE
+		DB	'EXECUT'
+		DB	'E'+80H
+		DW	LIT-6
+EXEC:		DW	$+2
+		POP	HL	; (HL) <- (S1) = CFA
+		JP	NEXT1
+;
+		DB	86H	; BRANCH
+		DB	'BRANC'
+		DB	'H'+80H
+		DW	EXEC-0AH
+BRAN:		DW	$+2	;(IP) <- (IP) + ((IP))
+BRAN1:		LD	H,B	; (HL) <- (IP)
+		LD	L,C
+		LD	E,(HL)	; (DE) <- ((IP)) = BRANCH OFFSET
+		INC	HL
+		LD	D,(HL)
+		DEC	HL
+		ADD	HL,DE	; (HL) <- (HL) + ((IP))
+		LD	C,L	; (IP) <- (HL)
+		LD	B,H
+		JP	NEXT
+;
+		DB	87H	; 0BRANCH
+		DB	'0BRANC'
+		DB	'H'+80H
+		DW	BRAN-9
+ZBRAN:		DW	$+2
+		POP	HL
+		LD	A,L
+		OR	H
+		JP	Z,BRAN1	; IF (S1)=0 THEN BRANCH
+		INC	BC	; ELSE SKIP BRANCH OFFSET
+		INC	BC
+		JP	NEXT
+;
+		DB	86H	; (LOOP)
+		DB	'(LOOP'
+		DB	')'+80H
+		DW	ZBRAN-0AH
+XLOOP:		DW	$+2
+		LD	DE,1	; (DE) <- INCREMENT
+XLOO1:		LD	HL,(RPP)	; ((HL)) = INDEX
+		LD	A,(HL)	; INDEX <- INDEX + INCR
+		ADD	A,E
+		LD	(HL),A
+		LD	E,A
+		INC	HL
+		LD	A,(HL)
+		ADC	A,D
+		LD	(HL),A
+		INC	HL	; ((HL)) = LIMIT
+		INC	D
+		DEC	D
+		LD	D,A	; (DE) <- NEW INDEX
+		JP	M,XLOO2	; IF INCR > 0
+		LD	A,E
+		SUB	(HL)	; THEN (A) <- INDEX - LIMIT
+		LD	A,D
+		INC	HL
+		SBC	A,(HL)
+		JP	XLOO3
+XLOO2:		LD	A,(HL)	; ELSE (A) <- LIMIT - INDEX
+		SUB	E
+		INC	HL
+		LD	A,(HL)
+		SBC	A,D
+;			; IF (A) < 0
+XLOO3:		JP	M,BRAN1	; THEN LOOP AGAIN
+		INC	HL	; ELSE DONE
+		LD	(RPP),HL	; DISCARD R1 & R2
+		INC	BC	; SKIP BRANCH OFFSET
+		INC	BC
+		JP	NEXT
+;
+		DB	87H	; (+LOOP)
+		DB	'(+LOOP'
+		DB	')'+80H
+		DW	XLOOP-9
+XPLOO:		DW	$+2
+		POP	DE	; (DE) <- INCR
+		JP	XLOO1
+;
+		DB	84H	; (DO)
+		DB	'(DO'
+		DB	')'+80H
+		DW	XPLOO-0AH
+XDO:		DW	$+2
+		LD	HL,(RPP)	; (RP) <- (RP) - 4
+		DEC	HL
+		DEC	HL
+		DEC	HL
+		DEC	HL
+		LD	(RPP),HL
+		POP	DE	; (R1) <- (S1) = INIT INDEX
+		LD	(HL),E
+		INC	HL
+		LD	(HL),D
+		POP	DE	; (R2) <- (S2) = LIMIT
+		INC	HL
+		LD	(HL),E
+		INC	HL
+		LD	(HL),D
+		JP	NEXT
+;
+		DB	81H	; I
+		DB	'I'+80H
+		DW	XDO-7
+IDO:		DW	$+2	;(S1) <- (R1) , (R1) UNCHANGED
+		LD	HL,(RPP)
+		LD	E,(HL)	; (DE) <- (R1)
+		INC	HL
+		LD	D,(HL)
+		PUSH	DE	; (S1) <- (DE)
+		JP	NEXT
+;
+		DB	85H	; DIGIT
+		DB	'DIGI'
+		DB	'T'+80H
+		DW	IDO-4
+DIGIT:		DW	$+2
+		POP	HL	; (L) <- (S1)LB = ASCII CHR TO BE
+;			 CONVERTED
+		POP	DE	; (DE) <- (S2) = BASE VALUE
+		LD	A,E
+		SUB	30H	; IF CHR > "0"
+		JP	M,DIGI2
+		CP	0AH	; AND IF CHR > "9"
+		JP	M,DIGI1
+		SUB	7
+		CP	0AH	; AND IF CHR >= "A"
+		JP	M,DIGI2
+;			; THEN VALID NUMERIC OR ALPHA CHR
+DIGI1:		CP	L	; IF < BASE VALUE
+		JP	P,DIGI2
+;			; THEN VALID DIGIT CHR
+		LD	E,A	; (S2) <- (DE) = CONVERTED DIGIT
+		LD	HL,1	; (S1) <- TRUE
+		JP	DPUSH
+;			; ELSE INVALID DIGIT CHR
+DIGI2:		LD	L,H	; (HL) <- FALSE
+		JP	HPUSH	; (S1) <- FALSE
+;
+		DB	86H	; (FIND)  (2-1)FAILURE
+		DB	'(FIND'	; (2-3)SUCCESS
+		DB	')'+80H
+		DW	DIGIT-8
+PFIND:		DW	$+2
+		POP	DE	; (DE) <- NFA
+PFIN1:		POP	HL	; (HL) <- STRING ADDR
+		PUSH	HL	; SAVE STRING ADDR FOR NEXT ITERATION
+		LD	A,(DE)
+		XOR	(HL)	; CHECK LENGTHS & SMUDGE BIT
+		AND	3FH
+		JP	NZ,PFIN4	; LENGTHS DIFFERENT
+;			; LENGTHS MATCH, CHECK EACH CHR
+PFIN2:		INC	HL	; (HL) <- ADDR NEXT CHR IN STRING
+		INC	DE	; (DE) <- ADDR NEXT CHR IN NF
+		LD	A,(DE)
+		XOR	(HL)	; IGNORE MSB
+		ADD	A,A
+		JP	NZ,PFIN3	; NO MATCH
+		JP	NC,PFIN2	; MATCH SO FAR, LOOP AGAIN
+		LD	HL,5	; STRING MATCHES
+		ADD	HL,DE	; ((SP)) <- PFA
+		EX	(SP),HL
+;			; BACK UP TO LENGTH BYTE OF NF = NFA
+PFIN6:		DEC	DE
+		LD	A,(DE)
+		OR	A
+		JP	P,PFIN6	; IF MSB = 1 THEN (DE) = NFA
+		LD	E,A	; (DE) <- LENGTH BYTE
+		LD	D,0
+		LD	HL,1	; (HL) <- TRUE
+		JP	DPUSH	; RETURN, NF FOUND
+;	ABOVE NF NOT A MATCH, TRY ANOTHER
+PFIN3:		JP	C,PFIN5	; IF NOT END OF NF
+PFIN4:		INC	DE	; THEN FIND END OF NF
+		LD	A,(DE)
+		OR	A
+		JP	P,PFIN4
+PFIN5:		INC	DE	; (DE) <- LFA
+		EX	DE,HL
+		LD	E,(HL)	; (DE) <- (LFA)
+		INC	HL
+		LD	D,(HL)
+		LD	A,D
+		OR	E	; IF (LFA) <> 0
+		JP	NZ,PFIN1	; THEN TRY PREVIOUS DICT. DEF.
+;			; ELSE END OF DICTIONARY
+		POP	HL	; DISCARD STRING ADDR
+		LD	HL,0	; (HL) <- FALSE
+		JP	HPUSH	; RETURN, NO MATCH FOUND
+;
+		DB	87H	; ENCLOSE
+		DB	'ENCLOS'
+		DB	'E'+80H
+		DW	PFIND-9
+ENCL:		DW	$+2
+		POP	DE	; (DE) <- (S1) = DELIMITER CHAR
+		POP	HL	; (HL) <- (S2) = ADDR TEXT TO SCAN
+		PUSH	HL	; (S4) <- ADDR
+		LD	A,E
+		LD	D,A	; (D) <- DELIM CHR
+		LD	E,-1	; INITIALIZE CHR OFFSET COUNTER
+		DEC	HL	; (HL) <- ADDR-1
+;			; SKIP OVER LEADING DELIMITER CHRS
+ENCL1:		INC	HL
+		INC	E
+		CP	(HL)	; IF TEXT CHR = DELIM CHR
+		JP	Z,ENCL1	; THEN LOOP AGAIN
+;			; ELSE NON-DELIM CHR FOUND
+		LD	D,0	; (S3) <- (E) = OFFSET TO 1ST NON-DELIM
+		PUSH	DE
+		LD	D,A	; (D) <- DELIM CHR
+		LD	A,(HL)	; IF 1ST NON-DELIM = NULL
+		AND	A
+		JP	NZ,ENCL2
+		LD	D,0	; THEN (S2) <- OFFSET TO BYTE
+		INC	E	;   FOLLOWING NULL
+		PUSH	DE
+		DEC	E	; (S1) <- OFFSET TO NULL
+		PUSH	DE
+		JP	NEXT
+;			; ELSE TEXT CONTAINS NON-DELIM &
+;			  NON-NULL CHR
+ENCL2:		LD	A,D	; (A) <- DELIM CHR
+		INC	HL	; (HL) <- ADDR NEXT CHR
+		INC	E	; (E) <- OFFSET TO NEXT CHR
+		CP	(HL)	; IF NEXT CHR <> DELIM CHR
+		JP	Z,ENCL4
+		LD	A,(HL)	; AND IF NEXT CHR <> NULL
+		AND	A
+		JP	NZ,ENCL2	; THEN CONTINUE SCAN
+;			; ELSE CHR = NULL
+ENCL3:		LD	D,0	; (S2) <- OFFSET TO NULL
+		PUSH	DE
+		PUSH	DE	; (S1) <- OFFSET TO NULL
+		JP	NEXT
+;			; ELSE CHR = DELIM CHR
+ENCL4:		LD	D,0	; (S2) <- OFFSET TO BYTE
+;			  FOLLOWING TEXT
+		PUSH	DE
+		INC	E	; (S1) <- OFFSET TO 2 BYTES AFTER
+;			    END OF WORD
+		PUSH	DE
+		JP	NEXT
+;
+		DB	84H	; EMIT
+		DB	'EMI'
+		DB	'T'+80H
+		DW	ENCL-0AH
+EMIT:		DW	DOCOL
+		DW	PEMIT
+		DW	ONE,OUTT
+		DW	PSTOR,SEMIS
+;
+PEMIT:		ex      (sp), hl
+		ld      b, c
+		pop     hl
+		ld      a, l
+		call    co
+		jp      NEXT
+;
+		DB	83H	; KEY
+		DB	'KE'
+		DB	'Y'+80H
+		DW	EMIT-7
+KEY:		DW	$+2
+		call    ci
+		ld      l, a
+		ld      h, 0
+		push    hl
+		jp      NEXT
+;
+		DB	89H	; ?TERMINAL
+		DB	'?TERMINA'
+		DB	'L'+80H
+		DW	KEY-6
+QTERM:		DW	$+2
+		call    sub_4029
+		ld      hl, 0
+		or      a
+		jp      z, loc_4216
+		inc     hl
+loc_4216:       jp      HPUSH
+;
+		DB	82H	; CR
+		DB	'C'
+		DB	'R'+80H
+		DW	QTERM-0CH
+CR:		DW	$+2
+		ld      a, 0Dh
+		call    co
+		ld      a, 0Ah
+		call    co
+		jp      NEXT
+;
+		DB	85H	; CMOVE
+		DB	'CMOV'
+		DB	'E'+80H
+		DW	CR-5
+CMOVE:		DW	$+2
+		LD	L,C	; (HL) <- (IP)
+		LD	H,B
+		POP	BC	; (BC) <- (S1) = #CHRS
+		POP	DE	; (DE) <- (S2) = DEST ADDR
+		EX	(SP),HL	; (HL) <- (S3) = SOURCE ADDR
+;			; (S1) <- (IP)
+		JP	CMOV2	; RETURN IF #CHRS = 0
+CMOV1:		LD	A,(HL)	; ((DE)) <- ((HL))
+		INC	HL	; INC SOURCE ADDR
+		LD	(DE),A
+		INC	DE	; INC DEST ADDR
+		DEC	BC	; DEC #CHRS
+CMOV2:		LD	A,B
+		OR	C
+		JP	NZ,CMOV1	; REPEAT IF #CHRS <> 0
+		POP	BC	; RESTORE (IP) FROM (S1)
+		JP	NEXT
+;
+		DB	82H	; U*	16X16 UNSIGNED MULTIPLY
+		DB	'U'	; AVG EXECUTION TIME = 994 CYCLES
+		DB	'*'+80H
+		DW	CMOVE-8
+USTAR:		DW	$+2
+		POP	DE	; (DE) <- MPLIER
+		POP	HL	; (HL) <- MPCAND
+		PUSH	BC	; SAVE IP
+		LD	B,H
+		LD	A,L	; (BA) <- MPCAND
+		CALL	MPYX	; (AHL)1 <- MPCAND.LB * MPLIER
+;			       1ST PARTIAL PRODUCT
+		PUSH	HL	; SAVE (HL)1
+		LD	H,A
+		LD	A,B
+		LD	B,H	; SAVE (A)1
+		CALL	MPYX	; (AHL)2 <- MPCAND.HB * MPLIER
+;			       2ND PARTIAL PRODUCT
+		POP	DE	; (DE) <- (HL)1
+		LD	C,D	; (BC) <- (AH)1
+;	FORM SUM OF PARTIALS:
+;			   (AHL) 1
+;			+ (AHL)  2
+;			--------
+;			  (AHLE)
+		ADD	HL,BC	; (HL) <- (HL)2 + (AH)1
+		ADC	A,0	; (AHLE) <- (BA) * (DE)
+		LD	D,L
+		LD	L,H
+		LD	H,A	; (HLDE) <- MPLIER * MPCAND
+		POP	BC	; RESTORE IP
+		PUSH	DE	; (S2) <- PRODUCT.LW
+		JP	HPUSH	; (S1) <- PRODUCT.HW
+;
+;	MULTIPLY PRIMITIVE
+;		(AHL) <- (A) * (DE)
+;	#BITS =	 24	  8	16
+MPYX:		LD	HL,0	; (HL) <- 0 = PARTIAL PRODUCT.LW
+		LD	C,8	; LOOP COUNTER
+MPYX1:		ADD	HL,HL	; LEFT SHIFT (AHL) 24 BITS
+		RLA
+		JP	NC,MPYX2	; IF NEXT MPLIER BIT = 1
+		ADD	HL,DE	; THEN ADD MPCAND
+		ADC	A,0
+MPYX2:		DEC	C	; IF NOT LAST MPLIER BIT
+		JP	NZ,MPYX1	; THEN LOOP AGAIN
+		RET	; ELSE DONE
+;
+		DB	82H	; U/
+		DB	'U'
+		DB	'/'+80H
+		DW	USTAR-5
+USLAS:		DW	$+2
+		LD	HL,4
+		ADD	HL,SP	; ((HL)) <- NUMERATOR.LW
+		LD	E,(HL)	; (DE) <- NUMER.LW
+		LD	(HL),C	; SAVE IP ON STACK
+		INC	HL
+		LD	D,(HL)
+		LD	(HL),B
+		POP	BC	; (BC) <- DENOMINATOR
+		POP	HL	; (HL) <- NUMER.HW
+		LD	A,L
+		SUB	C	; IF NUMER >= DENOM
+		LD	A,H
+		SBC	A,B
+		JP	C,USLA1
+		LD	HL,0FFFFH	; THEN OVERFLOW
+		LD	DE,0FFFFH	; SET REM & QUOT TO MAX
+		JP	USLA7
+USLA1:		LD	A,16	; LOOP COUNTER
+USLA2:		ADD	HL,HL	; LEFT SHIFT (HLDE) THRU CARRY
+		RLA
+		EX	DE,HL
+		ADD	HL,HL
+		JP	NC,USLA3
+		INC	DE
+		AND	A
+USLA3:		EX	DE,HL	; SHIFT DONE
+		RRA	; RESTORE 1ST CARRY
+		PUSH	AF	; SAVE COUNTER
+		JP	NC,USLA4	; IF CARRY = 1
+		LD	A,L	; THEN (HL) <- (HL) - (BC)
+		SUB	C
+		LD	L,A
+		LD	A,H
+		SBC	A,B
+		LD	H,A
+		JP	USLA5
+USLA4:		LD	A,L	; ELSE TRY (HL) <- (HL) - (BC)
+		SUB	C
+		LD	L,A
+		LD	A,H
+		SBC	A,B	; (HL) <- PARTIAL REMAINDER
+		LD	H,A
+		JP	NC,USLA5
+		ADD	HL,BC	; UNDERFLOW, RESTORE
+		DEC	DE
+USLA5:		INC	DE	; INC QUOT
+USLA6:		POP	AF	; RESTORE COUNTER
+		DEC	A	; IF COUNTER > 0
+		JP	NZ,USLA2	; THEN LOOP AGAIN
+USLA7:		POP	BC	; ELSE DONE, RESTORE IP
+		PUSH	HL	; (S2) <- REMAINDER
+		PUSH	DE	; (S1) <- QUOTIENT
+		JP	NEXT
+;
+		DB	83H	; AND
+		DB	'AN'
+		DB	'D'+80H
+		DW	USLAS-5
+ANDD:		DW	$+2	; (S1) <- (S1) AND (S2)
+		POP	DE
+		POP	HL
+		LD	A,E
+		AND	L
+		LD	L,A
+		LD	A,D
+		AND	H
+		LD	H,A
+		JP	HPUSH
+;
+		DB	82H	; OR
+		DB	'O'
+		DB	'R'+80H
+		DW	ANDD-6
+ORR:		DW	$+2	; (S1) <- (S1) OR (S2)
+		POP	DE
+		POP	HL
+		LD	A,E
+		OR	L
+		LD	L,A
+		LD	A,D
+		OR	H
+		LD	H,A
+		JP	HPUSH
+;
+		DB	83H	; XOR
+		DB	'XO'
+		DB	'R'+80H
+		DW	ORR-5
+XORR:		DW	$+2	; (S1) <- (S1) XOR (S2)
+		POP	DE
+		POP	HL
+		LD	A,E
+		XOR	L
+		LD	L,A
+		LD	A,D
+		XOR	H
+		LD	H,A
+		JP	HPUSH
+;
+		DB	83H	; SP@
+		DB	'SP'
+		DB	'@'+80H
+		DW	XORR-6
+SPAT:		DW	$+2	;(S1) <- (SP)
+		LD	HL,0
+		ADD	HL,SP	; (HL) <- (SP)
+		JP	HPUSH	; (S1) <- (HL)
+;
+		DB	83H	; STACK POINTER STORE
+		DB	'SP'
+		DB	'!'+80H
+		DW	SPAT-6
+SPSTO:		DW	$+2	;(SP) <- (S0) ( USER VARIABLE )
+		LD	HL,(UP)	; (HL) <- USER VAR BASE ADDR
+		LD	DE,6
+		ADD	HL,DE	; (HL) <- S0
+		LD	E,(HL)	; (DE) <- (S0)
+		INC	HL
+		LD	D,(HL)
+		EX	DE,HL
+		LD	SP,HL	; (SP) <- (S0)
+		JP	NEXT
+;
+		DB	83H	; RP@
+		DB	'RP'
+		DB	'@'+80H
+		DW	SPSTO-6
+RPAT:		DW	$+2	;(S1) <- (RP)
+		LD	HL,(RPP)
+		JP	HPUSH
+;
+		DB	83H	; RETURN STACK POINTER STORE
+		DB	'RP'
+		DB	'!'+80H
+		DW	RPAT-6
+RPSTO:		DW	$+2	;(RP) <- (R0) ( USER VARIABLE )
+		LD	HL,(UP)	; (HL) <- USER VARIABLE BASE ADDR
+		LD	DE,8
+		ADD	HL,DE	; (HL) <- R0
+		LD	E,(HL)	; (DE) <- (R0)
+		INC	HL
+		LD	D,(HL)
+		EX	DE,HL
+		LD	(RPP),HL	; (RP) <- (R0)
+		JP	NEXT
+;
+		DB	82H	; ;S
+		DB	';'
+		DB	'S'+80H
+		DW	RPSTO-6
+SEMIS:		DW	$+2	;(IP) <- (R1)
+		LD	HL,(RPP)
+		LD	C,(HL)	; (BC) <- (R1)
+		INC	HL
+		LD	B,(HL)
+		INC	HL
+		LD	(RPP),HL	; (RP) <- (RP) + 2
+		JP	NEXT
+;
+		DB	85H	; LEAVE
+		DB	'LEAV'
+		DB	'E'+80H
+		DW	SEMIS-5
+LEAVE:		DW	$+2	;LIMIT <- INDEX
+		LD	HL,(RPP)
+		LD	E,(HL)	; (DE) <- (R1) = INDEX
+		INC	HL
+		LD	D,(HL)
+		INC	HL
+		LD	(HL),E	; (R2) <- (DE) = LIMIT
+		INC	HL
+		LD	(HL),D
+		JP	NEXT
+;
+		DB	82H	; >R
+		DB	'>'
+		DB	'R'+80H
+		DW	LEAVE-8
+TOR:		DW	$+2	;(R1) <- (S1)
+		POP	DE	; (DE) <- (S1)
+		LD	HL,(RPP)
+		DEC	HL	; (RP) <- (RP) - 2
+		DEC	HL
+		LD	(RPP),HL
+		LD	(HL),E	; ((HL)) <- (DE)
+		INC	HL
+		LD	(HL),D
+		JP	NEXT
+;
+		DB	82H	; R>
+		DB	'R'
+		DB	'>'+80H
+		DW	TOR-5
+FROMR:		DW	$+2	;(S1) <- (R1)
+		LD	HL,(RPP)
+		LD	E,(HL)	; (DE) <- (R1)
+		INC	HL
+		LD	D,(HL)
+		INC	HL
+		LD	(RPP),HL	; (RP) <- (RP) + 2
+		PUSH	DE	; (S1) <- (DE)
+		JP	NEXT
+;
+		DB	81H	; R
+		DB	'R'+80H
+		DW	FROMR-5
+RR:		DW	IDO+2
+;
+		DB	82H	; 0=
+		DB	'0'
+		DB	'='+80H
+		DW	RR-4
+ZEQU:		DW	$+2
+		POP	HL	; (HL) <- (S1)
+		LD	A,L
+		OR	H	; IF (HL) = 0
+		LD	HL,0	; THEN (HL) <- FALSE
+		JP	NZ,ZEQU1
+		INC	HL	; ELSE (HL) <- TRUE
+ZEQU1:		JP	HPUSH	; (S1) <- (HL)
+;
+		DB	82H	; 0<
+		DB	'0'
+		DB	'<'+80H
+		DW	ZEQU-5
+ZLESS:		DW	$+2
+		POP	HL	; (HL) <- (S1)
+		ADD	HL,HL	; IF (HL) >= 0
+		LD	HL,0	; THEN (HL) <- FALSE
+		JP	NC,ZLES1
+		INC	HL	; ELSE (HL) <- TRUE
+ZLES1:		JP	HPUSH	; (S1) <- (HL)
+;
+		DB	81H	; +
+		DB	'+'+80H
+		DW	ZLESS-5
+PLUS:		DW	$+2	;(S1) <- (S1) + (S2)
+		POP	DE
+		POP	HL
+		ADD	HL,DE
+		JP	HPUSH
+;
+		DB	82H	; D+	(4-2)
+		DB	'D'	; XLW XHW  YLW YHW  ---  SLW SHW
+		DB	'+'+80H	; S4  S3   S2  S1        S2  S1
+		DW	PLUS-4
+DPLUS:		DW	$+2
+		LD	HL,6
+		ADD	HL,SP	; ((HL)) = XLW
+		LD	E,(HL)	; (DE) = XLW
+		LD	(HL),C	; SAVE IP ON STACK
+		INC	HL
+		LD	D,(HL)
+		LD	(HL),B
+		POP	BC	; (BC) <- YHW
+		POP	HL	; (HL) <- YLW
+		ADD	HL,DE
+		EX	DE,HL	; (DE) <- YLW + XLW = SUM.LW
+		POP	HL	; (HL) <- XHW
+		LD	A,L
+		ADC	A,C
+		LD	L,A	; (HL) <- YHW + XHW + CARRY
+		LD	A,H
+		ADC	A,B
+		LD	H,A
+		POP	BC	; RESTORE IP
+		PUSH	DE	; (S2) <- SUM.LW
+		JP	HPUSH	; (S1) <- SUM.HW
+;
+		DB	85H	; MINUS
+		DB	'MINU'
+		DB	'S'+80H
+		DW	DPLUS-5
+MINUS:		DW	$+2	;(S1) <- -(S1)	( 2'S COMPLEMENT )
+		POP	HL
+		LD	A,L
+		CPL
+		LD	L,A
+		LD	A,H
+		CPL
+		LD	H,A
+		INC	HL
+		JP	HPUSH
+;
+		DB	86H	; DMINUS
+		DB	'DMINU'
+		DB	'S'+80H
+		DW	MINUS-8
+DMINU:		DW	$+2
+		POP	HL	; (HL) <- HW
+		POP	DE	; (DE) <- LW
+		SUB	A
+		SUB	E	; (DE) <- 0 - (DE)
+		LD	E,A
+		LD	A,0
+		SBC	A,D
+		LD	D,A
+		LD	A,0
+		SBC	A,L	; (HL) <- 0 - (HL)
+		LD	L,A
+		LD	A,0
+		SBC	A,H
+		LD	H,A
+		PUSH	DE	; (S2) <- LW
+		JP	HPUSH	; (S1) <- HW
+;
+		DB	84H	; OVER
+		DB	'OVE'
+		DB	'R'+80H
+		DW	DMINU-9
+OVER:		DW	$+2
+		POP	DE
+		POP	HL
+		PUSH	HL
+		JP	DPUSH
+;
+		DB	84H	; DROP
+		DB	'DRO'
+		DB	'P'+80H
+		DW	OVER-7
+DROP:		DW	$+2
+		POP	HL
+		JP	NEXT
+;
+		DB	84H	; SWAP
+		DB	'SWA'
+		DB	'P'+80H
+		DW	DROP-7
+SWAP:		DW	$+2
+		POP	HL
+		EX	(SP),HL
+		JP	HPUSH
+;
+		DB	83H	; DUP
+		DB	'DU'
+		DB	'P'+80H
+		DW	SWAP-7
+DUP:		DW	$+2
+		POP	HL
+		PUSH	HL
+		JP	HPUSH
+;
+		DB	84H	; 2DUP
+		DB	'2DU'
+		DB	'P'+80H
+		DW	DUP-6
+TDUP:		DW	$+2
+		POP	HL
+		POP	DE
+		PUSH	DE
+		PUSH	HL
+		JP	DPUSH
+;
+		DB	82H	; PLUS STORE
+		DB	'+'
+		DB	'!'+80H
+		DW	TDUP-7
+PSTOR:		DW	$+2	;((S1)) <- ((S1)) + (S2)
+		POP	HL	; (HL) <- (S1) = ADDR
+		POP	DE	; (DE) <- (S2) = INCR
+		LD	A,(HL)	; ((HL)) <- ((HL)) + (DE)
+		ADD	A,E
+		LD	(HL),A
+		INC	HL
+		LD	A,(HL)
+		ADC	A,D
+		LD	(HL),A
+		JP	NEXT
+;
+		DB	86H	; TOGGLE
+		DB	'TOGGL'
+		DB	'E'+80H
+		DW	PSTOR-5
+TOGGL:		DW	$+2	;((S2)) <- ((S2)) XOR (S1)LB
+		POP	DE	; (E) <- BYTE MASK
+		POP	HL	; (HL) <- ADDR
+		LD	A,(HL)
+		XOR	E
+		LD	(HL),A	; (ADDR) <- (ADDR) XOR (E)
+		JP	NEXT
+;
+		DB	81H	; @
+		DB	'@'+80H
+		DW	TOGGL-9
+AT:		DW	$+2	;(S1) <- ((S1))
+		POP	HL	; (HL) <- ADDR
+		LD	E,(HL)	; (DE) <- (ADDR)
+		INC	HL
+		LD	D,(HL)
+		PUSH	DE	; (S1) <- (DE)
+		JP	NEXT
+;
+		DB	82H	; C@
+		DB	'C'
+		DB	'@'+80H
+		DW	AT-4
+CAT:		DW	$+2	;(S1) <- ((S1))LB
+		POP	HL	; (HL) <- ADDR
+		LD	L,(HL)	; (HL) <- (ADDR)LB
+		LD	H,0
+		JP	HPUSH
+;
+		DB	82H	; 2@
+		DB	'2'
+		DB	'@'+80H
+		DW	CAT-5
+TAT:		DW	$+2
+		POP	HL	; (HL) <- ADDR HW
+		LD	DE,2
+		ADD	HL,DE	; (HL) <- ADDR LW
+		LD	E,(HL)	; (DE) <- LW
+		INC	HL
+		LD	D,(HL)
+		PUSH	DE	; (S2) <- LW
+		LD	DE,-3	; (HL) <- ADDR HW
+		ADD	HL,DE
+		LD	E,(HL)	; (DE) <- HW
+		INC	HL
+		LD	D,(HL)
+		PUSH	DE	; (S1) <- HW
+		JP	NEXT
+;
+		DB	81H	; STORE
+		DB	'!'+80H
+		DW	TAT-5
+STORE:		DW	$+2	;((S1)) <- (S2)
+		POP	HL	; (HL) <- (S1) = ADDR
+		POP	DE	; (DE) <- (S2) = VALUE
+		LD	(HL),E	; ((HL)) <- (DE)
+		INC	HL
+		LD	(HL),D
+		JP	NEXT
+;
+		DB	82H	; C STORE
+		DB	'C'
+		DB	'!'+80H
+		DW	STORE-4
+CSTOR:		DW	$+2	;((S1))LB <- (S2)LB
+		POP	HL	; (HL) <- (S1) = ADDR
+		POP	DE	; (DE) <- (S2) = BYTE
+		LD	(HL),E	; ((HL))LB <- (E)
+		JP	NEXT
+;
+		DB	82H	; 2 STORE
+		DB	'2'
+		DB	'!'+80H
+		DW	CSTOR-5
+TSTOR:		DW	$+2
+		POP	HL	; (HL) <- ADDR
+		POP	DE	; (DE) <- HW
+		LD	(HL),E	; (ADDR) <- HW
+		INC	HL
+		LD	(HL),D
+		INC	HL	; (HL) <- ADDR LW
+		POP	DE	; (DE) <- LW
+		LD	(HL),E	; (ADDR+2) <- LW
+		INC	HL
+		LD	(HL),D
+		JP	NEXT
+;
+		DB	0C1H	; :
+		DB	':'+80H
+		DW	TSTOR-5
+COLON:		DW	DOCOL
+		DW	QEXEC
+		DW	SCSP
+		DW	CURR
+		DW	AT
+		DW	CONT
+		DW	STORE
+		DW	CREAT
+		DW	RBRAC
+		DW	PSCOD
+DOCOL:		LD	HL,(RPP)
+		DEC	HL	; (R1) <- (IP)
+		DEC	HL	; (RP) <- (RP) - 2
+		LD	(RPP),HL
+		LD	(HL),C
+		inc	hl
+		LD	(HL),B
+		INC	DE	; (DE) <- CFA+2 = (W)
+		LD	C,E	; (IP) <- (DE) = (W)
+		LD	B,D
+		JP	NEXT
+;
+		DB	0C1H	; ;
+		DB	';'+80H
+		DW	COLON-4
+SEMI:		DW	DOCOL
+		DW	QCSP
+		DW	COMP
+		DW	SEMIS
+		DW	SMUDG
+		DW	LBRAC
+		DW	SEMIS
+;
+		DB	88H	; CONSTANT
+		DB	'CONSTAN'
+		DB	'T'+80H
+		DW	SEMI-4
+CON:		DW	DOCOL
+		DW	CREAT
+		DW	SMUDG
+		DW	COMMA
+		DW	PSCOD
+DOCON:		INC	DE	; (DE) <- PFA
+		EX	DE,HL
+		LD	E,(HL)	; (DE) <- (PFA)
+		INC	HL
+		LD	D,(HL)
+		PUSH	DE	; (S1) <- (PFA)
+		JP	NEXT
+;
+		DB	88H	; VARIABLE
+		DB	'VARIABL'
+		DB	'E'+80H
+		DW	CON-0BH
+VAR:		DW	DOCOL
+		DW	CON
+		DW	PSCOD
+DOVAR:		INC	DE	; (DE) <- PFA
+		PUSH	DE	; (S1) <- PFA
+		JP	NEXT
+;
+		DB	84H	; USER
+		DB	'USE'
+		DB	'R'+80H
+		DW	VAR-0BH
+USER:		DW	DOCOL
+		DW	CON
+		DW	PSCOD
+DOUSE:		INC	DE	; (DE) <- PFA
+		EX	DE,HL
+		LD	E,(HL)	; (DE) <- USER VARIABLE OFFSET
+		LD	D,0
+		LD	HL,(UP)	; (HL) <- USER VARIABLE BASE ADDR
+		ADD	HL,DE	; (HL) <- (HL) + (DE)
+		JP	HPUSH	; (S1) <- BASE + OFFSET
+;
+		DB	81H	; 0
+		DB	'0'+80H
+		DW	USER-7
+ZERO:		DW	DOCON
+		DW	0
+;
+		DB	81H	; 1
+		DB	'1'+80H
+		DW	ZERO-4
+ONE:		DW	DOCON
+		DW	1
+;
+		DB	81H	; 2
+		DB	'2'+80H
+		DW	ONE-4
+TWO:		DW	DOCON
+		DW	2
+;
+		DB	81H	; 3
+		DB	'3'+80H
+		DW	TWO-4
+THREE:		DW	DOCON
+		DW	3
+;
+		DB	82H	; BL
+		DB	'B'
+		DB	'L'+80H
+		DW	THREE-4
+BL:		DW	DOCON
+		DW	20H
+;
+		DB	83H	; C/L ( CHARACTERS/LINE )
+		DB	'C/'
+		DB	'L'+80H
+		DW	BL-5
+CSLL:		DW	DOCON
+		DW	64
+;
+		DB	85H	; FIRST
+		DB	'FIRS'
+		DB	'T'+80H
+		DW	CSLL-6
+FIRST:		DW	DOCON
+		DW	BUF1
+;
+		DB	85H	; LIMIT
+		DB	'LIMI'
+		DB	'T'+80H
+		DW	FIRST-8
+LIMIT:		DW	DOCON
+		DW	EM-1
+;
+		DB	85H	; B/BUF ( BYTES/BUFFER )
+		DB	'B/BU'
+		DB	'F'+80H
+		DW	LIMIT-8
+BBUF:		DW	DOCON
+		DW	KBBUF
+;
+		DB	85H	; B/SCR ( BUFFERS/SCREEN )
+		DB	'B/SC'
+		DB	'R'+80H
+		DW	BBUF-8
+BSCR:		DW	DOCON
+		DW	400H/KBBUF
+;
+		DB	87H	; +ORIGIN
+		DB	'+ORIGI'
+		DB	'N'+80H
+		DW	BSCR-8
+PORIG:		DW	DOCOL
+		DW	LIT
+		DW	ORIG
+		DW	PLUS
+		DW	SEMIS
+;
+;	USER VARIABLES
+;
+		DB	82H	; S0
+		DB	'S'
+		DB	'0'+80H
+		DW	PORIG-0AH
+SZERO:		DW	DOUSE
+		DW	6
+;
+		DB	82H	; R0
+		DB	'R'
+		DB	'0'+80H
+		DW	SZERO-5
+RZERO:		DW	DOUSE
+		DW	8
+;
+		DB	83H	; TIB
+		DB	'TI'
+		DB	'B'+80H
+		DW	RZERO-5
+TIB:		DW	DOUSE
+		DB	0AH
+;
+		DB	85H	; WIDTH
+		DB	'WIDT'
+		DB	'H'+80H
+		DW	TIB-6
+WIDTH:		DW	DOUSE
+		DB	0CH
+;
+		DB	87H	; WARNING
+		DB	'WARNIN'
+		DB	'G'+80H
+		DW	WIDTH-8
+WARN:		DW	DOUSE
+		DB	0EH
+;
+		DB	85H	; FENCE
+		DB	'FENC'
+		DB	'E'+80H
+		DW	WARN-0AH
+FENCE:		DW	DOUSE
+		DB	10H
+;
+		DB	82H	; DP
+		DB	'D'
+		DB	'P'+80H
+		DW	FENCE-8
+DP:		DW	DOUSE
+		DB	12H
+;
+		DB	88H	; VOC-LINK
+		DB	'VOC-LIN'
+		DB	'K'+80H
+		DW	DP-5
+VOCL:		DW	DOUSE
+		DW	14H
+;
+		DB	83H	; BLK
+		DB	'BL'
+		DB	'K'+80H
+		DW	VOCL-0BH
+BLK:		DW	DOUSE
+		DB	16H
+;
+		DB	82H	; IN
+		DB	'I'
+		DB	'N'+80H
+		DW	BLK-6
+INN:		DW	DOUSE
+		DB	18H
+;
+		DB	83H	; OUT
+		DB	'OU'
+		DB	'T'+80H
+		DW	INN-5
+OUTT:		DW	DOUSE
+		DB	1AH
+;
+		DB	83H	; SCR
+		DB	'SC'
+		DB	'R'+80H
+		DW	OUTT-6
+SCR:		DW	DOUSE
+		DB	1CH
+;
+		DB	86H	; OFFSET
+		DB	'OFFSE'
+		DB	'T'+80H
+		DW	SCR-6
+OFSET:		DW	DOUSE
+		DB	1EH
+;
+		DB	87H	; CONTEXT
+		DB	'CONTEX'
+		DB	'T'+80H
+		DW	OFSET-9
+CONT:		DW	DOUSE
+		DB	20H
+;
+		DB	87H	; CURRENT
+		DB	'CURREN'
+		DB	'T'+80H
+		DW	CONT-0AH
+CURR:		DW	DOUSE
+		DB	22H
+;
+		DB	85H	; STATE
+		DB	'STAT'
+		DB	'E'+80H
+		DW	CURR-0AH
+STATE:		DW	DOUSE
+		DB	24H
+;
+		DB	84H	; BASE
+		DB	'BAS'
+		DB	'E'+80H
+		DW	STATE-8
+BASE:		DW	DOUSE
+		DB	26H
+;
+		DB	83H	; DPL
+		DB	'DP'
+		DB	'L'+80H
+		DW	BASE-7
+DPL:		DW	DOUSE
+		DB	28H
+;
+		DB	83H	; FLD
+		DB	'FL'
+		DB	'D'+80H
+		DW	DPL-6
+FLD:		DW	DOUSE
+		DB	2AH
+;
+		DB	83H	; CSP
+		DB	'CS'
+		DB	'P'+80H
+		DW	FLD-6
+CSPP:		DW	DOUSE
+		DB	2CH
+;
+		DB	82H	; R#
+		DB	'R'
+		DB	'#'+80H
+		DW	CSPP-6
+RNUM:		DW	DOUSE
+		DB	2EH
+;
+		DB	83H	; HLD
+		DB	'HL'
+		DB	'D'+80H
+		DW	RNUM-5
+HLD:		DW	DOUSE
+		DW	30H
+;
+;	END OF USER VARIABLES
+;
+;------------------------------------------------------------------------------
+;
+;------------------------------------------------------------------------------
+
+;
+;	FORTH VARIABLES AND CONSTANTS USED IN DISK INTERFACE
+;
+		DB	85H	; DRIVE ( CURRENT DRIVE # )
+		DB	'DRIV'
+		DB	'E'+80H
+		DW	HLD-6
+DRIVE:		DW	DOUSE,32h
+;
+		DB	83H	; SEC	( SECTOR # )
+		DB	'SE'
+		DB	'C'+80H
+		DW	DRIVE-8
+SEC:		DW	DOUSE,34h
+;
+		DB	85H	; TRACK	( TRACK # )
+		DB	'TRAC'
+		DB	'K'+80H
+		DW	SEC-6
+TRACK:		DW	DOUSE,36h
+;
+		DB	83H	; USE	( ADDR OF NEXT BUFFER TO USE )
+		DB	'US'
+		DB	'E'+80H
+		DW	TRACK-8
+USE:		DW	DOUSE,38h
+;
+		DB	84H	; PREV
+;			( ADDR OF PREVIOUSLY USED BUFFER )
+		DB	'PRE'
+		DB	'V'+80H
+		DW	USE-6
+PREV:		DW	DOUSE,3Ah
+;
+;
+		DB	87H	; DENSITY ( 0 = SINGLE , 1 = DOUBLE )
+		DB	'DENSIT'
+		DB	'Y'+80H
+		DW	PREV-7
+DENSTY:		DW	DOUSE,3Ch
+;
+		DB	8AH	; DISK-ERROR  ( DISK ERROR STATUS )
+		DB	'DISK-ERRO'
+		DB	'R'+80H
+		DW	DENSTY-10
+DSKERR:		DW	DOUSE,3Eh
+
+;------------------------------------------------------------------------------
+;
+;------------------------------------------------------------------------------
+
+
+		DB	82H	; 1+
+		DB	'1'
+		DB	'+'+80H
+		DW	DSKERR-13
+ONEP:		DW	DOCOL
+		DW	ONE
+		DW	PLUS
+		DW	SEMIS
+;
+		DB	82H	; 2+
+		DB	'2'
+		DB	'+'+80H
+		DW	ONEP-5
+TWOP:		DW	DOCOL
+		DW	TWO
+		DW	PLUS
+		DW	SEMIS
+;
+		DB	84H	; HERE
+		DB	'HER'
+		DB	'E'+80H
+		DW	TWOP-5
+HERE:		DW	DOCOL
+		DW	DP
+		DW	AT
+		DW	SEMIS
+;
+		DB	85H	; ALLOT
+		DB	'ALLO'
+		DB	'T'+80H
+		DW	HERE-7
+ALLOT:		DW	DOCOL
+		DW	DP
+		DW	PSTOR
+		DW	SEMIS
+;
+		DB	81H	; ,
+		DB	','+80H
+		DW	ALLOT-8
+COMMA:		DW	DOCOL
+		DW	HERE
+		DW	TWO
+		DW	ALLOT
+		DW	STORE
+		DW	SEMIS
+;
+		DB	82H	; C,
+		DB	'C'
+		DB	','+80H
+		DW	COMMA-4
+CCOMM:		DW	DOCOL
+		DW	HERE
+		DW	ONE
+		DW	ALLOT
+		DW	CSTOR
+		DW	SEMIS
+;
+;	SUBROUTINE USED BY - AND <
+;			; (HL) <- (HL) - (DE)
+SSUB:		LD	A,L	; LB
+		SUB	E
+		LD	L,A
+		LD	A,H	; HB
+		SBC	A,D
+		LD	H,A
+		RET
+;
+		DB	81H	; -
+		DB	'-'+80H
+		DW	CCOMM-5
+SUBB:		DW	$+2
+		POP	DE	; (DE) <- (S1) = Y
+		POP	HL	; (HL) <- (S2) = X
+		CALL	SSUB
+		JP	HPUSH	; (S1) <- X - Y
+;
+		DB	81H	; =
+		DB	'='+80H
+		DW	SUBB-4
+EQUAL:		DW	DOCOL
+		DW	SUBB
+		DW	ZEQU
+		DW	SEMIS
+;
+		DB	81H	; <
+		DB	'<'+80H	; X  <  Y
+		DW	EQUAL-4	; S2    S1
+LESS:		DW	$+2
+		POP	DE	; (DE) <- (S1) = Y
+		POP	HL	; (HL) <- (S2) = X
+		LD	A,D	; IF X & Y HAVE SAME SIGNS
+		XOR	H
+		JP	M,LES1
+		CALL	SSUB	; (HL) <- X - Y
+LES1:		INC	H	; IF (HL) >= 0
+		DEC	H
+		JP	M,LES2
+		LD	HL,0	; THEN X >= Y
+		JP	HPUSH	; (S1) <- FALSE
+LES2:		LD	HL,1	; ELSE X < Y
+		JP	HPUSH	; (S1) <- TRUE
+;
+		DB	82H	; U< ( UNSIGNED < )
+		DB	'U'
+		DB	'<'+80H
+		DW	LESS-4
+ULESS:		DW	DOCOL,TDUP
+		DW	XORR,ZLESS
+		DW	ZBRAN
+		DW	ULES1-$	; IF
+		DW	DROP,ZLESS
+		DW	ZEQU
+		DW	BRAN
+		DW	ULES2-$
+ULES1:		DW	SUBB,ZLESS	; ELSE
+ULES2:		DW	SEMIS	; ENDIF
+;
+		DB	81H	; >
+		DB	'>'+80H
+		DW	ULESS-5
+GREAT:		DW	DOCOL
+		DW	SWAP
+		DW	LESS
+		DW	SEMIS
+;
+		DB	83H	; ROT
+		DB	'RO'
+		DB	'T'+80H
+		DW	GREAT-4
+ROT:		DW	$+2
+		POP	DE
+		POP	HL
+		EX	(SP),HL
+		JP	DPUSH
+;
+		DB	85H	; SPACE
+		DB	'SPAC'
+		DB	'E'+80H
+		DW	ROT-6
+SPACE:		DW	DOCOL
+		DW	BL
+		DW	EMIT
+		DW	SEMIS
+;
+		DB	84H	; -DUP
+		DB	'-DU'
+		DB	'P'+80H
+		DW	SPACE-8
+DDUP:		DW	DOCOL
+		DW	DUP
+		DW	ZBRAN	; IF
+		DW	DDUP1-$
+		DW	DUP	; ENDIF
+DDUP1:		DW	SEMIS
+;
+		DB	88H	; TRAVERSE
+		DB	'TRAVERS'
+		DB	'E'+80H
+		DW	DDUP-7
+TRAV:		DW	DOCOL
+		DW	SWAP
+TRAV1:		DW	OVER	; BEGIN
+		DW	PLUS
+		DW	LIT
+		DW	7FH
+		DW	OVER
+		DW	CAT
+		DW	LESS
+		DW	ZBRAN	; UNTIL
+		DW	TRAV1-$
+		DW	SWAP
+		DW	DROP
+		DW	SEMIS
+;
+		DB	86H	; LATEST
+		DB	'LATES'
+		DB	'T'+80H
+		DW	TRAV-0BH
+LATES:		DW	DOCOL
+		DW	CURR
+		DW	AT
+		DW	AT
+		DW	SEMIS
+;
+		DB	83H	; LFA
+		DB	'LF'
+		DB	'A'+80H
+		DW	LATES-9
+LFA:		DW	DOCOL
+		DW	LIT
+		DW	4
+		DW	SUBB
+		DW	SEMIS
+;
+		DB	83H	; CFA
+		DB	'CF'
+		DB	'A'+80H
+		DW	LFA-6
+CFA:		DW	DOCOL
+		DW	TWO
+		DW	SUBB
+		DW	SEMIS
+;
+		DB	83H	; NFA
+		DB	'NF'
+		DB	'A'+80H
+		DW	CFA-6
+NFA:		DW	DOCOL
+		DW	LIT
+		DW	5
+		DW	SUBB
+		DW	LIT
+		DW	-1
+		DW	TRAV
+		DW	SEMIS
+;
+		DB	83H	; PFA
+		DB	'PF'
+		DB	'A'+80H
+		DW	NFA-6
+PFA:		DW	DOCOL
+		DW	ONE
+		DW	TRAV
+		DW	LIT
+		DW	5
+		DW	PLUS
+		DW	SEMIS
+;
+		DB	84H	; STORE CSP
+		DB	'!CS'
+		DB	'P'+80H
+		DW	PFA-6
+SCSP:		DW	DOCOL
+		DW	SPAT
+		DW	CSPP
+		DW	STORE
+		DW	SEMIS
+;
+		DB	86H	; ?ERROR
+		DB	'?ERRO'
+		DB	'R'+80H
+		DW	SCSP-7
+QERR:		DW	DOCOL
+		DW	SWAP
+		DW	ZBRAN	; IF
+		DW	QERR1-$
+		DW	ERROR
+		DW	BRAN	; ELSE
+		DW	QERR2-$
+QERR1:		DW	DROP	; ENDIF
+QERR2:		DW	SEMIS
+;
+		DB	85H	; ?COMP
+		DB	'?COM'
+		DB	'P'+80H
+		DW	QERR-9
+QCOMP:		DW	DOCOL
+		DW	STATE
+		DW	AT
+		DW	ZEQU
+		DW	LIT
+		DW	11H
+		DW	QERR
+		DW	SEMIS
+;
+		DB	85H	; ?EXEC
+		DB	'?EXE'
+		DB	'C'+80H
+		DW	QCOMP-8
+QEXEC:		DW	DOCOL
+		DW	STATE
+		DW	AT
+		DW	LIT
+		DW	12H
+		DW	QERR
+		DW	SEMIS
+;
+		DB	86H	; ?PAIRS
+		DB	'?PAIR'
+		DB	'S'+80H
+		DW	QEXEC-8
+QPAIR:		DW	DOCOL
+		DW	SUBB
+		DW	LIT
+		DW	13H
+		DW	QERR
+		DW	SEMIS
+;
+		DB	84H	; ?CSP
+		DB	'?CS'
+		DB	'P'+80H
+		DW	QPAIR-9
+QCSP:		DW	DOCOL
+		DW	SPAT
+		DW	CSPP
+		DW	AT
+		DW	SUBB
+		DW	LIT
+		DW	14H
+		DW	QERR
+		DW	SEMIS
+;
+		DB	88H	; ?LOADING
+		DB	'?LOADIN'
+		DB	'G'+80H
+		DW	QCSP-7
+QLOAD:		DW	DOCOL
+		DW	BLK
+		DW	AT
+		DW	ZEQU
+		DW	LIT
+		DW	16H
+		DW	QERR
+		DW	SEMIS
+;
+		DB	87H	; COMPILE
+		DB	'COMPIL'
+		DB	'E'+80H
+		DW	QLOAD-0BH
+COMP:		DW	DOCOL
+		DW	QCOMP
+		DW	FROMR
+		DW	DUP
+		DW	TWOP
+		DW	TOR
+		DW	AT
+		DW	COMMA
+		DW	SEMIS
+;
+		DB	0C1H	; [
+		DB	'['+80H
+		DW	COMP-0AH
+LBRAC:		DW	DOCOL
+		DW	ZERO
+		DW	STATE
+		DW	STORE
+		DW	SEMIS
+;
+		DB	81H	; ]
+		DB	']'+80H
+		DW	LBRAC-4
+RBRAC:		DW	DOCOL
+		DW	LIT,0C0H
+		DW	STATE,STORE
+		DW	SEMIS
+;
+		DB	86H	; SMUDGE
+		DB	'SMUDG'
+		DB	'E'+80H
+		DW	RBRAC-4
+SMUDG:		DW	DOCOL
+		DW	LATES
+		DW	LIT
+		DW	20H
+		DW	TOGGL
+		DW	SEMIS
+;
+		DB	83H	; HEX
+		DB	'HE'
+		DB	'X'+80H
+		DW	SMUDG-9
+HEX:		DW	DOCOL
+		DW	LIT
+		DW	10H
+		DW	BASE
+		DW	STORE
+		DW	SEMIS
+;
+		DB	87H	; DECIMAL
+		DB	'DECIMA'
+		DB	'L'+80H
+		DW	HEX-6
+DEC:		DW	DOCOL
+		DW	LIT
+		DW	0AH
+		DW	BASE
+		DW	STORE
+		DW	SEMIS
+;
+		DB	87H	; (;CODE)
+		DB	'(;CODE'
+		DB	')'+80H
+		DW	DEC-0AH
+PSCOD:		DW	DOCOL
+		DW	FROMR
+		DW	LATES
+		DW	PFA
+		DW	CFA
+		DW	STORE
+		DW	SEMIS
+;
+		DB	0C5H	; ;CODE
+		DB	';COD'
+		DB	'E'+80H
+		DW	PSCOD-0AH
+SEMIC:		DW	DOCOL
+		DW	QCSP
+		DW	COMP
+		DW	PSCOD
+		DW	LBRAC
+SEMI1:		DW	off_580A	; ( ASSEMBLER )
+		DW	SEMIS
+;
+		DB	87H	; <BUILDS
+		DB	'<BUILD'
+		DB	'S'+80H
+		DW	SEMIC-8
+BUILD:		DW	DOCOL
+		DW	ZERO
+		DW	CON
+		DW	SEMIS
+;
+		DB	85H	; DOES>
+		DB	'DOES'
+		DB	'>'+80H
+		DW	BUILD-0AH
+DOES:		DW	DOCOL
+		DW	FROMR
+		DW	LATES
+		DW	PFA
+		DW	STORE
+		DW	PSCOD
+DODOE:		LD	HL,(RPP)	; (HL) <- (RP)
+		DEC	HL
+		DEC	HL
+		LD	(RPP),HL	; (RP) <- (RP) - 2
+		LD	(HL),C
+		INC	HL
+		LD	(HL),B	; (R1) <- (IP) = PFA = (SUBSTITUTE CFA)
+		INC	DE	; (DE) <- PFA = (SUBSTITUTE CFA)
+		EX	DE,HL
+		LD	C,(HL)	; (IP) <- (SUBSTITUTE CFA)
+		INC	HL
+		LD	B,(HL)
+		INC	HL
+		JP	HPUSH	; (S1) <- PFA+2 = SUBSTITUTE PFA
+;
+		DB	85H	; COUNT
+		DB	'COUN'
+		DB	'T'+80H
+		DW	DOES-8
+COUNT:		DW	DOCOL
+		DW	DUP
+		DW	ONEP
+		DW	SWAP
+		DW	CAT
+		DW	SEMIS
+;
+		DB	84H	; TYPE
+		DB	'TYP'
+		DB	'E'+80H
+		DW	COUNT-8
+TYPE:		DW	DOCOL
+		DW	DDUP
+		DW	ZBRAN	; IF
+		DW	TYPE1-$
+		DW	OVER
+		DW	PLUS
+		DW	SWAP
+		DW	XDO	; DO
+TYPE2:		DW	IDO
+		DW	CAT
+		DW	EMIT
+		DW	XLOOP	; LOOP
+		DW	TYPE2-$
+		DW	BRAN	; ELSE
+		DW	TYPE3-$
+TYPE1:		DW	DROP	; ENDIF
+TYPE3:		DW	SEMIS
+;
+		DB	89H	; -TRAILING
+		DB	'-TRAILIN'
+		DB	'G'+80H
+		DW	TYPE-7
+DTRAI:		DW	DOCOL
+		DW	DUP
+		DW	ZERO
+		DW	XDO	; DO
+DTRA1:		DW	OVER
+		DW	OVER
+		DW	PLUS
+		DW	ONE
+		DW	SUBB
+		DW	CAT
+		DW	BL
+		DW	SUBB
+		DW	ZBRAN	; IF
+		DW	DTRA2-$
+		DW	LEAVE
+		DW	BRAN	; ELSE
+		DW	DTRA3-$
+DTRA2:		DW	ONE
+		DW	SUBB	; ENDIF
+DTRA3:		DW	XLOOP	; LOOP
+		DW	DTRA1-$
+		DW	SEMIS
+;
+		DB	84H	; (.")
+		DB	'(."'
+		DB	')'+80H
+		DW	DTRAI-0CH
+PDOTQ:		DW	DOCOL
+		DW	RR
+		DW	COUNT
+		DW	DUP
+		DW	ONEP
+		DW	FROMR
+		DW	PLUS
+		DW	TOR
+		DW	TYPE
+		DW	SEMIS
+;
+		DB	0C2H	; ."
+		DB	'.'
+		DB	'"'+80H
+		DW	PDOTQ-7
+DOTQ:		DW	DOCOL
+		DW	LIT
+		DW	22H
+		DW	STATE
+		DW	AT
+		DW	ZBRAN	; IF
+		DW	DOTQ1-$
+		DW	COMP
+		DW	PDOTQ
+		DW	WORD
+		DW	HERE
+		DW	CAT
+		DW	ONEP
+		DW	ALLOT
+		DW	BRAN	; ELSE
+		DW	DOTQ2-$
+DOTQ1:		DW	WORD
+		DW	HERE
+		DW	COUNT
+		DW	TYPE	; ENDIF
+DOTQ2:		DW	SEMIS
+;
+		DB	86H	; EXPECT
+		DB	'EXPEC'
+		DB	'T'+80H
+		DW	DOTQ-5
+EXPEC:		DW	DOCOL
+		DW	OVER
+		DW	PLUS
+		DW	OVER
+		DW	XDO	; DO
+EXPE1:		DW	KEY
+		DW	DUP
+		DW	LIT
+		DW	0EH
+		DW	PORIG
+		DW	AT
+		DW	EQUAL
+		DW	ZBRAN	; IF
+		DW	EXPE2-$
+		DW	DROP
+		DW	DUP
+		DW	IDO
+		DW	EQUAL
+		DW	DUP
+		DW	FROMR
+		DW	TWO
+		DW	SUBB
+		DW	PLUS
+		DW	TOR
+		DW	ZBRAN	; IF
+		DW	EXPE6-$
+		DW	LIT
+		DW	BELL
+		DW	BRAN	; ELSE
+		DW	EXPE7-$
+EXPE6:		DW	LIT
+		DW	BSOUT	; ENDIF
+EXPE7:		DW	BRAN	; ELSE
+		DW	EXPE3-$
+EXPE2:		DW	DUP
+		DW	LIT
+		DW	0DH
+		DW	EQUAL
+		DW	ZBRAN	; IF
+		DW	EXPE4-$
+		DW	LEAVE
+		DW	DROP
+		DW	BL
+		DW	ZERO
+		DW	BRAN	; ELSE
+		DW	EXPE5-$
+EXPE4:		DW	DUP	; ENDIF
+EXPE5:		DW	IDO
+		DW	CSTOR
+		DW	ZERO
+		DW	IDO
+		DW	ONEP
+		DW	STORE	; ENDIF
+EXPE3:		DW	EMIT
+		DW	XLOOP	; LOOP
+		DW	EXPE1-$
+		DW	DROP
+		DW	SEMIS
+;
+		DB	85H	; QUERY
+		DB	'QUER'
+		DB	'Y'+80H
+		DW	EXPEC-9
+QUERY:		DW	DOCOL
+		DW	TIB
+		DW	AT
+		DW	LIT
+		DW	50H
+		DW	EXPEC
+		DW	ZERO
+		DW	INN
+		DW	STORE
+		DW	SEMIS
+;
+		DB	0C1H	; 0 (NULL)
+		DB	80H
+		DW	QUERY-8
+NULL:		DW	DOCOL
+		DW	BLK
+		DW	AT
+		DW	ZBRAN	; IF
+		DW	NULL1-$
+		DW	ONE
+		DW	BLK
+		DW	PSTOR
+		DW	ZERO
+		DW	INN
+		DW	STORE
+		DW	BLK
+		DW	AT
+		DW	BSCR
+		DW	ONE
+		DW	SUBB
+		DW	ANDD
+		DW	ZEQU
+		DW	ZBRAN	; IF
+		DW	NULL2-$
+		DW	QEXEC
+		DW	FROMR
+		DW	DROP	; ENDIF
+NULL2:		DW	BRAN	; ELSE
+		DW	NULL3-$
+NULL1:		DW	FROMR
+		DW	DROP	; ENDIF
+NULL3:		DW	SEMIS
+;
+		DB	84H	; FILL
+		DB	'FIL'
+		DB	'L'+80H
+		DW	NULL-4
+FILL:		DW	$+2
+		LD	L,C
+		LD	H,B
+		POP	DE
+		POP	BC
+		EX	(SP),HL
+		EX	DE,HL
+FILL1:		LD	A,B	; BEGIN
+		OR	C
+		JP	Z,FILL2	; WHILE
+		LD	A,L
+		LD	(DE),A
+		INC	DE
+		DEC	BC
+		JP	FILL1	; REPEAT
+FILL2:		POP	BC
+		JP	NEXT
+;
+		DB	85H	; ERASE
+		DB	'ERAS'
+		DB	'E'+80H
+		DW	FILL-7
+ERASEE:		DW	DOCOL
+		DW	ZERO
+		DW	FILL
+		DW	SEMIS
+;
+		DB	86H	; BLANKS
+		DB	'BLANK'
+		DB	'S'+80H
+		DW	ERASEE-8
+BLANK:		DW	DOCOL
+		DW	BL
+		DW	FILL
+		DW	SEMIS
+;
+		DB	84H	; HOLD
+		DB	'HOL'
+		DB	'D'+80H
+		DW	BLANK-9
+HOLD:		DW	DOCOL
+		DW	LIT
+		DW	-1
+		DW	HLD
+		DW	PSTOR
+		DW	HLD
+		DW	AT
+		DW	CSTOR
+		DW	SEMIS
+;
+		DB	83H	; PAD
+		DB	'PA'
+		DB	'D'+80H
+		DW	HOLD-7
+PAD:		DW	DOCOL
+		DW	HERE
+		DW	LIT
+		DW	44H
+		DW	PLUS
+		DW	SEMIS
+;
+		DB	84H	; WORD
+		DB	'WOR'
+		DB	'D'+80H
+		DW	PAD-6
+WORD:		DW	DOCOL
+		DW	BLK
+		DW	AT
+		DW	ZBRAN	; IF
+		DW	WORD1-$
+		DW	BLK
+		DW	AT
+		DW	BLOCK
+		DW	BRAN	; ELSE
+		DW	WORD2-$
+WORD1:		DW	TIB
+		DW	AT	; ENDIF
+WORD2:		DW	INN
+		DW	AT
+		DW	PLUS
+		DW	SWAP
+		DW	ENCL
+		DW	HERE
+		DW	LIT
+		DW	22H
+		DW	BLANK
+		DW	INN
+		DW	PSTOR
+		DW	OVER
+		DW	SUBB
+		DW	TOR
+		DW	RR
+		DW	HERE
+		DW	CSTOR
+		DW	PLUS
+		DW	HERE
+		DW	ONEP
+		DW	FROMR
+		DW	CMOVE
+		DW	SEMIS
+;
+		DB	88H	; (NUMBER)
+		DB	'(NUMBER'
+		DB	')'+80H
+		DW	WORD-7
+PNUMB:		DW	DOCOL
+PNUM1:		DW	ONEP	; BEGIN
+		DW	DUP
+		DW	TOR
+		DW	CAT
+		DW	BASE
+		DW	AT
+		DW	DIGIT
+		DW	ZBRAN	; WHILE
+		DW	PNUM2-$
+		DW	SWAP
+		DW	BASE
+		DW	AT
+		DW	USTAR
+		DW	DROP
+		DW	ROT
+		DW	BASE
+		DW	AT
+		DW	USTAR
+		DW	DPLUS
+		DW	DPL
+		DW	AT
+		DW	ONEP
+		DW	ZBRAN	; IF
+		DW	PNUM3-$
+		DW	ONE
+		DW	DPL
+		DW	PSTOR	; ENDIF
+PNUM3:		DW	FROMR
+		DW	BRAN	; REPEAT
+		DW	PNUM1-$
+PNUM2:		DW	FROMR
+		DW	SEMIS
+;
+		DB	86H	; NUMBER
+		DB	'NUMBE'
+		DB	'R'+80H
+		DW	PNUMB-0BH
+NUMB:		DW	DOCOL
+		DW	ZERO
+		DW	ZERO
+		DW	ROT
+		DW	DUP
+		DW	ONEP
+		DW	CAT
+		DW	LIT
+		DW	2DH
+		DW	EQUAL
+		DW	DUP
+		DW	TOR
+		DW	PLUS
+		DW	LIT
+		DW	-1
+NUMB1:		DW	DPL	; BEGIN
+		DW	STORE
+		DW	PNUMB
+		DW	DUP
+		DW	CAT
+		DW	BL
+		DW	SUBB
+		DW	ZBRAN	; WHILE
+		DW	NUMB2-$
+		DW	DUP
+		DW	CAT
+		DW	LIT
+		DW	2EH
+		DW	SUBB
+		DW	ZERO
+		DW	QERR
+		DW	ZERO
+		DW	BRAN	; REPEAT
+		DW	NUMB1-$
+NUMB2:		DW	DROP
+		DW	FROMR
+		DW	ZBRAN	; IF
+		DW	NUMB3-$
+		DW	DMINU	; ENDIF
+NUMB3:		DW	SEMIS
+;
+		DB	85H	; -FIND	(0-3) SUCCESS
+		DB	'-FIN'	; (0-1) FAILURE
+		DB	'D'+80H
+		DW	NUMB-9
+DFIND:		DW	DOCOL
+		DW	BL
+		DW	WORD
+		DW	HERE
+		DW	CONT
+		DW	AT
+		DW	AT
+		DW	PFIND
+		DW	DUP
+		DW	ZEQU
+		DW	ZBRAN	; IF
+		DW	DFIN1-$
+		DW	DROP
+		DW	HERE
+		DW	LATES
+		DW	PFIND	; ENDIF
+DFIN1:		DW	SEMIS
+;
+		DB	87H	; (ABORT)
+		DB	'(ABORT'
+		DB	')'+80H
+		DW	DFIND-8
+PABOR:		DW	DOCOL
+		DW	ABORT
+		DW	SEMIS
+;
+		DB	85H	; ERROR
+		DB	'ERRO'
+		DB	'R'+80H
+		DW	PABOR-0AH
+ERROR:		DW	DOCOL
+		DW	WARN
+		DW	AT
+		DW	ZLESS
+		DW	ZBRAN	; IF
+		DW	ERRO1-$
+		DW	PABOR	; ENDIF
+ERRO1:		DW	HERE
+		DW	COUNT
+		DW	TYPE
+		DW	PDOTQ
+		DB	2
+		DB	'? '
+		DW	MESS
+		DW	SPSTO
+;	CHANGE FROM FIG MODEL
+;	DW	INN,AT,BLK,AT
+		DW	BLK,AT
+		DW	DDUP
+		DW	ZBRAN
+		DW	ERRO2-$	; IF
+		DW	INN,AT
+		DW	SWAP	; ENDIF
+ERRO2:		DW	QUIT
+;
+		DB	83H	; ID.
+		DB	'ID'
+		DB	'.'+80H
+		DW	ERROR-8
+IDDOT:		DW	DOCOL
+		DW	PAD
+		DW	LIT
+		DW	20H
+		DW	LIT
+		DW	5FH
+		DW	FILL
+		DW	DUP
+		DW	PFA
+		DW	LFA
+		DW	OVER
+		DW	SUBB
+		DW	PAD
+		DW	SWAP
+		DW	CMOVE
+		DW	PAD
+		DW	COUNT
+		DW	LIT
+		DW	1FH
+		DW	ANDD
+		DW	TYPE
+		DW	SPACE
+		DW	SEMIS
+;
+		DB	86H	; CREATE
+		DB	'CREAT'
+		DB	'E'+80H
+		DW	IDDOT-6
+CREAT:		DW	DOCOL
+		DW	DFIND
+		DW	ZBRAN	; IF
+		DW	CREA1-$
+		DW	DROP
+		DW	NFA
+		DW	IDDOT
+		DW	LIT
+		DW	4
+		DW	MESS
+		DW	SPACE	; ENDIF
+CREA1:		DW	HERE
+		DW	DUP
+		DW	CAT
+		DW	WIDTH
+		DW	AT
+		DW	MIN
+		DW	ONEP
+		DW	ALLOT
+		DW	DUP
+		DW	LIT
+		DW	0A0H
+		DW	TOGGL
+		DW	HERE
+		DW	ONE
+		DW	SUBB
+		DW	LIT
+		DW	80H
+		DW	TOGGL
+		DW	LATES
+		DW	COMMA
+		DW	CURR
+		DW	AT
+		DW	STORE
+		DW	HERE
+		DW	TWOP
+		DW	COMMA
+		DW	SEMIS
+;
+		DB	0C9H	; [COMPILE]
+		DB	'[COMPILE'
+		DB	']'+80H
+		DW	CREAT-9
+BCOMP:		DW	DOCOL
+		DW	DFIND
+		DW	ZEQU
+		DW	ZERO
+		DW	QERR
+		DW	DROP
+		DW	CFA
+		DW	COMMA
+		DW	SEMIS
+;
+		DB	0C7H	; LITERAL
+		DB	'LITERA'
+		DB	'L'+80H
+		DW	BCOMP-0CH
+LITER:		DW	DOCOL
+		DW	STATE
+		DW	AT
+		DW	ZBRAN	; IF
+		DW	LITE1-$
+		DW	COMP
+		DW	LIT
+		DW	COMMA	; ENDIF
+LITE1:		DW	SEMIS
+;
+		DB	0C8H	; DLITERAL
+		DB	'DLITERA'
+		DB	'L'+80H
+		DW	LITER-0AH
+DLITE:		DW	DOCOL
+		DW	STATE
+		DW	AT
+		DW	ZBRAN	; IF
+		DW	DLIT1-$
+		DW	SWAP
+		DW	LITER
+		DW	LITER	; ENDIF
+DLIT1:		DW	SEMIS
+;
+		DB	86H	; ?STACK
+		DB	'?STAC'
+		DB	'K'+80H
+		DW	DLITE-0BH
+QSTAC:		DW	DOCOL
+		DW	SPAT
+		DW	SZERO
+		DW	AT
+		DW	SWAP
+		DW	ULESS
+		DW	ONE
+		DW	QERR
+		DW	SPAT
+		DW	HERE
+		DW	LIT
+		DW	80H
+		DW	PLUS
+		DW	ULESS
+		DW	LIT
+		DW	7
+		DW	QERR
+		DW	SEMIS
+;
+		DB	89H	; INTERPRET
+		DB	'INTERPRE'
+		DB	'T'+80H
+		DW	QSTAC-9
+INTER:		DW	DOCOL
+INTE1:		DW	DFIND	; BEGIN
+		DW	ZBRAN	; IF
+		DW	INTE2-$
+		DW	STATE
+		DW	AT
+		DW	LESS
+		DW	ZBRAN	; IF
+		DW	INTE3-$
+		DW	CFA
+		DW	COMMA
+		DW	BRAN	; ELSE
+		DW	INTE4-$
+INTE3:		DW	CFA
+		DW	EXEC	; ENDIF
+INTE4:		DW	QSTAC
+		DW	BRAN	; ELSE
+		DW	INTE5-$
+INTE2:		DW	HERE
+		DW	NUMB
+		DW	DPL
+		DW	AT
+		DW	ONEP
+		DW	ZBRAN	; IF
+		DW	INTE6-$
+		DW	DLITE
+		DW	BRAN	; ELSE
+		DW	INTE7-$
+INTE6:		DW	DROP
+		DW	LITER	; ENDIF
+INTE7:		DW	QSTAC	; ENDIF
+INTE5:		DW	BRAN	; AGAIN
+		DW	INTE1-$
+;
+		DB	89H	; IMMEDIATE
+		DB	'IMMEDIAT'
+		DB	'E'+80H
+		DW	INTER-0CH
+IMMED:		DW	DOCOL
+		DW	LATES
+		DW	LIT
+		DW	40H
+		DW	TOGGL
+		DW	SEMIS
+;
+		DB	8AH	; VOCABULARY
+		DB	'VOCABULAR'
+		DB	'Y'+80H
+		DW	IMMED-0CH
+VOCAB:		DW	DOCOL
+		DW	BUILD
+		DW	LIT
+		DW	0A081H
+		DW	COMMA
+		DW	CURR
+		DW	AT
+		DW	CFA
+		DW	COMMA
+		DW	HERE
+		DW	VOCL
+		DW	AT
+		DW	COMMA
+		DW	VOCL
+		DW	STORE
+		DW	DOES
+DOVOC:		DW	TWOP
+		DW	CONT
+		DW	STORE
+		DW	SEMIS
+;
+unk_4F4F:	DB	0C5H	; FORTH
+		DB	'FORT'
+		DB	'H'+80H
+		DW	VOCAB-0DH
+FORTH:		DW	DODOE
+		DW	DOVOC
+		DW	0A081H
+		DW	unk_5803; COLD START VALUE ONLY
+				; CHANGED EACH TIME A DEF IS APPENDED
+				; TO THE FORTH VOCABULARY
+		DW	0	; END OF VOCABULARY LIST
+;
+		DB	8BH	; DEFINITIONS
+		DB	'DEFINITION'
+		DB	'S'+80H
+		DW	byte_6004	; FORTH
+DEFIN:		DW	DOCOL
+		DW	CONT
+		DW	AT
+		DW	CURR
+		DW	STORE
+		DW	SEMIS
+;
+		DB	0C1H	; (
+		DB	'('+80H
+		DW	DEFIN-0EH
+PAREN:		DW	DOCOL
+		DW	LIT
+		DW	29H
+		DW	WORD
+		DW	SEMIS
+;
+		DB	84H	; QUIT
+		DB	'QUI'
+		DB	'T'+80H
+		DW	PAREN-4
+QUIT:		DW	DOCOL
+		DW	ZERO
+		DW	BLK
+		DW	STORE
+		DW	LBRAC
+QUIT1:		DW	RPSTO	; BEGIN
+		DW	CR
+		DW	QUERY
+		DW	INTER
+		DW	STATE
+		DW	AT
+		DW	ZEQU
+		DW	ZBRAN	; IF
+		DW	QUIT2-$
+		DW	PDOTQ
+		DB	2
+		DB	'OK'	; ENDIF
+QUIT2:		DW	BRAN	; AGAIN
+		DW	QUIT1-$
+;
+		DB	85H	; ABORT
+		DB	'ABOR'
+		DB	'T'+80H
+		DW	QUIT-7
+ABORT:		DW	DOCOL
+		DW	SPSTO
+		DW	DEC
+		DW	QSTAC
+		DW	CR
+		DW	off_57E5
+		DW	PDOTQ
+		DB	0DH
+		DB	'Fig-Forth '
+		DB	FIGREL+30H,ADOT,FIGREV+30H
+		DW	unk_600C	; FORTH
+		DW	DEFIN
+		DW	QUIT
+;
+WRM:		LD	BC,WRM1
+		JP	NEXT
+WRM1:		DW	WARM
+;
+		DB	84H	; WARM
+		DB	'WAR'
+		DB	'M'+80H
+		DW	ABORT-8
+WARM:		DW	DOCOL
+		DW	MTBUF
+		DW	ABORT
+
+; ---------------------------------------------------------------------------
+;COLD
+CLD0:		ld      de, NEXT0
+		ld      hl, unk_6016
+		ld      (hl), 0C3h 	; 6016: JP NEXT0
+		inc     hl
+		ld      (hl), e
+		inc     hl
+		ld      (hl), d
+		ld      bc, CLD1	; next word to execute
+		ld      hl, (word_4012)
+		ld      sp, hl		; INIT S0
+		ld      hl, (word_4014)
+		ld      (RPP), hl	; INIT R0
+		ld      hl, (word_4010)
+		ld      (UP), hl	; INIT UP
+		jp      NEXT		; ->(CLD1)-> COLD
+;
+CLD1:		DW	COLD
+;
+		DB	84H	; COLD
+		DB	'COL'
+		DB	'D'+80H
+		DW	WARM-7
+COLD:		DW	DOCOL
+		DW	MTBUF
+		DW	ZERO,DENSTY
+		DW	STORE
+		DW	LIT,BUF1
+		DW	USE,STORE
+		DW	LIT,BUF1
+		DW	PREV,STORE
+		DW	DRZER
+		DW	LIT
+		DW	word_4012
+		DW	LIT
+		DW	UP
+		DW	AT
+		DW	LIT
+		DW	6
+		DW	PLUS
+		DW	LIT
+		DW	10H
+		DW	CMOVE
+		DW	LIT
+		DW	FORTH-8		; copy code of FORTH
+		dw LIT
+		dw byte_6004		; to 6004h-6015h
+		dw LIT
+		dw 12h
+		dw CMOVE
+		dw LIT
+		dw off_400C		; TOPMOST WORD
+		DW	AT
+		DW	LIT
+		DW	unk_6012	; Link Vocs
+		DW	STORE
+		DW	ABORT
+;
+		DB	84H	; S->D
+		DB	'S->'
+		DB	'D'+80H
+		DW	COLD-7
+STOD:		DW	$+2
+		POP	DE
+		LD	HL,0
+		LD	A,D
+		AND	80H
+		JP	Z,STOD1
+		DEC	HL
+STOD1:		JP	DPUSH
+;
+		DB	82H	; +-
+		DB	'+'
+		DB	'-'+80H
+		DW	STOD-7
+PM:		DW	DOCOL
+		DW	ZLESS
+		DW	ZBRAN	; IF
+		DW	PM1-$
+		DW	MINUS	; ENDIF
+PM1:		DW	SEMIS
+;
+		DB	83H	; D+-
+		DB	'D+'
+		DB	'-'+80H
+		DW	PM-5
+DPM:		DW	DOCOL
+		DW	ZLESS
+		DW	ZBRAN	; IF
+		DW	DPM1-$
+		DW	DMINU	; ENDIF
+DPM1:		DW	SEMIS
+;
+		DB	83H	; ABS
+		DB	'AB'
+		DB	'S'+80H
+		DW	DPM-6
+ABS:		DW	DOCOL
+		DW	DUP
+		DW	PM
+		DW	SEMIS
+;
+		DB	84H	; DABS
+		DB	'DAB'
+		DB	'S'+80H
+		DW	ABS-6
+DABS:		DW	DOCOL
+		DW	DUP
+		DW	DPM
+		DW	SEMIS
+;
+		DB	83H	; MIN
+		DB	'MI'
+		DB	'N'+80H
+		DW	DABS-7
+MIN:		DW	DOCOL,TDUP
+		DW	GREAT
+		DW	ZBRAN	; IF
+		DW	MIN1-$
+		DW	SWAP	; ENDIF
+MIN1:		DW	DROP
+		DW	SEMIS
+;
+		DB	83H	; MAX
+		DB	'MA'
+		DB	'X'+80H
+		DW	MIN-6
+MAX:		DW	DOCOL,TDUP
+		DW	LESS
+		DW	ZBRAN	; IF
+		DW	MAX1-$
+		DW	SWAP	; ENDIF
+MAX1:		DW	DROP
+		DW	SEMIS
+;
+		DB	82H	; M*
+		DB	'M'
+		DB	'*'+80H
+		DW	MAX-6
+MSTAR:		DW	DOCOL,TDUP
+		DW	XORR
+		DW	TOR
+		DW	ABS
+		DW	SWAP
+		DW	ABS
+		DW	USTAR
+		DW	FROMR
+		DW	DPM
+		DW	SEMIS
+;
+		DB	82H	; M/
+		DB	'M'
+		DB	'/'+80H
+		DW	MSTAR-5
+MSLAS:		DW	DOCOL
+		DW	OVER
+		DW	TOR
+		DW	TOR
+		DW	DABS
+		DW	RR
+		DW	ABS
+		DW	USLAS
+		DW	FROMR
+		DW	RR
+		DW	XORR
+		DW	PM
+		DW	SWAP
+		DW	FROMR
+		DW	PM
+		DW	SWAP
+		DW	SEMIS
+;
+		DB	81H	; *
+		DB	'*'+80H
+		DW	MSLAS-5
+STAR:		DW	DOCOL
+		DW	MSTAR
+		DW	DROP
+		DW	SEMIS
+;
+		DB	84H	; /MOD
+		DB	'/MO'
+		DB	'D'+80H
+		DW	STAR-4
+SLMOD:		DW	DOCOL
+		DW	TOR
+		DW	STOD
+		DW	FROMR
+		DW	MSLAS
+		DW	SEMIS
+;
+		DB	81H	; /
+		DB	'/'+80H
+		DW	SLMOD-7
+SLASH:		DW	DOCOL
+		DW	SLMOD
+		DW	SWAP
+		DW	DROP
+		DW	SEMIS
+;
+		DB	83H	; MOD
+		DB	'MO'
+		DB	'D'+80H
+		DW	SLASH-4
+MODD:		DW	DOCOL
+		DW	SLMOD
+		DW	DROP
+		DW	SEMIS
+;
+		DB	85H	; */MOD
+		DB	'*/MO'
+		DB	'D'+80H
+		DW	MODD-6
+SSMOD:		DW	DOCOL
+		DW	TOR
+		DW	MSTAR
+		DW	FROMR
+		DW	MSLAS
+		DW	SEMIS
+;
+		DB	82H	; */
+		DB	'*'
+		DB	'/'+80H
+		DW	SSMOD-8
+SSLA:		DW	DOCOL
+		DW	SSMOD
+		DW	SWAP
+		DW	DROP
+		DW	SEMIS
+;
+		DB	85H	; M/MOD
+		DB	'M/MO'
+		DB	'D'+80H
+		DW	SSLA-5
+MSMOD:		DW	DOCOL
+		DW	TOR
+		DW	ZERO
+		DW	RR
+		DW	USLAS
+		DW	FROMR
+		DW	SWAP
+		DW	TOR
+		DW	USLAS
+		DW	FROMR
+		DW	SEMIS
+;
+;	BLOCK MOVED DOWN 2 PAGES
+;
+;
+		DB	86H	; (LINE)
+		DB	'(LINE'
+		DB	')'+80H
+		DW	MSMOD-8
+PLINE:		DW	DOCOL
+		DW	TOR
+		DW	LIT
+		DW	40H
+		DW	BBUF
+		DW	SSMOD
+		DW	FROMR
+		DW	BSCR
+		DW	STAR
+		DW	PLUS
+		DW	BLOCK
+		DW	PLUS
+		DW	LIT
+		DW	40H
+		DW	SEMIS
+;
+		DB	85H	; .LINE
+		DB	'.LIN'
+		DB	'E'+80H
+		DW	PLINE-9
+DLINE:		DW	DOCOL
+		DW	PLINE
+		DW	DTRAI
+		DW	TYPE
+		DW	SEMIS
+;
+		DB	87H	; MESSAGE
+		DB	'MESSAG'
+		DB	'E'+80H
+		DW	DLINE-8
+MESS:		DW	DOCOL
+		DW	WARN
+		DW	AT
+		DW	ZBRAN	; IF
+		DW	MESS1-$
+		DW	DDUP
+		DW	ZBRAN	; IF
+		DW	MESS2-$
+		DW	LIT
+		DW	4
+		DW	OFSET
+		DW	AT
+		DW	BSCR
+		DW	SLASH
+		DW	SUBB
+		DW	DLINE
+		DW	SPACE	; ENDIF
+MESS2:		DW	BRAN	; ELSE
+		DW	MESS3-$
+MESS1:		DW	PDOTQ
+		DB	6
+		DB	'MSG # '
+		DW	DOT	; ENDIF
+MESS3:		DW	SEMIS
+		NEWPAGE
+
+;------------------------------------------------------------------------------
+;
+;------------------------------------------------------------------------------
+
+		DB	87H	; SEC/BLK ( # SECTORS/BLOCK )
+		DB	'SEC/BL'
+		DB	'K'+80H
+		DW	MESS-10
+SPBLK:		DW	DOCON
+		DW	1
+;
+		DB	85H	; #BUFF  ( NUMBER OF BUFFERS )
+		DB	'#BUF'
+		DB	'F'+80H
+		DW	SPBLK-10
+NOBUF:		DW	DOCON,NBUF
+
+		NEWPAGE
+;
+;	DISK INTERFACE HIGH-LEVEL ROUTINES
+;
+		DB	84H	; +BUF	( ADVANCE BUFFER )
+		DB	'+BU'
+		DB	'F'+80H
+		DW	NOBUF-8
+PBUF:		DW	DOCOL
+		DW	LIT,84h
+		DW	PLUS,DUP
+		DW	LIMIT,EQUAL
+		DW	ZBRAN
+		DW	PBUF1-$
+		DW	DROP,FIRST
+PBUF1:		DW	DUP,PREV
+		DW	AT,SUBB
+		DW	SEMIS
+;
+		DB	86H	; UPDATE
+		DB	'UPDAT'
+		DB	'E'+80H
+		DW	PBUF-7
+UPDAT:		DW	DOCOL,PREV
+		DW	AT,AT
+		DW	LIT,8000H
+		DW	ORR
+		DW	PREV,AT
+		DW	STORE,SEMIS
+;
+		DB	8DH	; EMPTY-BUFFERS
+		DB	'EMPTY-BUFFER'
+		DB	'S'+80H
+		DW	UPDAT-9
+MTBUF:		DW	DOCOL,FIRST
+		DW	LIMIT,OVER
+		DW	SUBB,ERASEE
+		DW	SEMIS
+;
+		DB	83H	; DR0
+		DB	'DR'
+		DB	'0'+80H
+		DW	MTBUF-16
+DRZER:		DW	DOCOL,ZERO
+		DW	OFSET,STORE
+		DW	SEMIS
+;
+;	8080 PORT FETCH AND STORE
+;	( SELF MODIFYING CODE, NOT REENTRANT )
+;
+		DB	82H	; P@ "PORT @"
+		DB	'P'
+		DB	'@'+80H
+		DW	DRZER-6
+PTAT:		DW	$+2
+		POP	DE	;E <- PORT#
+		LD	HL,$+5
+		LD	(HL),E
+		IN	A,(4)	;( PORT# MODIFIED )
+		LD	L,A	;L <- (PORT#)
+		LD	H,0
+		JP	HPUSH
+; ---------------------------------------------------------------------------
+                db    0
+                db    0
+                db    0
+                db    0
+                db    0
+                db    0
+                db    0
+                db    0
+                db    0
+                db    0
+                db    0
+                db    0
+                db    0
+                db    0
+; ---------------------------------------------------------------------------
+;
+		DB	86H	; BUFFER
+		DB	'BUFFE'
+		DB	'R'+80H
+		DW	PTAT-5
+BUFFE:		DW	DOCOL,USE
+		DW	AT,DUP
+		DW	TOR
+BUFF1:		DW	PBUF	; WON'T WORK IF SINGLE BUFFER
+		DW	ZBRAN
+		DW	BUFF1-$
+		DW	USE,STORE
+		DW	RR,AT
+		DW	ZLESS
+		DW	ZBRAN
+		DW	BUFF2-$
+		DW	RR,TWOP
+		DW	RR,AT
+		DW	LIT,7FFFH
+		DW	ANDD,ZERO
+		DW	RSLW
+BUFF2:		DW	RR,STORE
+		DW	RR,PREV
+		DW	STORE,FROMR
+		DW	TWOP,SEMIS
+;
+		DB	85H	; BLOCK
+		DB	'BLOC'
+		DB	'K'+80H
+		DW	BUFFE-9
+BLOCK:		DW	DOCOL,OFSET
+		DW	AT,PLUS
+		DW	TOR,PREV
+		DW	AT,DUP
+		DW	AT,RR
+		DW	SUBB
+		DW	DUP,PLUS
+		DW	ZBRAN
+		DW	BLOC1-$
+BLOC2:		DW	PBUF,ZEQU
+		DW	ZBRAN
+		DW	BLOC3-$
+		DW	DROP,RR
+		DW	BUFFE,DUP
+		DW	RR,ONE
+		DW	RSLW
+		DW	TWO,SUBB
+BLOC3:		DW	DUP,AT
+		DW	RR,SUBB
+		DW	DUP,PLUS
+		DW	ZEQU
+		DW	ZBRAN
+		DW	BLOC2-$
+		DW	DUP,PREV
+		DW	STORE
+BLOC1:		DW	FROMR,DROP
+		DW	TWOP,SEMIS
+;
+;--------------------------------------------------------
+;
+;	ALTERNATIVE R/W FOR NO DISK INTERFACE
+
+; R/W
+unk_537D:       db  83h
+                db  52h ; R
+                db  2Fh ; /
+                db 0D7h ; Œ
+                dw BLOCK-8
+RSLW:           dw $+2
+	        pop     hl
+                ld      a, h
+                or      l
+                pop     hl
+                pop     de
+                jp      z, loc_5393
+                call    sub_402F
+                jp      NEXT
+loc_5393:       call    sub_4032
+                jp      NEXT
+;
+;--------------------------------------------------------
+;
+		DB	85H	; FLUSH
+		DB	'FLUS'
+		DB	'H'+80H
+		DW	RSLW-6
+FLUSH:		DW	DOCOL
+		DW	NOBUF,ONEP
+		DW	ZERO,XDO
+FLUS1:		DW	ZERO,BUFFE
+		DW	DROP
+		DW	XLOOP
+		DW	FLUS1-$
+		DW	SEMIS
+;
+		DB	84H	; LOAD
+		DB	'LOA'
+		DB	'D'+80H
+		DW	FLUSH-8
+LOAD:		DW	DOCOL,BLK
+		DW	AT,TOR
+		DW	INN,AT
+		DW	TOR,ZERO
+		DW	INN,STORE
+		DW	BSCR,STAR
+		DW	BLK,STORE	; BLK <- SCR * B/SCR
+		DW	INTER	; INTERPRET FROM OTHER SCREEN
+		DW	FROMR,INN
+		DW	STORE
+		DW	FROMR,BLK
+		DW	STORE
+		DW	SEMIS
+;
+		DB	0C3H	; -->
+		DB	'--'
+		DB	'>'+80H
+		DW	LOAD-7
+ARROW:		DW	DOCOL
+		DW	QLOAD
+		DW	ZERO
+		DW	INN
+		DW	STORE
+		DW	BSCR
+		DW	BLK
+		DW	AT
+		DW	OVER
+		DW	MODD
+		DW	SUBB
+		DW	BLK
+		DW	PSTOR
+		DW	SEMIS
+;
+		NEWPAGE
+;
+		DB	0C1H	; '	( TICK )
+		DB	0A7H
+		DW	ARROW-6
+TICK:		DW	DOCOL
+		DW	DFIND
+		DW	ZEQU
+		DW	ZERO
+		DW	QERR
+		DW	DROP
+		DW	LITER
+		DW	SEMIS
+;
+		DB	86H	; FORGET
+		DB	'FORGE'
+		DB	'T'+80H
+		DW	TICK-4
+FORG:		dw DOCOL
+		dw TICK
+		dw NFA
+		dw DUP
+		dw FENCE
+		dw AT
+		dw ULESS
+		dw LIT
+		dw 0Fh
+		dw QERR
+		dw TOR
+		dw VOCL
+		dw AT
+		dw RR
+		dw OVER
+		dw ULESS
+		dw ZBRAN
+		dw 12h
+		dw unk_600C	; FORTH
+		dw DEFIN
+		dw AT
+		dw DUP
+		dw VOCL
+		dw STORE
+		dw BRAN
+		dw 0FFE8h
+		dw DUP
+		dw LIT
+		dw 4
+		dw SUBB
+		dw PFA
+		dw LFA
+		dw AT
+		dw DUP
+		dw RR
+		dw ULESS
+		dw ZBRAN
+		dw 0FFF2h
+		dw OVER
+		dw TWO
+		dw SUBB
+		dw STORE
+		dw AT
+		dw DDUP
+		dw ZEQU
+		dw ZBRAN
+		dw 0FFD8h
+		dw FROMR
+		dw DP
+		dw STORE
+		dw SEMIS
+
+;
+		DB	84H	; BACK
+		DB	'BAC'
+		DB	'K'+80H
+		DW	FORG-9
+BACK:		DW	DOCOL
+		DW	HERE
+		DW	SUBB
+		DW	COMMA
+		DW	SEMIS
+;
+		DB	0C5H	; BEGIN
+		DB	'BEGI'
+		DB	'N'+80H
+		DW	BACK-7
+BEGIN:		DW	DOCOL
+		DW	QCOMP
+		DW	HERE
+		DW	ONE
+		DW	SEMIS
+;
+		DB	0C5H	; ENDIF
+		DB	'ENDI'
+		DB	'F'+80H
+		DW	BEGIN-8
+ENDIFF:		DW	DOCOL
+		DW	QCOMP
+		DW	TWO
+		DW	QPAIR
+		DW	HERE
+		DW	OVER
+		DW	SUBB
+		DW	SWAP
+		DW	STORE
+		DW	SEMIS
+;
+		DB	0C4H	; THEN
+		DB	'THE'
+		DB	'N'+80H
+		DW	ENDIFF-8
+THEN:		DW	DOCOL
+		DW	ENDIFF
+		DW	SEMIS
+;
+		DB	0C2H	; DO
+		DB	'D'
+		DB	'O'+80H
+		DW	THEN-7
+DO:		DW	DOCOL
+		DW	COMP
+		DW	XDO
+		DW	HERE
+		DW	THREE
+		DW	SEMIS
+;
+		DB	0C4H	; LOOP
+		DB	'LOO'
+		DB	'P'+80H
+		DW	DO-5
+LOOP:		DW	DOCOL
+		DW	THREE
+		DW	QPAIR
+		DW	COMP
+		DW	XLOOP
+		DW	BACK
+		DW	SEMIS
+;
+		DB	0C5H	; +LOOP
+		DB	'+LOO'
+		DB	'P'+80H
+		DW	LOOP-7
+PLOOP:		DW	DOCOL
+		DW	THREE
+		DW	QPAIR
+		DW	COMP
+		DW	XPLOO
+		DW	BACK
+		DW	SEMIS
+;
+		DB	0C5H	; UNTIL
+		DB	'UNTI'
+		DB	'L'+80H
+		DW	PLOOP-8
+UNTIL:		DW	DOCOL
+		DW	ONE
+		DW	QPAIR
+		DW	COMP
+		DW	ZBRAN
+		DW	BACK
+		DW	SEMIS
+;
+		DB	0C3H	; END
+		DB	'EN'
+		DB	'D'+80H
+		DW	UNTIL-8
+ENDD:		DW	DOCOL
+		DW	UNTIL
+		DW	SEMIS
+;
+		DB	0C5H	; AGAIN
+		DB	'AGAI'
+		DB	'N'+80H
+		DW	ENDD-6
+AGAIN:		DW	DOCOL
+		DW	ONE
+		DW	QPAIR
+		DW	COMP
+		DW	BRAN
+		DW	BACK
+		DW	SEMIS
+;
+		DB	0C6H	; REPEAT
+		DB	'REPEA'
+		DB	'T'+80H
+		DW	AGAIN-8
+REPEA:		DW	DOCOL
+		DW	TOR
+		DW	TOR
+		DW	AGAIN
+		DW	FROMR
+		DW	FROMR
+		DW	TWO
+		DW	SUBB
+		DW	ENDIFF
+		DW	SEMIS
+;
+		DB	0C2H	; IF
+		DB	'I'
+		DB	'F'+80H
+		DW	REPEA-9
+IFF:		DW	DOCOL
+		DW	COMP
+		DW	ZBRAN
+		DW	HERE
+		DW	ZERO
+		DW	COMMA
+		DW	TWO
+		DW	SEMIS
+;
+		DB	0C4H	; ELSE
+		DB	'ELS'
+		DB	'E'+80H
+		DW	IFF-5
+ELSEE:		DW	DOCOL
+		DW	TWO
+		DW	QPAIR
+		DW	COMP
+		DW	BRAN
+		DW	HERE
+		DW	ZERO
+		DW	COMMA
+		DW	SWAP
+		DW	TWO
+		DW	ENDIFF
+		DW	TWO
+		DW	SEMIS
+;
+		DB	0C5H	; WHILE
+		DB	'WHIL'
+		DB	'E'+80H
+		DW	ELSEE-7
+WHILE:		DW	DOCOL
+		DW	IFF
+		DW	TWOP
+		DW	SEMIS
+;
+		DB	86H	; SPACES
+		DB	'SPACE'
+		DB	'S'+80H
+		DW	WHILE-8
+SPACS:		DW	DOCOL
+		DW	ZERO
+		DW	MAX
+		DW	DDUP
+		DW	ZBRAN	; IF
+		DW	SPAX1-$
+		DW	ZERO
+		DW	XDO	; DO
+SPAX2:		DW	SPACE
+		DW	XLOOP	; LOOP	ENDIF
+		DW	SPAX2-$
+SPAX1:		DW	SEMIS
+;
+		DB	82H	; <#
+		DB	'<'
+		DB	'#'+80H
+		DW	SPACS-9
+BDIGS:		DW	DOCOL
+		DW	PAD
+		DW	HLD
+		DW	STORE
+		DW	SEMIS
+;
+		DB	82H	; #>
+		DB	'#'
+		DB	'>'+80H
+		DW	BDIGS-5
+EDIGS:		DW	DOCOL
+		DW	DROP
+		DW	DROP
+		DW	HLD
+		DW	AT
+		DW	PAD
+		DW	OVER
+		DW	SUBB
+		DW	SEMIS
+;
+		DB	84H	; SIGN
+		DB	'SIG'
+		DB	'N'+80H
+		DW	EDIGS-5
+SIGN:		DW	DOCOL
+		DW	ROT
+		DW	ZLESS
+		DW	ZBRAN	; IF
+		DW	SIGN1-$
+		DW	LIT
+		DW	2DH
+		DW	HOLD	; ENDIF
+SIGN1:		DW	SEMIS
+;
+		DB	81H	; #
+		DB	'#'+80H
+		DW	SIGN-7
+DIG:		DW	DOCOL
+		DW	BASE
+		DW	AT
+		DW	MSMOD
+		DW	ROT
+		DW	LIT
+		DW	9
+		DW	OVER
+		DW	LESS
+		DW	ZBRAN	; IF
+		DW	DIG1-$
+		DW	LIT
+		DW	7
+		DW	PLUS	; ENDIF
+DIG1:		DW	LIT
+		DW	30H
+		DW	PLUS
+		DW	HOLD
+		DW	SEMIS
+;
+		DB	82H	; #S
+		DB	'#'
+		DB	'S'+80H
+		DW	DIG-4
+DIGS:		DW	DOCOL
+DIGS1:		DW	DIG	; BEGIN
+		DW	OVER
+		DW	OVER
+		DW	ORR
+		DW	ZEQU
+		DW	ZBRAN	; UNTIL
+		DW	DIGS1-$
+		DW	SEMIS
+;
+		DB	83H	; D.R
+		DB	'D.'
+		DB	'R'+80H
+		DW	DIGS-5
+DDOTR:		DW	DOCOL
+		DW	TOR
+		DW	SWAP
+		DW	OVER
+		DW	DABS
+		DW	BDIGS
+		DW	DIGS
+		DW	SIGN
+		DW	EDIGS
+		DW	FROMR
+		DW	OVER
+		DW	SUBB
+		DW	SPACS
+		DW	TYPE
+		DW	SEMIS
+;
+		DB	82H	; .R
+		DB	'.'
+		DB	'R'+80H
+		DW	DDOTR-6
+DOTR:		DW	DOCOL
+		DW	TOR
+		DW	STOD
+		DW	FROMR
+		DW	DDOTR
+		DW	SEMIS
+;
+		DB	82H	; D.
+		DB	'D'
+		DB	'.'+80H
+		DW	DOTR-5
+DDOT:		DW	DOCOL
+		DW	ZERO
+		DW	DDOTR
+		DW	SPACE
+		DW	SEMIS
+;
+		DB	81H	; .
+		DB	'.'+80H
+		DW	DDOT-5
+DOT:		DW	DOCOL
+		DW	STOD
+		DW	DDOT
+		DW	SEMIS
+;
+		DB	81H	; ?
+		DB	'?'+80H
+		DW	DOT-4
+QUES:		DW	DOCOL
+		DW	AT
+		DW	DOT
+		DW	SEMIS
+;
+		DB	82H	; U.
+		DB	'U'
+		DB	'.'+80H
+		DW	QUES-4
+UDOT:		DW	DOCOL
+		DW	ZERO
+		DW	DDOT
+		DW	SEMIS
+;
+
+;------------------------------------------------------------------------------
+; indiv. AC1
+;------------------------------------------------------------------------------
+
+;.C
+unk_56BC:	db  82h	; .C
+		db  '.'
+		db 'C'+80H
+		dw UDOT-5
+		dw loc_56C3
+loc_56C3:	rst	18h
+		db 13,"  (c) by W.R.Juergens 88",8Dh
+		jp	NEXT
+
+;	8080 PORT FETCH AND STORE
+;	( SELF MODIFYING CODE, NOT REENTRANT )
+;P!
+unk_56E1:	DB	82H	; "PORT STORE"
+		DB	'P'
+		DB	'!'+80H
+		dw unk_56BC
+PTSTO:		DW	$+2
+		POP	DE	;E <- PORT#
+		LD	HL,$+7
+		LD	(HL),E
+		POP	HL	;H <- CDATA
+		LD	A,L
+		OUT	(5),A	;( PORT# MODIFIED )
+		JP	NEXT
+;
+		db    0
+		db    0
+		db    0
+		db    0
+		db    0
+		db    0
+		db    0
+		db    0
+		db    0
+		db    0
+		db    0
+		db    0
+		db    0
+		db    0
+		db    0
+		db    0
+		db    0
+		db    0
+		db    0
+		db    0
+		db    0
+		db    0
+		db    0
+		db    0
+		db    0
+		db    0
+		db    0
+		db    0
+		db    0
+		db    0
+		db    0
+		db    0
+		db    0
+		db    0
+;LIST
+unk_5716:	db  84h	; LIST
+		db  'LIS'
+		db 'T'+80H
+		dw unk_56E1
+LIST:		dw DOCOL
+		dw DEC
+		dw CR
+		dw DUP
+		dw SCR
+		dw STORE
+		dw PDOTQ
+		db 6,"SCR # "
+		dw DOT
+		dw LIT
+		dw 10h
+		dw ZERO
+		dw XDO
+		dw CR
+		dw IDO
+		dw LIT
+		dw 3
+		dw DOTR
+		dw SPACE
+		dw IDO
+		dw SCR
+		dw AT
+		dw DLINE
+		dw QTERM
+		dw ZBRAN
+		dw 4
+		dw LEAVE
+		dw XLOOP
+		dw 0FFE2h
+		dw CR
+		dw SEMIS
+;INDEX
+unk_5760:	db  85h	; INDEX
+		db  'INDE'
+		db 'X'+80H
+		dw unk_5716
+		dw DOCOL
+		dw LIT
+		dw FF
+		dw EMIT
+		dw CR
+		dw ONEP
+		dw SWAP
+		dw XDO
+		dw CR
+		dw IDO
+		dw LIT
+		dw 3
+		dw DOTR
+		dw SPACE
+		dw ZERO
+		dw IDO
+		dw DLINE
+		dw QTERM
+		dw ZBRAN
+		dw 4
+		dw LEAVE
+		dw XLOOP
+		dw 0FFE4h
+		dw SEMIS
+;TRIAD
+unk_5798:	db  85h ; TRIAD
+		db  'TRIA'
+		db 'D'+80H
+		dw unk_5760
+		dw DOCOL
+		dw LIT
+		dw FF
+		dw EMIT
+		dw LIT
+		dw 3
+		dw SLASH
+		dw LIT
+		dw 3
+		dw STAR
+		dw LIT
+		dw 3
+		dw OVER
+		dw PLUS
+		dw SWAP
+		dw XDO
+		dw CR
+		dw IDO
+		dw LIST
+		dw QTERM
+		dw ZBRAN
+		dw 4
+		dw LEAVE
+		dw XLOOP
+		dw 0FFF0h
+		dw CR
+		dw LIT
+		dw 0Fh
+		dw MESS
+		dw CR
+		dw SEMIS
+;.CPU
+unk_57DE:	db  84h ; .CPU
+		db  '.CP'
+		db 'U'+80H
+		dw unk_5798
+off_57E5:	dw DOCOL
+		dw BASE
+		dw AT
+		dw LIT
+		dw 24h
+		dw BASE
+		dw STORE
+		dw LIT
+		dw 22h
+		dw PORIG
+		dw TAT
+		dw DDOT
+		dw BASE
+		dw STORE
+		dw SEMIS
+;TASK
+unk_5803:	db  84h ; TASK
+		db  'TAS'
+		db 'K'+80H
+		dw unk_57DE
+off_580A:	dw DOCOL
+		dw SEMIS
+
+;------------------------------------------------------------------------------
+;
+		db    0
+		db    0
+
+;R/W Block from/to RAMDisk
+sub_5810:	ld	a, 1
+		jr	loc_5815
+loc_5814:	xor	a
+loc_5815:	push	bc
+		ld	b, 7
+loc_5818:	add	hl, hl
+		djnz	loc_5818
+		ld	bc, 7C00h
+		add	hl, bc
+		push	hl
+		and	a
+		ld	bc, 0FFFFh
+		sbc	hl, bc
+		pop	hl
+		jr	nc, loc_5832
+		ld	bc, 80h	; 'Ä'
+		and	a
+		jr	nz, loc_5830
+		ex	de, hl
+loc_5830:	ldir
+loc_5832:	pop	bc
+		ret
+
+;------------------------------------------------------------------------------
+;Kaltstart
+CLD:		ld	a, 0Ch		; cls
+		rst	10h
+		jp	CLD0
+
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+;
+;------------------------------------------------------------------------------
+; EDITOR
+; ÿ1h      ctrl+A           Cursor Home
+; ÿ2h      ctrl+B           Clear   ab   Cursor   Screen
+; ÿ3h      ctrl+C           verlassen  des  Edit  und Ersetzen
+; ÿ4h      ctrl+D           delete   ab   Cursor   Line
+; ÿ5h      ctrl+E           insert in Line
+; ÿ7h      ctrl+G           Cursor   an   Zeilenanfang
+; ÿ8h      ctrl+H           <--
+; ÿ9h      ctrl+I           -->
+; ÿAh      ctrl+J           Cursor down
+; ÿBh      ctrl+K           Cursor up
+; ÿCh      ctrl+L           Clear screen + home
+; ÿDh      ctrl+M           CR+LF
+; ÿFh      ctrl+O           tab   auf   naechstes   no  Blank
+; 14h      ctrl+T           Cursor auf Textende
+; 15h      ctrl+U           insert im screen
+; 16h      ctrl+V           delete im screen
+; 17h      ctrl+W           Line ab Cursor clear
+; 18h      ctrl+X           clear Line Cursor  auf beginn Line
+; 19h      ctrl+Y           delete   ab   cursor   screen
+; 1Ah      ctrl+Z           DEL
+; 1Bh      ESC              verlassen  des Edit  ohne  Ersetzen
+;
+
+sub_5850:	ld	d, (iy+2)
+		ld	e, (iy+3)
+		ret
+
+sub_5857:	call	sub_5850
+loc_585A:	push	af
+		ld	h, d
+		xor	a
+		rr	h
+		rra
+		rr	h
+		rra
+		add	a, e
+		ld	l, a
+		ld	a, h
+		cpl
+		and	17h
+		or	10h
+		ld	h, a
+		ld	a, l
+		cpl
+		ld	l, a
+		pop	af
+		ret
+sub_5871:	ld	(iy+2),	d
+		ld	(iy+3),	e
+		ret
+sub_5878:	ld	a, c
+		cp	0Ah
+		jr	z, loc_5880
+		ld	(iy+3),	e
+loc_5880:	push	ix
+		ld	d, (iy+4)	; erste Zeile
+		ld	e, (iy+5)	; erste Spalte
+		ld	a, (iy+7) 	; letzte Spalte
+		sub	(iy+5)		; erste Spalte
+		inc	a
+		ld	c, a
+loc_5890:	ld	b, c
+		call	loc_585A
+		push	hl
+		pop	ix
+		ld	a, d
+		cp	(iy+6)		; letzte Zeile
+		jr	nc, loc_58AA
+loc_589D:	ld	a, (ix-40h)	; +c0h ?
+		ld	(ix+0),	a
+		dec	ix
+		djnz	loc_589D
+		inc	d
+		jr	loc_5890
+loc_58AA:	ld	(hl), 20h ; ' '
+		dec	hl
+		djnz	loc_58AA
+		pop	ix
+		ret
+sub_58B2:	push	de
+		ld	a, (iy+7) 	; letzte Spalte
+		push	af
+		sub	(iy+5)		; erste Spalte
+		inc	a
+		ld	c, a
+		pop	af
+		sub	e
+		inc	a
+		ld	b, a
+loc_58C0:	call	loc_585A
+loc_58C3:	ld	(hl), 20h ; ' '
+		dec	hl
+		djnz	loc_58C3
+		ld	b, c
+		bit	1, (iy+0)
+		jr	z, loc_58D9
+		ld	e, (iy+5)	; erste Spalte
+		ld	a, d
+		inc	d
+		cp	(iy+6)		; letzte Zeile
+		jr	c, loc_58C0
+loc_58D9:	pop	de
+		ret
+sub_58DB:	push	de
+		ld	b, d
+		ld	c, 20h ; ' '
+		bit	1, (iy+0)
+		jr	z, loc_58E8
+		ld	d, (iy+6)	; letzte Zeile
+loc_58E8:	ld	e, (iy+7) 	; letzte Spalte
+		call	loc_585A
+		ld	a, b
+		cp	d
+		jr	z, loc_5902
+loc_58F2:	ld	a, (hl)
+		ld	(hl), c
+		ld	c, a
+		ld	a, (iy+5)	; erste Spalte
+		cp	e
+		jr	nc, loc_58FF
+		dec	e
+		inc	hl
+		jr	loc_58F2
+loc_58FF:	dec	d
+		jr	loc_58E8
+loc_5902:	ld	a, c
+		pop	bc
+		ld	b, a
+		inc	e
+loc_5906:	dec	e
+		ld	a, (hl)
+		ld	(hl), b
+		ld	b, a
+		inc	hl
+		ld	a, c
+		cp	e
+		jr	nz, loc_5906
+		ret
+;
+sub_5910:	ld	a, e
+		cp	(iy+7) 		; letzte Spalte
+		ret	z
+		inc	e
+		call	loc_585A
+sub_5919:	ld	a, (hl)
+		cp	30h ; '0'
+		ret	c
+		cp	3Ah ; ':'
+		ccf
+		ret	nc
+		cp	40h ; '@'
+		ret	c
+		xor	a
+		inc	a
+		ret
+;
+edit_co:	push	af
+		push	bc
+		push	de
+		push	hl
+		ld	c, a
+		bit	3, (iy+0)
+		jr	z, loc_5952
+		bit	4, (iy+0)
+		jr	z, loc_5945
+		res	4, (iy+0)
+		ld	a, (iy+4)	; erste Zeile
+		add	a, c
+		ld	(iy+2),	a
+		jr	loc_59A7
+loc_5945:	res	3, (iy+0)
+		ld	a, (iy+5)	; erste Spalte
+		add	a, c
+		ld	(iy+3),	a
+		jr	loc_59A7
+loc_5952:	call	sub_5857
+		bit	7, (iy+0)
+		jr	nz, loc_5987
+		cp	20h ; ' '
+		jr	c, loc_59B2
+		bit	2, (iy+0)
+		jr	z, loc_5987
+loc_5965:	call	loc_585A
+		ld	a, (hl)
+		ld	(hl), c
+		ld	c, a
+		ld	a, e
+		inc	e
+		cp	(iy+7) 		; letzte Spalte
+		jr	c, loc_5965
+		bit	1, (iy+0)
+		jr	z, loc_5982
+		ld	e, (iy+5)	; erste Spalte
+		ld	a, d
+		inc	d
+		cp	(iy+6)		; letzte Zeile
+		jr	c, loc_5965
+loc_5982:	call	sub_5857
+		jr	loc_5988
+loc_5987:	ld	(hl), c
+; ÿ9h -->
+loc_5988:	ld	a, e
+		inc	e
+		cp	(iy+7) 		; letzte Spalte
+		jr	c, loc_59A4
+; ÿDh CR+LF
+loc_598F:	ld	e, (iy+5)	; erste Spalte
+; ÿAh Cursor down
+loc_5992:	ld	a, d
+		inc	d
+		cp	(iy+6)		; letzte Zeile
+		jr	c, loc_59A4
+		bit	0, (iy+0)
+		jr	z, loc_59A7
+		call	sub_5878
+		jr	loc_59A7
+loc_59A4:	call	sub_5871
+loc_59A7:	call	sub_5857
+		ld	(1800h), hl
+		pop	hl
+		pop	de
+		pop	bc
+		pop	af
+		ret
+loc_59B2:	ld	a, (iy+0)
+		and	0C1h ; '¡'
+		ld	(iy+0),	a
+		ld	a, c
+		cp	0Dh		; CR+LF
+		jr	z, loc_598F
+		cp	9		; -->
+		jr	z, loc_5988
+		cp	0Ah		; Cursor Down
+		jr	z, loc_5992
+		cp	8		; <--
+		jr	nz, loc_59EB
+; ÿ8h <--
+loc_59CB:	ld	a, (iy+5)	; erste Spalte
+		cp	e
+		jr	nc, loc_59DF
+		dec	e
+loc_59D2:	bit	5, (iy+0)
+		jr	z, loc_59A4
+		call	loc_585A
+		ld	(hl), 20h ; ' '
+loc_59DD:	jr	loc_59A4
+loc_59DF:	ld	e, (iy+7) 	; letzte Spalte
+; ÿBh Cursor up
+loc_59E2:	ld	a, (iy+4)	; erste Zeile
+		cp	d
+		jr	nc, loc_59A7
+		dec	d
+		jr	loc_59D2
+; weitere Tasten
+loc_59EB:	cp	0Bh		; Cursor up
+		jr	z, loc_59E2
+		cp	1		; Cursor Home
+		jr	nz, loc_59FB
+; ÿ1h Cursor Home
+		ld	d, (iy+4)	; erste Zeile
+; ÿ7h Cursor an Zeilenanfang
+loc_59F6:	ld	e, (iy+5)	; erste Spalte
+		jr	loc_59A4
+loc_59FB:	cp	7		; Zeilenanfang
+		jr	z, loc_59F6
+		cp	0Ch		; Clear screen + home
+		jr	nz, loc_5A1B
+; ÿCh Clear screen + home
+		ld	d, (iy+4)	; erste Zeile
+		ld	e, (iy+5)	; erste Spalte
+; ÿ2h Clear ab Cursor Screen
+loc_5A09:	set	1, (iy+0)
+		jr	loc_5A16
+; 18h clear Line Cursor  auf beginn Line
+loc_5A0F:	ld	e, (iy+5)	; erste Spalte
+; 17h Line ab Cursor clear
+loc_5A12:	res	1, (iy+0)
+loc_5A16:	call	sub_58B2
+		jr	loc_59DD
+;
+loc_5A1B:	cp	18h		; clear Line
+		jr	z, loc_5A0F
+		cp	2		; Clear ab Cursor
+		jr	z, loc_5A09
+		cp	17h		; Line ab Cursor clear
+		jr	z, loc_5A12
+		cp	4		; delete ab Cursor Line
+		jr	nz, loc_5A34
+; ÿ4h delete ab Cursor Line
+		res	1, (iy+0)
+loc_5A2F:	call	sub_58DB
+		jr	loc_59DD
+;
+loc_5A34:	cp	19h		; delete ab cursor screen
+		jr	nz, loc_5A3E
+; 19h delete ab cursor screen
+		set	1, (iy+0)
+		jr	loc_5A2F
+;
+loc_5A3E:	cp	5		; insert in Line
+		jr	nz, loc_5A4C
+; ÿ5h insert in Line
+		res	1, (iy+0)
+loc_5A46:	set	2, (iy+0)
+		jr	loc_59DD
+;
+loc_5A4C:	cp	15h		; insert im screen
+		jr	nz, loc_5A56
+; 15h insert im screen
+		set	1, (iy+0)
+		jr	loc_5A46
+;
+loc_5A56:	cp	0Eh		; ??
+		jr	nz, loc_5A65
+; ÿEh ??
+		set	3, (iy+0)
+		set	4, (iy+0)
+loc_5A62:	jp	loc_59A4
+;
+loc_5A65:	cp	1Ah		; DEL
+		jr	nz, loc_5A70
+; 1Ah DEL
+		set	5, (iy+0)
+		jp	loc_59CB
+;
+loc_5A70:	cp	0Fh		; tab auf naechstes no Blank
+		jr	nz, loc_5A92
+; ÿFh tab auf naechstes no Blank
+		ld	c, e
+		call	sub_5919
+		rr	b
+loc_5A7A:	call	sub_5910
+		jr	z, loc_5A8F
+		rra
+		xor	b
+		bit	7, a
+		jr	z, loc_5A7A
+		bit	7, b
+		jr	nz, loc_5A8E
+		ld	c, e
+		set	7, b
+		jr	loc_5A7A
+loc_5A8E:	ld	c, e
+loc_5A8F:	ld	e, c
+		jr	loc_5A62
+;
+loc_5A92:	cp	14h		; Cursor auf Textende
+		jr	nz, loc_5A62	; sonstige Taste: zur¸ck in Tastaturschleife
+; 14h Cursor auf Textende
+		ld	e, (iy+7) 	; letzte Spalte
+		call	loc_585A
+		ld	a, (hl)
+		cp	20h ; ' '
+		jr	nz, loc_5A62
+		ld	a, e
+		sub	(iy+5)		; erste Spalte
+		inc	a
+		ld	b, a
+		ld	a, 20h ; ' '
+loc_5AA9:	cp	(hl)
+		jr	nz, loc_5AB0
+		dec	e
+		inc	hl
+		djnz	loc_5AA9
+loc_5AB0:	inc	e
+		jr	loc_5A62
+;
+		db 0FFh
+unk_5AB4:	db  10h
+		db 0FFh
+		db 0FFh
+		db 0FFh
+unk_5AB8:	db    0		; IY+0  Flags
+		db    0		; IY+1
+		db  0Ah		; IY+2
+		db    0		; IY+3
+		db  0Ah		; IY+4	Zeile start of screen
+		db    0		; IY+5	Spalte start of screen
+		db  19h		; IY+6	Zeile end of screen
+		db  3Fh		; IY+7  Spalte end of screen
+;
+sub_5AC0:	push	hl
+		push	bc
+		ld	hl, (1800h)	; cupos
+loc_5AC5:	ld	c, (hl)
+		ld	(hl), 5Fh ; '_'
+loc_5AC8:	ld	b, 0
+loc_5ACA:	push	bc
+		ld	b, 0
+loc_5ACD:	djnz	loc_5ACD
+		pop	bc
+		call	7FAh	; TASTE
+		jr	nz, loc_5ADF
+		djnz	loc_5ACA
+		ld	a, 5Fh ; '_'
+		cp	(hl)
+		jr	nz, loc_5AC5
+		ld	(hl), c
+		jr	loc_5AC8
+loc_5ADF:	ld	(hl), c
+		push	af
+loc_5AE1:	call	7FAh	; TASTE
+		ld	hl, unk_5AB4
+		jr	nz, loc_5AF2
+		ld	a, 10h
+loc_5AEB:	ld	(hl), a
+		pop	af
+		and	7Fh
+		pop	bc
+		pop	hl
+		ret
+loc_5AF2:	ld	a, (hl)
+		dec	a
+		ld	(hl), a
+		jr	nz, loc_5AE1
+		inc	a
+		inc	a
+		inc	a
+		jr	loc_5AEB
+		db 0FFh
+		db 0FFh
+		db 0FFh
+		db 0FFh
+
+; EDIT  ( n --> )
+unk_5B00:	db  84h
+		db "EDI",'T'+80H
+		dw unk_5803
+		dw loc_5B09
+loc_5B09:	pop	hl
+		push	bc
+		call	sub_5B77
+		ld	iy, unk_5AB8
+		ld	(iy+0),	0	; init
+		ld	(iy+4),	0Ah	; erste Zeile
+		ld	(iy+5),	0	; erste Spalte
+		ld	(iy+6),	19h	; letzte Zeile
+		ld	(iy+7),	3Fh 	; letzte Spalte
+		ld	a, 0Ch		; Clear screen + home
+		call	edit_co		; ausgeben
+		ld	b, l
+		ld	hl, 7C00h
+		ld	de, 400h
+loc_5B32:	add	hl, de
+		djnz	loc_5B32
+		ld	e, l
+		ld	d, h
+		ld	bc, 400h
+loc_5B3A:	ld	a, (hl)
+		call	edit_co		; ausgeben
+		inc	hl
+		dec	bc
+		ld	a, b
+		or	c
+		jr	nz, loc_5B3A
+		ld	a, 1
+loc_5B46:	call	edit_co
+		call	sub_5AC0
+		cp	1Bh		; ESC
+		jr	z, loc_5B6E
+		cp	3		; Ctrl-C
+		jr	nz, loc_5B46
+; ÿ3h ctrl+C verlassen des Edit und Ersetzen
+		ld	a, 1		; Cursor Home
+		call	edit_co		; ausgeben
+		ld	hl, (1800h)	; cupos. == 1. Zeichen
+		ld	bc, 400h	; 1K Screen
+loc_5B5F:	ld	a, (hl)		; ggf. durch ' ' ersetzen
+		cp	80h
+		jr	c, loc_5B66
+		ld	a, ' '
+loc_5B66:	ld	(de), a		; umkopieren nach de
+		dec	hl		; n‰chstes Zeichen
+		inc	de
+		dec	bc
+		ld	a, b
+		or	c
+		jr	nz, loc_5B5F
+; 1Bh ESC verlassen des Edit ohne Ersetzen
+loc_5B6E:	ld	a, 0Ch		; CLS
+		call	10h		; rst 10 outch
+		pop	bc
+		jp	NEXT
+;
+sub_5B77:	push	hl
+		ld	a, 0Ch
+		call	10h		; rst 10 outch
+		ld	hl, 15BFh	; bws(9,0)
+		ld	b, 40h
+loc_5B82:	ld	(hl), '-'
+		dec	hl
+		djnz	loc_5B82
+		ld	(hl), 0A9h ; '©'
+		ld	hl, 117Fh	; bws(26,0)
+		ld	b, 40h
+loc_5B8E:	ld	(hl), '-'
+		dec	hl
+		djnz	loc_5B8E
+		pop	hl
+		ret
+		xor	d
+		pop	hl
+		ret
+		dec	d
+loc_5B99:	ld	(hl), 0A1h
+		add	hl, de
+		djnz	loc_5B99
+		ld	hl, 117Fh	; bws(26,0)
+		ld	(hl), 0A7h
+		dec	hl
+		ld	b, 3Eh
+loc_5BA6:	ld	(hl), 0AFh
+		dec	hl
+		djnz	loc_5BA6
+		ld	(hl), 0AAh
+		pop	hl
+		ret
+
+;BYE
+unk_5BAF:	db  83h
+aBy:		db "BY",'E'+80H
+		dw unk_5B00
+		dw loc_5BB7
+loc_5BB7:	jp	2B0h		; GETCO1
+
+;CLS
+unk_5BBA:	db  83h
+aCl:		db "CL",'S'+80H
+		dw unk_5BAF
+		dw DOCOL
+		dw LIT
+		dw 0Ch
+		dw EMIT
+		dw SEMIS
+
+;DINPUT
+unk_5BCA:	db  86h
+		db "DINPU",'T'+80H
+		dw unk_5BBA
+DINPUT:		dw DOCOL
+		dw PAD
+		dw ONEP
+		dw LIT
+		dw 64h
+		dw EXPEC
+		dw LIT
+		dw 0
+		dw LIT
+		dw 0
+		dw PAD
+		dw PNUMB
+		dw DROP
+		dw SEMIS
+
+;INPUT
+unk_5BEF:	db  85h
+		db "INPU",'T'+80H
+		dw unk_5BCA
+		dw DOCOL
+		dw DINPUT
+		dw DROP
+		dw SEMIS
+
+;PICK
+unk_5BFF:	db  84h
+		db "PIC",'K'+80H
+		dw unk_5BEF
+PICK:		dw DOCOL
+		dw TWO
+		dw STAR
+		dw SPAT
+		dw PLUS
+		dw AT
+		dw SEMIS
+
+;DEPTH
+unk_5C14:	db  85h
+		db "DEPT",'H'+80H
+		dw unk_5BFF
+DEPTH:		dw DOCOL
+		dw SPAT
+		dw SZERO
+		dw AT
+		dw SWAP
+		dw SUBB
+		dw TWO
+		dw SLASH
+		dw SEMIS
+
+;ROLL
+unk_5C2E:	db  84h
+		db "ROL",'L'+80H
+		dw unk_5C14
+		dw DOCOL
+		dw DEPTH
+		dw TOR
+		dw DUP
+		dw DUP
+		dw FROMR
+		dw LESS
+		dw TOR
+		dw ONE
+		dw FROMR
+		dw ANDD
+		dw ZBRAN
+		dw 38h
+		dw ONEP
+		dw DUP
+		dw PICK
+		dw SWAP
+		dw TWO
+		dw STAR
+		dw SPAT
+		dw PLUS
+		dw TWO
+		dw SUBB
+		dw SPAT
+		dw ONEP
+		dw SWAP
+		dw XDO
+		dw IDO
+		dw AT
+		dw IDO
+		dw TWO
+		dw PLUS
+		dw STORE
+		dw LIT
+		dw 0FFFEh
+		dw XPLOO
+		dw 0FFEEh
+		dw DROP
+		dw BRAN
+		dw 4
+		dw DROP
+		dw SEMIS
+
+;J
+unk_5C89:	db  81h	; Å
+		db 'J'+80H
+		dw unk_5C2E
+		dw DOCOL
+		dw FROMR
+		dw FROMR
+		dw FROMR
+		dw FROMR
+		dw DUP
+		dw SWAP
+		dw TOR
+		dw SWAP
+		dw TOR
+		dw SWAP
+		dw TOR
+		dw SWAP
+		dw TOR
+		dw SEMIS
+
+;.S
+unk_5CAB:	db  82h
+		db '.','S'+80H
+		dw unk_5C89
+		dw DOCOL
+		dw DEPTH
+		dw ZBRAN
+		dw 24h
+		dw SPAT
+		dw TWO
+		dw SUBB
+		dw SZERO
+		dw AT
+		dw TWO
+		dw SUBB
+		dw XDO
+		dw IDO
+		dw AT
+		dw UDOT
+		dw LIT
+		dw 0FFFEh
+		dw XPLOO
+		dw 0FFF4h
+		dw BRAN
+		dw 0Bh
+		dw PDOTQ
+		db 6,"empty "
+		dw SEMIS
+
+;2SWAP
+unk_5CE5:	db  85h
+		db "2SWA",'P'+80H
+		dw unk_5CAB
+TSWAP:		dw DOCOL
+		dw ROT
+		dw TOR
+		dw ROT
+		dw FROMR
+		dw SEMIS
+
+;2DROP
+unk_5CF9:	db  85h
+		db "2DRO",'P'+80H
+		dw unk_5CE5
+		dw DOCOL
+		dw DROP
+		dw DROP
+		dw SEMIS
+
+;2OVER
+unk_5D09:	db  85h
+		db "2OVE",'R'+80H
+		dw unk_5CF9
+		dw DOCOL
+		dw LIT
+		dw 4
+		dw PICK
+		dw LIT
+		dw 4
+		dw PICK
+		dw SEMIS
+
+;2ROT
+unk_5D21:	db  84h
+		db "2RO",0D4h
+		dw unk_5D09
+		dw DOCOL
+		dw TOR
+		dw TOR
+		dw TSWAP
+		dw FROMR
+		dw FROMR
+		dw TSWAP
+		dw SEMIS
+
+;2*
+unk_5D38:	db  82h
+		db '2','*'+80H
+		dw unk_5D21
+		dw loc_5D3F
+loc_5D3F:	pop	hl
+		add	hl, hl
+		jp	HPUSH
+
+;2/
+unk_5D44:	db  82h
+		db '2','/'+80H
+		dw unk_5D38
+		dw loc_5D4B
+loc_5D4B:	pop	hl
+		sra	h
+		rr	l
+		jp	HPUSH
+
+;DUMP
+unk_5D53:	db  84h
+		db "DUM",'P'+80H
+		dw unk_5D44
+		dw DOCOL
+		dw CR
+		dw CR
+		dw BASE
+		dw AT
+		dw HEX
+		dw ROT
+		dw ROT
+		dw ONEP
+		dw SWAP
+		dw XDO
+		dw IDO
+		dw ZERO
+		dw LIT
+		dw 8
+		dw DDOTR
+		dw THREE
+		dw SPACS
+		dw LIT
+		dw ':'
+		dw EMIT
+		dw SPACE
+		dw SPACE
+		dw IDO
+		dw LIT
+		dw 8
+		dw ZERO
+		dw XDO
+		dw DUP
+		dw IDO
+		dw PLUS
+		dw CAT
+		dw LIT
+		dw 4
+		dw DOTR
+		dw XLOOP
+		dw 0FFF0h
+		dw DROP
+		dw CR
+		dw LIT
+		dw 8
+		dw XPLOO
+		dw 0FFC2h
+		dw BASE
+		dw STORE
+		dw SEMIS
+
+;VLIST
+unk_5DB6:	db  85h
+aVlis:		db "VLIS",'T'+80H
+		dw unk_5D53
+		dw DOCOL
+		dw LIT
+		dw 0D05h
+		dw OUTT
+		dw STORE
+		dw CONT
+		dw AT
+		dw AT
+VLIS1:		dw OUTT		; BEGIN
+		dw AT
+		dw LIT
+		dw 28h
+		dw GREAT
+		dw ZBRAN	; IF
+		dw VLIS2-$
+		dw CR
+		dw ZERO
+		dw OUTT
+		dw STORE	; ENDIF
+		dw BRAN
+		dw 12h
+VLIS2:		dw LIT
+		dw 14h
+		dw OUTT
+		dw AT
+		dw OVER
+		dw MODD
+		dw SUBB
+		dw SPACS
+		dw DUP
+		dw DUP
+		dw ZERO
+		dw BASE
+		dw AT
+		dw TOR
+		dw HEX
+		dw BDIGS
+		dw DIG
+		dw DIG
+		dw DIG
+		dw DIG
+		dw EDIGS
+		dw FROMR
+		dw BASE
+		dw STORE
+		dw TYPE
+		dw DUP
+		dw ONEP
+		dw CAT
+		dw LIT
+		dw 80h
+		dw SUBB
+		dw ZBRAN
+		dw 0Ah
+		dw SPACE
+		dw IDDOT
+		dw BRAN
+		dw 0Ch
+		dw PDOTQ
+		db 5," null"
+		dw DROP
+		dw TOR
+		dw QTERM
+		dw ZBRAN
+		dw 0Eh
+		dw KEY
+		dw THREE
+		dw EQUAL
+		dw ZBRAN
+		dw 4
+		dw QUIT
+		dw FROMR
+		dw PFA
+		dw LFA
+		dw AT
+		dw DUP
+		dw ZEQU
+		dw ZBRAN	; UNTIL
+		dw VLIS1-$	; 0FF70h
+		dw DROP
+		dw SEMIS
+
+;SAVE-SCREENS
+unk_5E64:	db  8Ch
+		db "SAVE-SCREEN",'S'+80H
+		dw unk_5DB6
+		dw loc_5E75
+loc_5E75:	pop	de
+		pop	hl
+		push	bc
+		ld	b, l
+		ld	c, e
+		ld	de, 400h
+		ld	hl, 7C00h
+loc_5E80:	add	hl, de
+		djnz	loc_5E80
+		ld	(185Bh), hl	; ARG1
+		ld	hl, 7C00h
+		ld	b, c
+loc_5E8A:	add	hl, de
+		djnz	loc_5E8A
+		add	hl, de
+		dec	hl
+		ld	(185Dh), hl	; ARG2
+		ld	hl, ORIG
+		ld	(185Fh), hl	; ARG3
+		rst	18h
+		db 13,"NAME",0BAh
+		ld	de, (1800h)	; cupos
+loc_5EA3:	call	8
+		call	10h
+		cp	0Dh
+		jr	nz, loc_5EA3
+		call	2BBh		; csave im Monitor 3.1
+		pop	bc
+		jp	NEXT
+
+		NEWPAGE
+;
+;		MEMORY MAP
+;	( THE FOLLOWING EQUATES ARE NOT REFERENCED ELSEWHERE )
+;
+;		LOCATION	CONTENTS
+;		--------	--------
+MCOLD		EQU	ORIG	;JMP TO COLD START
+MWARM		EQU	ORIG+4	;JMP TO WARM START
+MA2		EQU	ORIG+8	;COLD START PARAMETERS
+MUP		EQU	UP	;USER VARIABLES' BASE 'REG'
+MRP		EQU	RPP	;RETURN STACK 'REGISTER'
+;
+MBIP		EQU	0	;DEBUG SUPPORT
+MDPUSH		EQU	DPUSH	;ADDRESS INTERPRETER
+MHPUSH		EQU	HPUSH
+MNEXT		EQU	NEXT
+;
+MDP0		EQU	DP0	;START FORTH DICTIONARY
+MDIO		EQU	DRIVE	;CP/M DISK INTERFACE
+MCIO		EQU	0; EPRINT	;CONSOLE & PRINTER INTERFACE
+MIDP		EQU	INITDP	;END INITIAL FORTH DICTIONARY
+;				  = COLD (DP) VALUE
+;				  = COLD (FENCE) VALUE
+;				  |  NEW
+;				  |  DEFINITIONS
+;				  V
+;
+;				  ^
+;				  |  DATA
+;				  |  STACK
+MIS0		EQU	INITS0	;  = COLD (SP) VALUE = (S0)
+;				   = (TIB)
+;				  |  TERMINAL INPUT
+;				  |  BUFFER
+;				  V
+;
+;				  ^
+;				  |  RETURN
+;				  |  STACK
+MIR0		EQU	INITR0	;START USER VARIABLES
+;				  = COLD (RP) VALUE = (R0)
+;				  = (UP)
+;				;END USER VARIABLES
+MFIRST		EQU	BUF1	;START DISK BUFFERS
+;				  = FIRST
+MEND		EQU	EM-1	;END DISK BUFFERS
+MLIMIT		EQU	EM	;LAST MEMORY LOC USED + 1
+;				  = LIMIT
+;
+;
+
+;------------------------------------------------------------------------------
+;
+;------------------------------------------------------------------------------
+
+
+
+		; RAM
+		org 6000h
+
+RPP:		EQU	6000h	; RETURN STACK POINTER
+UP:		EQU	6002h	; USER AREA POINTER
+
+; CLD_ copy code of FORTH to 6004h-6015h
+byte_6004	equ	6004h	;Start FORTH-Definition
+unk_600C	equ	600Ch	;FORTH
+unk_6012	equ	6012h	; Link Vocs
+unk_6016	equ	6016h	;NEXT
+
+;6004:		DB	0C5H	; FORTH
+;6005:		DB	'FORT'
+;6009: 		DB	'H'+80H
+;600A:		DW	VOCAB-0DH
+;600C:		DW	DODOE
+;600E:		DW	DOVOC
+;6010:		DW	0A081H
+;6012:		DW	INITDP  ; CHANGED EACH TIME A DEF IS APPENDED
+;				; TO THE FORTH VOCABULARY
+;6014:		DW	0	; END OF VOCABULARY LIST
+;
+;6016:		JP	NEXT0
+
+INITDP:		equ	6020h	;CONSUME MEMORY TO LIMIT
+
+	END	ORIG
+
+;------------------------------------------------------------------------------
+;
+;------------------------------------------------------------------------------
+
+
+4000-5FFF	FORTH Kern
+6000-		RAM fuer die  Organisation  des  Return-Stackpointers
+		sowie  fur  das Linken  von Vocabularen. Ab 6ÿ2ÿH  
+		aufw‰rts  w‰chst  das neue Wˆrterbuch ,das durch den User 
+		angelegt werden kann.
+
+6ÿ2ÿh         Beginn der vom User erzeugten Vokabularerweit.
+7FFFh         Ende des Forth-RAMs
+8ÿÿÿH         Beginn RAM-Disk
+bis Ende physischer RAM
+
+
+8ÿÿÿH  bis FFFF  RAMdisk. Die  Ramdisk ist  Forth-typisch  in
+Blˆcke  zu  128 Bytes eingeteilt.
+
+Von 7FFFH  r¸ckw‰rts  befindet  sich  der Diskpuffer-bereich.
+Dieser  ist 42ÿH  groﬂ ,daran  schlieﬂt  sich nach unten  der
+Variablen-bereich sowie der Forth-Stack an.
+Der Bereich  von  6ÿ2ÿH  bis zur Stapel-Spitze  ist also  der
+nutzbare  Bereich  fuer  den User, um darin ein Forthprogramm
+zu compilieren und abzuarbeiten.
+
+
+6000   77 7B 7F 7B C5 46 4F 52 54 C8 1A 4F 30 4A 47 4F   w{{.FORT..O0JGO
+6010   81 A0 20 60 00 00 C3 3A 40 00 FF 00 FF 00 FF 00   .. `...:@.......
+6020   84 54 45 53 D4 64 5E 29 45 C0 4A 09 48 41 4C 4C   .TES.d^)E.J.HALL
+6030   4F 20 41 43 31 5F 43 01 00 20 20 20 20 20 20 20   O AC1_C..
+6040   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+6050   20 20 20 20 20 20 20 20 20 00 FF 00 FF 00 FF 36            ......6
+6060   35 34 31 35 82 2E D2 5F 5F 5F 5F 5F 5F 5F 5F 5F   5415..._________
+6070   5F 5F 5F 5F 5F 5F 5F 5F 5F 5F 5F 5F 5F 5F 5F 5F   ________________
+6080   5F 5F 5F 5F FF 00 FF 00 FF 00 FF 00 FF 00 FF 00   ____............
+6090   FF 00 FF 00 FF 00 FF 00 FF 00 FF 00 FF 00 FF 00   ................
+60A0   FF 00 FF 00 FF 00 FF 00 FF 00 FF 00 FF 00 FF 00   ................
+60B0   FF 00 FF 00 FF 00 FF 00 FF 00 FF 00 FF 00 FF 00   ................
+60C0   FF 00 FF 00 FF 00 FF 00 FF 00 FF 00 FF 00 FF 00   ................
+60D0   FF 00 FF 00 FF 00 FF 00 FF 00 FF 00 FF 00 FF 00   ................
+60E0   FF 00 FF 00 FF 00 FF 00 FF 00 FF 00 FF 00 FF 00   ................
+60F0   FF 00 FF 00 FF 00 FF 00 FF 00 FF 00 FF 00 FF 00   ................
+
+7BE0: BUF
+
+7BE0   00 3A 20 54 45 53 54 20 20 20 20 20 20 20 20 20   .: TEST
+7BF0   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+7C00   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+7C10   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+7C20   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+7C30   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+7C40   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+7C50   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+7C60   20 00 00 09 00 2E 22 20 48 41 4C 4C 4F 20 41 43    ....." HALLO AC
+7C70   31 22 20 3B 20 20 20 20 20 20 20 20 20 20 20 20   1" ;
+7C80   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+7C90   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+7CA0   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+7CB0   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+7CC0   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+7CD0   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+7CE0   20 20 20 20 20 00 00 0A 00 20 20 20 20 20 20 20        ....
+7CF0   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+7D00   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+7D10   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+7D20   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+7D30   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+7D40   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+7D50   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+7D60   20 20 20 20 20 20 20 20 20 00 00 0B 00 20 20 20            ....
+7D70   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+
+8000: RAMDisk
+
+8000   3A 20 54 45 53 54 20 20 20 20 20 20 20 20 20 20   : TEST
+8010   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+8020   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+8030   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+8040   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+8050   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+8060   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+8070   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+8080   2E 22 20 48 41 4C 4C 4F 20 41 43 31 22 20 3B 20   ." HALLO AC1" ;
+8090   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+80A0   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+80B0   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+80C0   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+80D0   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+80E0   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+80F0   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+8100   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+8110   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+8120   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+8130   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+8140   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+8150   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+8160   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+8170   20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+
