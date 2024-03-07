@@ -2,6 +2,8 @@ Sources für den DDR-Computer AC1
 
 http://hc-ddr.hucki.net/wiki/doku.php/homecomputer/ac1
 
+**Anwender-Software für den AC1** findet man in den Unterverzeichnissen zur [ROM-Disk](modul1/romdiskverwaltung-neu)
+
 Der Monitor des AC1 basiert auf dem Programm ZETBUG für TRS-80 Model I, beschrieben in funkschau 1980/11. Außerdem ist der Monitor des AC1 die Basis für den Systemmonitor des Z1013. Ich habe ZETBUG reassembliert, ebenso den AC1-Monitor und an die Labels des Z1013 angepasst. Damit kann man die Versionen gut vergleichen und Veränderungen verfolgen.
 
 Das Minibasic basiert auf dem Minibasic V3.2 von Rolf-Dieter-Klein. Auch hier hab ich das AC1-Minibasic reassembliert und an das Original angepasst. Damit kann man beide Versionen gut vergleichen und Veränderungen verfolgen.
