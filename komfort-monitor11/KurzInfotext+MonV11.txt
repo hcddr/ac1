@@ -1,0 +1,34 @@
+USB-KomfortMonitorV11.0 					Stand 22.02.2015 [c]HR
+
+Gegenüber dem bisherigen Monitor 10.3 gab es umfangreiche Veränderungen.
+
+Der Name "KomfortMonitor" sagt es schon aus. Es wurde Wert auf Komfort
+und Flexibilität gelegt. Dabei soll der Monitor als Arbeitsmonitor zu
+sehen sein. Debug-Funktionen sind keine eingebaut. Dafür gibt es den 10/88.
+
+Was ist neu:
+
+1. Es ist nur noch 1 Monitorversion für AC1 SCCH und AC1-2010 notwendig!
+
+2. GrafikSoundBasic CLOAD/CSAVE mit voller USB Unterstützung (Merge & Felder)
+   HD (DVHD Files) ist ohne Felder auch möglich
+
+3. USB/HD Abfrage "OverWrite?(J)" bei vorhandenen Dateien,
+
+4. USB-Löschkommando eingebaut,
+
+5. EX_SA_LO Einsprungschnittstelle, damit kann aus jeder Anwendung
+   via USB und HD (V24 nachladbar) auf LOAD & SAVE Routinen zugegriffen werden.
+
+6. Funktion: nachladbare Kommandos, der Monitor lädt fehlende Kommandos automatisch
+   von USB oder HD nach und startet diese auch gleich !
+   Damit brauchen nur noch die nötigsten Kommandos im Monitor enthalten sein.
+   Jedes fehlende Kommando wird einfach nachgeladen (z.B. ROMBANK, FDC etc)
+
+7. verschiebbarer Puffer von HD (bisher fest auf FE00H) nun selbst wählbar
+
+8. V24 Eingabe / Ausgabe für alle Baudraten enthalten (Baudratentabelle auf 0B00H)
+
+Viel Spaß beim Nutzen/Testen wünscht Ralph Hänsel !
+
+Fragen und Anregungen, natürlich auch Bugs bitte an ralphhaensel@gmx.de

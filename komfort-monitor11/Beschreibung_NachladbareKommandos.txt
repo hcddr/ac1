@@ -1,0 +1,83 @@
+Nachladbare Kommandodateien
+===========================
+
+7:	MO11A_37.z80		ROMBANK AC1-2010 starten
+-----------------------------------------------------------------------------
+Syntax: 7
+
+In diesem mit dem Kommando 7 CR nachladbaren Kommando können die Startaufrufe
+(6 7 8 9 0) für die ROMBANK nachgeladen werden und stehen dann zur Verfügung.
+Die Routinen werden auf 18C0H geladen.
+
+
+F:	MO11A_46.z80		Suche
+-----------------------------------------------------------------------------
+Syntax:	F aaaa bbbb cc dd...	HEX
+	F aaaa bbbb 'ABC..	ASCII
+
+Der Speicher wird von Adresse aaaa bis bbbb nach der Bytefolge cc dd .. 
+(L‰nge beliebig) durchsucht. Suche nach ASCII-Zeichen ist ebenfalls möglich, 
+diese ist hinter einem Hochkomma anzugeben. Sämtliche im Speicher gefundenen 
+Zeichenketten werden ausgeschrieben (Anfangsadresse). 
+Ist die Kette sooft vorhanden, dass nicht alle Adressen auf den Schirm passen, 
+wird die Suche abgebrochen; günstig ist, vorher den Bildschirm zu löschen. 
+bbbb max. FFFE.
+Die Routine ist verschieblich und wird nach 1900H geladen, kann aber auch
+mit dem Aufruf # U xxxx "MO11A_46.z80" in den Speicher ab xxxx geladen werden.
+
+
+K:	MO11A_4B.z80		V.24-SAVE (HEADERSAVE-Format)
+----------------------------------------------------------------------------
+Syntax:	K aaaa bbbb cccc ("name")    SAVE Programm
+	K aaaa bbbb cccc *("name")   SAVE Daten
+
+SENDEN eines Files von Adresse aaaa bis bbbb mit Startadresse cccc via V24.
+Der Name kann bis zu 16 Zeichen lang sein und MUSS mit " beginnen!
+Das FILE wird als HEADERSAVE-FILE (also mit 32Byte Vorblock) gesendet. 
+
+Dabei wird die Einstellung vom V24-Kommandobyte auf fest 4.800Baud
+mit Protokoll: 8N1 ohne Handshake eingestellt.
+Auf diese Parameter ist der "Empfänger-PC" ebenfalls einzustellen.
+Am Ende wird die CRC-Prüfsumme berechnet und ausgeschrieben.
+
+Die Routine ist verschieblich und wird nach FE00H geladen, kann aber auch
+mit dem Aufruf # U xxxx "MO11A_4B.z80" in den Speicher ab xxxx geladen werden.
+
+
+L:	MO11A_4C.z80		V.24-LOAD (HEADERSAVE-Format)
+--------------------------------------------------------------------------
+Syntax:	L aaaa "name"   LOAD "name" nach aaaa
+	L 		LOAD beliebiges File nach 
+
+LADEN eines Files nach Adresse aaaa via V24. 
+Der Name kann bis zu 16 Zeichen lang sein und MUSS mit " beginnen,
+kann aber auch weggelassen werden. Dann wird jedes File geladen,
+sofern es ein HEADERSAVE-File ist.
+
+Dabei wird die Einstellung vom V24-Kommandobyte auf fest 4.800Baud
+mit Protokoll: 8N1 ohne Handshake eingestellt.
+Auf diese Parameter ist der "Empfänger-PC" ebenfalls einzustellen.
+
+Am Ende wird die CRC-Prüfsumme berechnet und ausgeschrieben. Damit kann
+dann auf fehlerfreies Laden kontrolliert werden.
+
+Die Routine ist verschieblich und wird nach 1900H geladen, kann aber auch
+mit dem Aufruf # U xxxx "MO11A_46.z80" in den Speicher ab xxxx geladen werden.
+
+
+Y:	MO11A_59.z80		RAM-Monitor booten
+-----------------------------------------------------------------------------
+Syntax:	Y aaaa
+
+Kommando lädt 4k großen RAM-Bereich ab aaaa auf Adresse 0000H und bootet neu,
+um z.B. einen alternativen Monitor zu verwenden. Achtung!! RAM wird gelöscht !!
+Wichtig: Das "Durchschreiben" unter den Monitor-ROM muss funktionieren, sonst
+klappt das nicht.
+
+Die Routine ist verschieblich und wird nach 1900H geladen, kann aber auch
+mit dem Aufruf # U xxxx "MO11A_59.z80" in den Speicher ab xxxx geladen werden.
+
+
+
+WEITERE Kommandos werden folgen, bzw. sind nach diesem Schema recht einfach
+selbst nach Bedarf zu erstellen.
