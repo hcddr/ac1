@@ -30,3 +30,8 @@ Es gibt Quellcodes der SCCH-Monitore V8, 10/88 und der angepassten Version für 
 10.3.2023
 
 - cpm/v22-funkamateur:	Das CP/M aus dem Funkamateur 10/89. Ein CPM mit Kassette und RAM-Disk für mp3/88-RAM-Floppy. BDOS ist von CP/A, CCP von DR (modifiziert), BIOS nach Kramer
+
+20.3.2024
+
+- rekonstruierte Quellen für HRDOS12/HRCPM12 incl. BDOS und BIOS
+- rekonstruierte Quellen für FORMATAC u.a. Tools
