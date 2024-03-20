@@ -34,3 +34,9 @@ Es gibt Quellcodes der SCCH-Monitore V8, 10/88 und der angepassten Version für 
 07.03.2024
 
 - cpm/hrcpm12: Das MLDOS/ZSDOS-basierte CP/M von R. Hänsel
+
+20.3.2024
+
+- rekonstruierte Quellen für HRDOS12/HRCPM12 incl. BDOS und BIOS
+- rekonstruierte Quellen für FORMATAC u.a. Tools
+
