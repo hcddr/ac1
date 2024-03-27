@@ -140,8 +140,19 @@ zusammengestellt.
 Maschinencode-Programme starten automatisch, wenn eine Startadr. angegeben ist 
 oder aber, wenn sie die Autostartkennung "SCHnnnn" am Anfang besitzen.
 BASIC-Programme (Grafik-BASIC 3.2) starten ebenfalls automatisch.
-;------------------------------------------------------------------------------
 
+
+21.02.2023 neue Feld offset im Header, u.a. für minibasic-Programme
+s.a. addFile macro (packedroms.asm): Wenn Programm < 1900h beginnt, wird es 
+automatisch nach 1900h geladen (aadr+offs) und anschließend an den Zielort verschoben
+Minibasic (4000) laden
+Minibasic: Orig.Programm (unverändert) laden, J4003
+
+
+27.03.2024 minibasic-Programme laden automatisch minibasic_4000 nach, so dass
+danach J4003 reicht. Fehler bei Programmen am Bankende und am ROMende behoben.
+
+;------------------------------------------------------------------------------
 Ordnernamen: kein _ , kein Leerzeichen!
 Dateinamen: kein Leerzeichen!
 Adressraum 1880..18FF wird von der Paket-Software genutzt

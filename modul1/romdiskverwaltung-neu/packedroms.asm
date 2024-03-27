@@ -110,35 +110,35 @@ file_bis
 
 ; aus d:\hobby3\ac1-2010\modul_1\programme3
 	if 1=1 ; unkomprimiert
-	addfile "software/CP_M-2.2_D000_FEFF_E600.bin"		,0D000h,0FEFFh,0E600h,'P',"CP/M-2.2","JE600"
-	addfile "software/HRCPM-12_D000_FEFF_E600.bin"		,0D000h,0FEFFh,0E600h,'P', ,"JE600"
-	addfile "software/DVU-21_4000_531F_4000.bin"		,04000h,0531Fh,04000h,'P', ,"d"
-	addfile	"software/DVHD-31_4000_57EB_4000.bin"		,04000h,057EBh,04000h,'P', ,"d"
-	addfile	"software/Gide-Check_2000_2FE7_2000.bin"	,02000h,02FE7h,02000h,'P', ,"g"
-	addfile	"software/EDAS-4_4000_544F_4000.bin"		,04000h,0544Fh,04000h,'P', ,"J4000"
-	addfile	"software/ASSEMBLER_4000_5447_4000.bin"		,04000h,05447h,04000h,'P', ,"a"
-	addfile	"software/COMPILER_5600_6000_5600.bin"		,05600h,06000h,05600h,'P', ,"8"
-	addfile	"software/DEBUGGER_4000_5861_4000.bin"		,04000h,05861h,04000h,'P', ,"J4000"
-	addfile	"software/DIASSEMBLER-3_5800_5FFF_5800.bin"	,05800h,05FFFh,05800h,'P', "DISASSEMBLER-3","J5800"
-	addfile	"software/RAM-TEST_2000_26BF_2000.bin"		,02000h,026BFh,02000h,'P', ,"g"
-	addfile	"software/DISK-1F_3000_3BF1_3000.bin"		,03000h,03BF1h,03000h,'P', ,"d"
-	addfile	"software/OCEAC1_4000_5D44_4000.bin"		,04000h,05D44h,04000h,'P', ,"J4000"
-	addfile	"software/FDC-iA_2000_27FF_0000.bin"		,02000h,027FFh,00000h,'P', ,"s,l,d,k,f,i,x"
+	addfile "software1/CP_M-2.2_D000_FEFF_E600.bin"		,0D000h,0FEFFh,0E600h,'P',"HRDOS12-AC2010","JE600"	; HR: HRDOS12-AC2010_D000_FEFF_E600.BIN
+	addfile "software1/HRCPM-12_D000_FEFF_E600.bin"		,0D000h,0FEFFh,0E600h,'P','HRCPM12-AC2010',"JE600"	; HR: HRCPM12-AC2010_D000_FEFF_E600.BIN
+	addfile "software1/DVU-21_4000_531F_4000.bin"		,04000h,0531Fh,04000h,'P', ,"d,t"
+	addfile	"software1/DVHD-31_4000_57EB_4000.bin"		,04000h,057EBh,04000h,'P', ,"d,t"			; neuer als HR: DVHD3_4000_575E_4000.BIN
+	addfile	"software1/Gide-Check_2000_2FE7_2000.bin"	,02000h,02FE7h,02000h,'P', ,"g"				; neuer als HR: GIDE-CHECK_2000.BIN
+	addfile	"software1/EDAS-4_4000_544F_4000.bin"		,04000h,0544Fh,04000h,'P', ,"J4000"
+	addfile	"software1/ASSEMBLER_4000_5447_4000.bin"		,04000h,05447h,04000h,'P', ,"a"
+	addfile	"software1/COMPILER_5600_6000_5600.bin"		,05600h,06000h,05600h,'P', ,"8"
+	addfile	"software1/DEBUGGER_4000_5861_4000.bin"		,04000h,05861h,04000h,'P', ,"J4000"
+	addfile	"software1/DIASSEMBLER-3_5800_5FFF_5800.bin"	,05800h,05FFFh,05800h,'P', "DISASSEMBLER-3","J5800"
+	addfile	"software1/RAM-TEST_2000_26BF_2000.bin"		,02000h,026BFh,02000h,'P', ,"g"
+	addfile	"software1/DISK-1F_3000_3BF1_3000.bin"		,03000h,03BF1h,03000h,'P', ,"d"
+	addfile	"software1/OCEAC1_4000_5D44_4000.bin"		,04000h,05D44h,04000h,'P', ,"J4000"
+	addfile	"software1/FDC-iA_2000_27FF_0000.bin"		,02000h,027FFh,00000h,'P', ,"s,l,d,k,f,i,x"
 	else ; komprimiert
-	addfile	"software/CP_M-2.2_D000_FEFF_E600.bin.zx7"	,0D000h,0FEFFh,0E600h,'P',"CP/M-2.2","JE600"
-	addfile	"software/HRCPM-12_D000_FEFF_E600.bin.zx7"	,0D000h,0FEFFh,0E600h,'P', ,"JE600"
-	addfile	"software/DVU-21_4000_531F_4000.bin.zx7"	,04000h,0531Fh,04000h,'P', ,"d"
-	addfile	"software/DVHD-31_4000_57EB_4000.bin.zx7"	,04000h,057EBh,04000h,'P', ,"d"
-	addfile	"software/Gide-Check_2000_2FE7_2000.bin.zx7"	,02000h,02FE7h,02000h,'P', ,"g"
-	addfile	"software/EDAS-4_4000_544F_4000.bin.zx7"	,04000h,0544Fh,04000h,'P', ,"J4000"
-	addfile	"software/ASSEMBLER_4000_5447_4000.bin.zx7"	,04000h,05447h,04000h,'P', ,"a"
-	addfile	"software/COMPILER_5600_6000_5600.bin.zx7"	,05600h,06000h,05600h,'P', ,"8"
-	addfile	"software/DEBUGGER_4000_5861_4000.bin.zx7"	,04000h,05861h,04000h,'P', ,"J4000"
-	addfile	"software/DIASSEMBLER-3_5800_5FFF_5800.bin.zx7"	,05800h,05FFFh,05800h,'P', "DISASSEMBLER-3","J5800"
-	addfile	"software/RAM-TEST_2000_26BF_2000.bin.zx7"	,02000h,026BFh,02000h,'P', ,"g"
-	addfile	"software/DISK-1F_3000_3BF1_3000.bin.zx7"	,03000h,03BF1h,03000h,'P', ,"d"
-	addfile	"software/OCEAC1_4000_5D44_4000.bin.zx7"	,04000h,05D44h,04000h,'P', ,"J4000"
-	addfile	"software/FDC-iA_2000_27FF_0000.bin.zx7"	,02000h,027FFh,00000h,'P', ,"s,l,d,k,f,i,x"
+	addfile "software1/CP_M-2.2_D000_FEFF_E600.bin.zx7"	,0D000h,0FEFFh,0E600h,'P',"HRDOS12-AC2010","JE600"	; HR: HRDOS12-AC2010_D000_FEFF_E600.BIN
+	addfile "software1/HRCPM-12_D000_FEFF_E600.bin.zx7"	,0D000h,0FEFFh,0E600h,'P','HRCPM12-AC2010',"JE600"	; HR: HRCPM12-AC2010_D000_FEFF_E600.BIN
+	addfile	"software1/DVU-21_4000_531F_4000.bin.zx7"	,04000h,0531Fh,04000h,'P', ,"d,t"
+	addfile	"software1/DVHD-31_4000_57EB_4000.bin.zx7"	,04000h,057EBh,04000h,'P', ,"d,t"			; neuer als HR: DVHD3_4000_575E_4000.BIN
+	addfile	"software1/Gide-Check_2000_2FE7_2000.bin.zx7"	,02000h,02FE7h,02000h,'P', ,"g"				; neuer als HR: GIDE-CHECK_2000.BIN
+	addfile	"software1/EDAS-4_4000_544F_4000.bin.zx7"	,04000h,0544Fh,04000h,'P', ,"J4000"
+	addfile	"software1/ASSEMBLER_4000_5447_4000.bin.zx7"	,04000h,05447h,04000h,'P', ,"a"
+	addfile	"software1/COMPILER_5600_6000_5600.bin.zx7"	,05600h,06000h,05600h,'P', ,"8"
+	addfile	"software1/DEBUGGER_4000_5861_4000.bin.zx7"	,04000h,05861h,04000h,'P', ,"J4000"
+	addfile	"software1/DIASSEMBLER-3_5800_5FFF_5800.bin.zx7"	,05800h,05FFFh,05800h,'P', "DISASSEMBLER-3","J5800"
+	addfile	"software1/RAM-TEST_2000_26BF_2000.bin.zx7"	,02000h,026BFh,02000h,'P', ,"g"
+	addfile	"software1/DISK-1F_3000_3BF1_3000.bin.zx7"	,03000h,03BF1h,03000h,'P', ,"d"
+	addfile	"software1/OCEAC1_4000_5D44_4000.bin.zx7"	,04000h,05D44h,04000h,'P', ,"J4000"
+	addfile	"software1/FDC-iA_2000_27FF_0000.bin.zx7"	,02000h,027FFh,00000h,'P', ,"s,l,d,k,f,i,x"
 	endif
 	
 
@@ -146,20 +146,20 @@ file_bis
 
 	shared	minibasic
 minibasic	equ	lfdnr	
-	
+
 	;software-ralf-haensel
 	addfile	"software-ralf-haensel/AC1-TurboSaveLoad_1900.bin.zx7"	,01900h,,,'P', ,"q"
 	addfile	"software-ralf-haensel/AC1-V24SaveLoad_1900.bin.zx7"	,01900h,,,'P', ,"q"
 	; == "software-ralf-haensel/AC1-V24SAVELOAD.bin.zx7"
 	addfile	"software-ralf-haensel/AC1-V24Testtool_1900.bin.zx7"	,01900h,,,'P', ,"Auto"
 	addfile	"software-ralf-haensel/Check+CPM-Umgebung_2000_25FF_2000.bin.zx7"	,02000h,025ffh,0000h,'P', ,"t"
-	addfile	"software-ralf-haensel/DVHD3_4000_575E_4000.bin.zx7"	,04000h,0575eh,04000h,'P', ,"d,t"
-	addfile	"software-ralf-haensel/DVU21_4000_531F_4000.bin.zx7"	,04000h,0531fh,04000h,'P', ,"d,t"
+	;;addfile	"software-ralf-haensel/DVHD3_4000_575E_4000.bin.zx7"	,04000h,0575eh,04000h,'P', ,"d,t"
+	;;addfile	"software-ralf-haensel/DVU21_4000_531F_4000.bin.zx7"	,04000h,0531fh,04000h,'P', ,"d,t"
 	;; ==  "software-ralf-haensel/DVU21-221111.bin.zx7"
-	addfile	"software-ralf-haensel/GIDE-CHECK_2000.bin.zx7"	,02000h,,,'P', ,"g"
-	addfile	"software-ralf-haensel/HRCPM12-AC2010_D000_FEFF_E600.bin.zx7"	,0d000h,0feffh,0e600h,'P', ,"J E600"
+	;;addfile	"software-ralf-haensel/GIDE-CHECK_2000.bin.zx7"	,02000h,,,'P', ,"g"
+	;;addfile	"software-ralf-haensel/HRCPM12-AC2010_D000_FEFF_E600.bin.zx7"	,0d000h,0feffh,0e600h,'P', ,"J E600"
+	;;addfile	"software-ralf-haensel/HRDOS12-AC2010_D000_FEFF_E600.bin.zx7"	,0d000h,0feffh,0e600h,'P', ,"J E600"
 	addfile	"software-ralf-haensel/HRCPM12-SCCH_D000_FEFF_E600.bin.zx7"	,0d000h,0feffh,0e600h,'P', ,"J E600"
-	addfile	"software-ralf-haensel/HRDOS12-AC2010_D000_FEFF_E600.bin.zx7"	,0d000h,0feffh,0e600h,'P', ,"J E600"
 	addfile	"software-ralf-haensel/HRDOS12-SCCH_D000_FEFF_E600.bin.zx7"	,0d000h,0feffh,0e600h,'P', ,"J E600"
 	addfile	"software-ralf-haensel/IO-Portwerte_1900.bin.zx7"	,01900h,,,'P', ,"t"
 	addfile	"software-ralf-haensel/USB-CHECK_E000.bin.zx7"	,0E000h,,,'P', ,"t"
@@ -168,7 +168,7 @@ minibasic	equ	lfdnr
 
 	; einfach erstmal alles. Muss später sortiert und kommentiert werden!
 	include	z80files.inc
-	
+
 hier 	equ $
 	SHARED hier
 

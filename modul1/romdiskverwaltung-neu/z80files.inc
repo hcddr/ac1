@@ -239,7 +239,7 @@
 	addfile	"./software/P.HRCPM-12.bin.zx7",0D000h,0FEFFh,0E600h,'P',"HRCPM-12",""
 	addfile	"./software/P.OCEAC1.bin.zx7",04000h,05D44h,04000h,'P',"OCEAC1",""
 	addfile	"./software/P.RAM-TEST.bin.zx7",02000h,026BFh,02000h,'P',"RAM-TEST",""
-	addfile	"./software/SQUASH.bin.zx7",06000h,07579h,00000h,'B',"",""
+	addfile	"./software/SQUASH.bin.zx7",06000h,07579h,00000h,'B',"SQUASH",""
 	addfile	"./software/WURMI.bin.zx7",04000h,04B0Fh,04000h,'P',"WURMI",""
 	addfile	"./software-ralf-haensel/AC1-V24SAVELOAD.bin.zx7",01900h,01BFFh,00000h,'P',"AC1-V24SAVELOAD",""
 	addfile	"./software-ralf-haensel/AC1-V24Testtool_1900.bin.zx7",01900h,01DADh,00000h,'P',"AC1-V24TESTTOOL",""
@@ -310,6 +310,7 @@
 	addfile	"./spiele/B.Super_3.bin.zx7",060F7h,070D4h,00000h,'B',"Super 3",""
 	addfile	"./spiele/B.Tabularasa.bin.zx7",060F7h,08532h,00000h,'B',"Tabularasa",""
 	addfile	"./spiele/B.TATUM_-_Spiel.bin.zx7",060F7h,0CA20h,00000h,'B',"TATUM - Spiel",""
+	if 1=1
 	addfile	"./spiele/B.Taxman.bin.zx7",060F7h,06E97h,00000h,'B',"Taxman",""
 	addfile	"./spiele/B.Tennis_-_Spiel.bin.zx7",060F7h,06823h,00000h,'B',"Tennis - Spiel",""
 	addfile	"./spiele/B.U-Boot_-_Spiel.bin.zx7",060F7h,070C6h,00000h,'B',"U-Boot - Spiel",""
@@ -317,3 +318,4 @@
 	addfile	"./spiele/B.Unternehmenspiel.bin.zx7",060F7h,072A6h,00000h,'B',"Unternehmenspiel",""
 	addfile	"./spiele/B.Viper_-_Spiel.bin.zx7",060F7h,0710Fh,00000h,'B',"Viper - Spiel",""
 	addfile	"./spiele/P.Grafik-Basic_3.1.bin.zx7",04000h,05FFFh,00000h,'P',"Grafik-Basic 3.1",""
+	endif

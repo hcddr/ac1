@@ -7,8 +7,15 @@
 ; 06.02.2023 erste lauffähige Version, noch ohne BASIC-Austostart und ohne Packer
 ; 13.02.2023 mit ZX7-Unpacker, SCH-Autostart
 ; 21.02.2023 neu offset, u.a. für minibasic-Programme
+; 25.01.2024 Branch Version Spezialmodul f. Dietmar
+; 26.03.2024 kleines Problem: wenn Programme in der letzten Bank liegen, wird "weitergeblättert",
+; 	d.h. Programme wurden wiederholt angezeigt -> bank =ff als Endekennung genutzt.
+; 27.03.2024 Fehler bei Programmen behoben, bei denen der Header am Ende der Bank liegt
+;	hier erfolgte die Bankumschaltung zu spät
+
 
 		include	ac1-2010.asm
+		include	packedroms.inc	; wg Nr. minibasic_4000
 
 		CPU 	z80undoc
 
@@ -17,9 +24,23 @@ VERSIONSDATUM	equ	DATE
 bnkanf		EQU	8000h
 bnkende		equ	0FFFFh
 firstbnk	equ	08h
-lastbnk		equ	0F9h	; Bänke 0..31, erst ROM1 dann ROM2
+lastbnk		equ	0F9h	; Bänke 0..31, erst ROM1 dann ROM2, muss <> FF sein, sonst menu15+16 ändern!
+nxtbnkprc	equ	2	; Bankumschaltungsroutine
+				; 1- laufende Banknummern liegen im ROM hintereinander (orig Modul1, jkcemu)
+				; 2- Banknummern erst ROM1 x8 dann ROM2 x9 (1-MByte-Modul-1 AC1-2010, 2 ROMs)
+				; 3- Variante Banknummern mit Liste
 
 ;tstsch		equ	0A7Bh	; in V8, 1088, Test Autostart
+
+; VERSION modul_1_dietmar, 1_dragon@gmx.de
+; Die Bänke werden immer im Bereich von C000H bis FFFFH eingeblendet.
+; IM ROM ist BASIC + PAKETX mit drin
+; bnkanf		EQU	0C000h
+; bnkende		equ	0FFFFh
+; firstbnk	equ	08h
+; lastbnk		equ	0A9h	; Bänke 0..31, erst ROM1 dann ROM2
+; nxtbnkprc	equ	3	; Bankumschaltungsroutine Nr 3 (1..3)
+
 
 ;nr_minibasic 	equ 0FH		; aus packedroms.inc
 
@@ -107,7 +128,7 @@ menu0:		ld	hl,(ARG1)
 
 ;sonst Menü anzeigen		
 menu1:		rst	PRNST
-		db 	0Ch,0Dh,"     * * *  ROM - Disk Verwaltung VP 02/2023 * * *",0Dh,0Dh+80h
+		db 	0Ch,0Dh,"     * * *  ROM - Disk Verwaltung VP 03/2024 * * *",0Dh,0Dh+80h
 		;
 		
 		ld	b, 1		; b'' = Prg.nummer auf Bildschirm
@@ -147,7 +168,7 @@ menu9:		ld	b, 1		; neue Page, angezeigte Prg.nummer wieder auf 1
 ; Aktion		
 menu10:		rst	INCH
 		cp	0Dh
-		jr	z, menu15	; weiter
+		jp	z, menu15	; weiter
 		cp	'Z'
 		jp	z, menu1	; Zurück zum Anfang
 		cp	'M'
@@ -170,10 +191,30 @@ menu11:		rst	OUTCH
 		rst	PRNST
 		db 	0Dh+80h
 ;-----------
-; Programm laden + starten
-menu12:		call	show
+; Programm laden
+menu12:		if 1=1
+		ld	a,(bank)	;Bank+Pos merken
+		push	af
+		push	ix
+		call	getsec		; Header in Buffer laden
+		ld	a,(buffer+3)	; typ
+		cp	'b'		; minibasic?
+		jr	nz, menu12a	; nein
+; Minibasic
+		ld	hl,minibasic	; sonst erst minibasic laden
+		call	such
+		call	show
+		call	umlad
+		endif
+;
+menu12a:	pop	ix		;Bank+Pos restaurieren
+		pop	af
+		ld	(bank),a
+		call	show
 		call	umlad
 		
+;-----------
+; Programm starten
 		; aadr > ramcodend?
 		ld	hl,(buffer+8)	; offs <> 0?
 		ld	a,h
@@ -202,15 +243,22 @@ menu13:		rst	PRNST
 		ret
 
 ; weiter anzeigen
-menu15:		rst	PRNST
+menu15:		ld	a,(bank)	; Ende erreicht (Bank FF) ?
+		inc	a		; 
+		jp	z,menu10	; ja, dann kein Blättern mehr
+		; sonst
+		rst	PRNST
 		db 	0Bh,0Bh,0Bh,0Bh,6,02h+80h	; 4 Zeilen hoch und bws löschen
 		jp	menu2
 
-;
-menu16:		rst	PRNST
+; Ende erreicht
+menu16:		ld	a,0ffh
+		ld	(bank),a	; Ende merken als Bank FF
+		;
+		rst	PRNST
 		db 	CR+80h		; statt "weiter"
 		call	hilfe1		; Hilfe anzeigen
-		jr	menu10
+		jp	menu10
 
 	
 ;------------------------------------------------------------------------------
@@ -294,8 +342,8 @@ DZKON1:		push	af
 		pop	af
 		ret
 
-		if 1=0	
-		
+		if nxtbnkprc = 1 ; Bankumschaltungsroutine Nr 1
+
 ;------------------------------------------------------------------------------
 ; Variante laufende Banknummern liegen im ROM hintereinander (orig Modul1, jkcemu)
 ; nächste Bank 08,09,18,19,...F8,F9
@@ -309,11 +357,16 @@ nxtbnk:		ld	a,(bank)
 		add	a,10h-2		; bei ungerade-> gerade fehlen noch 10-2
 					; 09->0A->18
 nxtbnk1: 	ld	(bank),a
-		;out	(modul1),a	; erfolgte jetzt immer erst im RAM-Code
+		;out	(modul1),a	; erfolgte jetzt immer erst im RAM-Code 
 		;;call	OUTHEX		; testweise
 		ret
 
-		else
+;;bnktab		db	08h,09h,18h,19h,28h,29h,38h,39h
+;;		db	48h,49h,58h,59h,68h,69h,78h,79h
+;;		db	88h,89h,98h,99h,0A8h,0A9h,0B8h,0B9h
+;;		db	0C8h,0C9h,0D8h,0D9h,0E8h,0E9h,0F8h,0F9h
+
+		elseif nxtbnkprc = 2 ; Bankumschaltungsroutine Nr 2   
 		
 ;------------------------------------------------------------------------------
 ; Variante Banknummern erst ROM1 x8 dann ROM2 x9 (1-MByte-Modul-1 AC1-2010, 2 ROMs)
@@ -331,6 +384,34 @@ nxtbnk1: 	ld	(bank),a
 		;out	(modul1),a	; erfolgte jetzt immer erst im RAM-Code
 		;;call	OUTHEX		; testweise
 		ret
+
+;;bnktab		db	08h,18h,28h,38h,48h,58h,68h,78h
+;;		db	88h,98h,0A8h,0B8h,0C8h,0D8h,0E8h,0F8h
+;;		db	09h,19h,29h,39h,49h,59h,69h,79h
+;;		db	89h,99h,0A9h,0B9h,0C9h,0D9h,0E9h,0F9h
+
+		elseif nxtbnkprc = 3 ; Bankumschaltungsroutine Nr 2   
+
+;------------------------------------------------------------------------------
+; Variante Banknummern mit Liste
+;------------------------------------------------------------------------------
+
+nxtbnk:		ld	a,(bank)
+		
+		ld	hl, bnktab
+		ld	bc, 8
+		cpir			; suchen
+		ld	a, 0
+		jr	nz, nxtbnk1	; nicht gefunden -> 0 (??)
+		ld	a, (hl)		; sonst nachfolgendes Zeichen aus Liste	
+nxtbnk1: 	ld	(bank),a
+		;out	(modul1),a	; erfolgte jetzt immer erst im RAM-Code
+		;;call	OUTHEX		; testweise
+		ret
+
+bnktab		db	08h,09h,28h,29h,88h,89h,0a8h,0a9h
+
+
 
 		endif
 
@@ -445,10 +526,11 @@ rgetsecend
 
 ;------------------------------------------------------------------------------
 ; Anzeige Header
-; Header steht jetzt in buffer
+; Header steht danach in buffer
 ;------------------------------------------------------------------------------
 
 show		push	bc
+		push	hl
 
 		call	getsec
 
@@ -515,6 +597,7 @@ show		push	bc
 		rst	prnst
 		db	cr+80h
 		;
+		pop	hl
 		pop	bc
 		ret	
 
@@ -530,6 +613,7 @@ outtxt:		ld	a,(hl)
 ;------------------------------------------------------------------------------
 
 such:		; init
+		push	hl
 		ld	a,firstbnk	; bank 0
 		ld	(bank),a
 		ld	ix,bnkanf-40h	; Bankanfang
@@ -542,6 +626,7 @@ such1		push	hl
 		ld	a,h
 		or	l
 		jr	nz,such1
+		pop	hl
 		ret			; cy=0
 
 
@@ -600,14 +685,15 @@ rumlad
 		adc	a,0
 		ld	h,a		;hl=adr. im ROM(IX+40h)
 		;
-umlad1		ldi			;von (hl) nach (de)
-					;schreiben in unterliegenden RAM
+umlad1		
 		push	af		;flag sichern					
 		dec	h
 		inc	h		;FFFF überschritten?
 					;dann nächste Bank
 		call	z,umlad2
 		pop	af
+		ldi			;von (hl) nach (de)
+					;schreiben in unterliegenden RAM
 		jp	pe, umlad1	;weiter bis bc=0
 
 		; modul wieder aktivieren
@@ -680,9 +766,9 @@ dzx7_standard:
 ;
         ld      a, 080h
 dzx7s_copy_byte_loop:
+       	call	umlad4
         ldi                             ; copy literal byte
         				; schreiben in unterliegenden RAM
-       	call	umlad4
 dzx7s_main_loop:
         call    dzx7s_next_bit
         jr      nc, dzx7s_copy_byte_loop ; next bit indicates either literal or sequence
@@ -785,7 +871,7 @@ dzx7_standardend
 
 
 ;------------------------------------------------------------------------------
-; Basic-Warmstart
+; Basic-Warmstart f. GWBASIC 3.2
 ;------------------------------------------------------------------------------
 
 
@@ -864,6 +950,9 @@ rstart
 		ld	a,(buffer+3)	; typ
 		cp	'B'
 		jr	z,start1	; basic-programm
+;minibasic-Start funktioniert so nicht, da aadr < 1900
+;		cp	'b'
+;		jr	z,start3	; minibasic-programm
 		cp	'P'
 		ret	nz		; sonstiges Programm -> zurück zum Monitor
 
@@ -895,6 +984,8 @@ start1		ld	a,XROM+BASICROM
 		JP      RUNFST
 		;ret
 
+;start3		jp	4003h		; minibasic warmstart
+
 		if $ > ramcodend
 		warning "Prozedur passt nicht mehr in RAM-Bereich"
 		endif
@@ -906,6 +997,8 @@ rstartend
 ;------------------------------------------------------------------------------
 ; Test Autostart
 ;------------------------------------------------------------------------------
+
+aSch:		db 'SCH'
 
 tstsch:		ld	hl, aSch	; "SCH"
 		ld	b, 3
