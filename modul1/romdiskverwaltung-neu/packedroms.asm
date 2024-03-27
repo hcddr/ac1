@@ -143,7 +143,6 @@ file_bis
 	
 
 	addfile	"minibasic/minibasic_4000.bin.zx7"	,04000h,,04000h,'P', ,"AC1 Minibasic"
-
 	shared	minibasic
 minibasic	equ	lfdnr	
 
@@ -159,11 +158,11 @@ minibasic	equ	lfdnr
 	;;addfile	"software-ralf-haensel/GIDE-CHECK_2000.bin.zx7"	,02000h,,,'P', ,"g"
 	;;addfile	"software-ralf-haensel/HRCPM12-AC2010_D000_FEFF_E600.bin.zx7"	,0d000h,0feffh,0e600h,'P', ,"J E600"
 	;;addfile	"software-ralf-haensel/HRDOS12-AC2010_D000_FEFF_E600.bin.zx7"	,0d000h,0feffh,0e600h,'P', ,"J E600"
-	addfile	"software-ralf-haensel/HRCPM12-SCCH_D000_FEFF_E600.bin.zx7"	,0d000h,0feffh,0e600h,'P', ,"J E600"
-	addfile	"software-ralf-haensel/HRDOS12-SCCH_D000_FEFF_E600.bin.zx7"	,0d000h,0feffh,0e600h,'P', ,"J E600"
+	addfile	"software-ralf-haensel/HRCPM12-SCCH_D000_FEFF_E600.bin.zx7"	,0d000h,0feffh,0e600h,'P', ,"JE600"
+	addfile	"software-ralf-haensel/HRDOS12-SCCH_D000_FEFF_E600.bin.zx7"	,0d000h,0feffh,0e600h,'P', ,"JE600"
 	addfile	"software-ralf-haensel/IO-Portwerte_1900.bin.zx7"	,01900h,,,'P', ,"t"
 	addfile	"software-ralf-haensel/USB-CHECK_E000.bin.zx7"	,0E000h,,,'P', ,"t"
-	addfile	"software-ralf-haensel/Z1013-Monitor-V1.2_F000_FE48_F009.bin.zx7"	,0F000h,0FE48h,0F009h,'P', ,"Auto"
+	addfile	"software-ralf-haensel/Z1013-Monitor-V1.2_F000_FE48_F009.bin.zx7"	,0F000h,0FE48h,0F009h,'P', ,"Y"
 
 
 	; einfach erstmal alles. Muss später sortiert und kommentiert werden!

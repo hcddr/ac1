@@ -37,11 +37,18 @@ jp_rst30:	equ	1811h		; jp	0FFFFh
 jp_rst38:	equ	1814h		; jp	rError
 jp_nmi:		equ	1817h		; jp NMI-Routine
 soil:		equ	181Ah		; Beginn Eingabezeile
-SYSSK:		equ	1856h		; System-Stack 
+syssk:		equ	1856h		; System-Stack 
 data:		equ	1858h		; interner Speicher f. Monitor
 ARG1:		equ	185Bh		; Kdo-Argument 1
 ARG2:		equ	185Dh		; Kdo-Argument 2
 ARG3:		equ	185Fh		; Kdo-Argument 3
+
+; erw. 2010
+warmst:		equ	181Ch		; warmstart-Erkennung ("SCH")
+farbbws:	equ	181Fh		; Farb-Attribut
+kdov24:		equ	1820h		; V24-Konfiguration
+iobyt:		equ	1821h		; I/O-Byte
+
 
 ;------------------------------------------------------------------------------
 ; I/O-Adressen
@@ -62,7 +69,11 @@ PIO2DB		equ	9
 PIO2CA		equ	0Ah
 PIO2CB		equ	0Bh
 
+
+PIO2EPROM	equ	0Fh		; EPROM auf PIO2-Karte
 modul1		equ	14h		; Konfiguationsbyte für Modul 1
+cpmumsch	equ	1Eh		; Bit0=1 64K RAM aktiv
+
 
 ;------------------------------------------------------------------------------
 ; Monitor-Funktionen
@@ -86,18 +97,33 @@ GETCO1      	equ	07FDh		; Sprung zur Monitoreingabeschleife
 ; Zeichen
 ;------------------------------------------------------------------------------
 
+; ac1
 BS		equ	08h		; backspace
 CLS		equ	0Ch		; Bildschirm löschen
 CR		equ	0Dh		; neue Zeile
 SPC		EQU	20H		; Leerzeichen
 
-; CURSL:	EQU	8		;CURSOR LINKS
-; CURSR:	EQU	9		;CURSOR RECHTS
-; CURSD:	EQU	0AH		;CURSOR RUNTER (LF)
-; CURSU:	EQU	0BH		;CURSOR HOCH
+; ac12010
+; Steuercodes Bildschirm
+HOME:		equ 	01h		; Home, Kursor oben links
+CLSC:		equ 	02h		; Bildschirm ab Kursorposition löschen
+CLLN:		equ 	03h		; Zeile ab Kursorposition löschen
+DEL:		equ 	04h		; Delete; Zeichen löschen, Zeile rückt nach links
+INS:		equ 	05h		; Insert; Space einfügen, Zeile rückt nach rechts
+SOL:		equ 	06h		; Kursor an den Anfang der Zeile
+BELL:		equ 	07h		; BEL, akustisches Signal
+LEFT:		equ 	08h		; Kursor nach links
+RIGHT:		equ 	09h		; Kursor nach rechts
+DOWN:		equ 	0Ah		; Kursor nach unten
+UP:		equ 	0Bh		; Kursor nach oben
+;CLS:		equ 	0Ch		; Bildschirm löschen
+;CR:		equ 	0Dh		; CR, Kursor an Anfang nächster Zeile; Enter
+SETC:		equ 	0Eh		; Kursor direkt positionieren
+TAB:		equ 	0Fh		; Tabulator 8 Spalten
 
-
-; ausgabe steuerzeichen (ac1-2010)
-; 0bh
-; 06h
-; 02h
+norm:		equ	10H 		; Einzelzeichen-normal
+inv:		equ	11H 		; Einzelzeichen-Invers
+printon:	equ	18H 		; Drucker ein (V 24 – Schnittstelle)
+printoff:	equ	19H 		; Ein-/Ausgabe normal Drucker aus
+;		equ	1AH 		; Umschaltung Zeichensatz SCCH/ACC
+rubout:		equ	5FH 		; Kursor nach links und Zeichen löschen

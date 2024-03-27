@@ -27,7 +27,9 @@ depend:
 
 z80files.inc:
 	$(PERL) create_z80filesinc2.pl 2> unusable_rom_files
-
+	
+packedroms.inc: packedroms.bin
+		
 # Assemblieren einer Datei
 %.bin:	%.asm
 	$(AS) -cpu Z80 -L $< -a
