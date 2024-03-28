@@ -1,6 +1,6 @@
 ;------------------------------------------------------------------------------
 ; AC1-2010-Modul-1 (1M-Modul mit max. 2 ROMBANK-ROMs)
-; (c) V. Pohlers 2023
+; (c) V. Pohlers 2023-2024
 ;------------------------------------------------------------------------------
 ; Modulverwaltungssoftware
 ;------------------------------------------------------------------------------
@@ -11,7 +11,7 @@ ROMs:
 
 es gibt 3 (4) ROMs:
 	paket_x.bin			Verwaltungssoftware, 	8K-ROM "Paket X"
-	GrafikBasic3.2ROM.bin		Grafik-BASIC V3.2,	8K-ROM "BASIC"
+	GrafikBasic3.2.rom		Grafik-BASIC V3.2,	8K-ROM "BASIC"
 	rom_1.bin			ROM-Disk ROM 1		512k-ROM "ROM 1"
 	rom_2.bin			ROM-Disk ROM 2		512k-ROM "ROM 2"
 

@@ -60,14 +60,14 @@ DATE=$(strip $(shell date /t))
 DISTFILES =  *.asm  */*.asm  */*.z80 */*/*.z80 */*.txt */*/*.txt  */*.pdf */*/*.pdf \
 	software1/*.bin software-ralf-haensel/*.bin \
 	makefile *.exe *.pl z80files.inc \
-	GrafikBasic3.2ROM.bin basicarb_6000_60f6.bin \
+	GrafikBasic3.2.rom basicarb_6000_60f6.rom \
 	.depend 00liesmich fileXname 
 
 #make dist	Quellarchiv packen
 dist: ALL
 	zip -r ac1-modul-1.$(DATE).zip $(DISTFILES)
 
-ROMFILES =  jkcemu_xrom.bin paket_x.bin jkcemu-ac1.jar rom_*.bin GrafikBasic3.2ROM.bin \
+ROMFILES =  jkcemu_xrom.bin paket_x.bin jkcemu-ac1.jar rom_*.bin GrafikBasic3.2.rom \
 	00liesmich rominhalt.txt
 
 romdist distrom: roms
