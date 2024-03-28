@@ -833,11 +833,11 @@ dzx7s_exit:
 dzx7s_next_bit:
         add     a, a                    ; check next bit
         ret     nz                      ; no more bits left?
-        ld      a, (hl)                 ; load another group of 8 bits
-        inc     hl
 	;
 	call	umlad4
 	;
+        ld      a, (hl)                 ; load another group of 8 bits
+        inc     hl
         rla
         ret
 
