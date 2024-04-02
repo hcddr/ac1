@@ -23,7 +23,7 @@ GETCO1      	equ	07FDh
 ;**********************************************************
 ;  Mini  B A S I C  INTERPRETER     AC1
 ; basiert auf Basic-Interpreter: Funktionsweise u. Implementierung
-; in 8080/Z-80-ECHOmputern / Rolf-Dieter Klein. München: Franzis, 1981
+; in 8080/Z-80-Computern / Rolf-Dieter Klein. München: Franzis, 1981
 ;**********************************************************
 
 		org BASIC
@@ -32,7 +32,7 @@ GETCO1      	equ	07FDh
 		jp	RSTART
 ;
 CI:		jp	inch
-ECHO:		jp	outch
+CO:		jp	outch
 CSTS:		call	TASTE
 		jr	nz, cs1
 		xor	a
@@ -41,7 +41,7 @@ cs1:		ld	a, 0FFh
 		and	a
 		ret
 ;
-ECHOMP:		ld	a, h
+COMP:		ld	a, h
 		cp	d
 		ret	nz
 		ld	a, l
@@ -69,7 +69,7 @@ TSTV:		call	IGNB
 		push	de
 		ex	de, hl
 		call	SIZE
-		call	ECHOMP
+		call	COMP
 		jp	c, ASORRY
 		ld	hl, (TXTEND)
 		sbc	hl, de
@@ -380,7 +380,7 @@ CKHLDE:		ld	a, h
 		xor	d
 		jp	p, CK1
 		ex	de, hl
-CK1:		jp	ECHOMP
+CK1:		jp	COMP
 ;
 ;********************************************
 ;  SETVAL  FIN	ENDCHK	 ERROR	    UPR
@@ -490,7 +490,7 @@ FNDLN:		ld	a, h
 FNDLP:		push	hl
 		ld	hl, (TXTUNF)
 		dec	hl
-		call	ECHOMP
+		call	COMP
 		pop	hl
 		ret	c
 		ld	a, (de)
@@ -601,7 +601,7 @@ PRTLN:		ld	a, (de)
 ;  MVUP	 MVDOWN	  UPR
 ;******************************************
 ;
-MVUP:		call	ECHOMP
+MVUP:		call	COMP
 		ret	z
 		ld	a, (de)
 		ld	(bc), a
@@ -627,7 +627,7 @@ MD1:		dec	de
 ;
 CRLF:		ld	a, 0Dh
 ;
-OUTC:		jp	ECHO
+OUTC:		jp	CO
 ;
 CHKIO:		call	CI
 		and	7Fh
@@ -647,7 +647,7 @@ CXBUFA:		push	hl
 		pop	hl
 		ret
 ;
-ECHONT:		call	CSTS
+CONT:		call	CSTS
 		ret	z
 		call	CI
 		cp	3
@@ -730,7 +730,7 @@ ST4:		pop	bc
 		jr	z, RSTART
 		call	tv2
 		ld	de, (TXTEND)
-		call	ECHOMP
+		call	COMP
 		jp	nc, QSORRY
 		ld	(TXTUNF), hl
 		pop	de
@@ -766,7 +766,7 @@ LIST:		call	TSTNUM
 		call	FNDLN
 LS1:		jp	c, RSTART
 		call	PRTLN
-		call	ECHONT
+		call	CONT
 		call	MS30
 		call	MS30
 		call	FNDLP
@@ -792,7 +792,7 @@ RUNNXL:		ld	hl, 0
 RUNTSL:		ld	(CURRNT), de
 		inc	de
 		inc	de
-RUNSML:		call	ECHONT
+RUNSML:		call	CONT
 		ld	hl, TAB2-1
 		jp	EXEC
 ;
@@ -883,7 +883,7 @@ IP3:		push	de
 		call	GETLN
 		ld	de, (BUFFER)
 		call	EXPR
-		call	ECHONT
+		call	CONT
 		pop	de
 		ex	de, hl
 		ld	(hl), e
@@ -1074,13 +1074,13 @@ POPRET:		pop	bc
 CNVBN:		cp	'0'
 		jp	m, QWHAT
 		cp	'9'
-		jp	m, ECHONTC
-		jr	z, ECHONTC
+		jp	m, CONTC
+		jr	z, CONTC
 		cp	'A'
 		jp	m, QWHAT
 		cp	'G'
 		jp	p, QWHAT
-ECHONTC:	sub	'0'
+CONTC:	sub	'0'
 		cp	0Ah
 		ret	m
 		sub	7
@@ -1100,7 +1100,7 @@ END:		call	EXPR
 		ex	de, hl
 		ld	hl, TXTE
 		ex	de, hl
-		call	ECHOMP
+		call	COMP
 		jp	c, ASORRY
 		ld	a, h
 		or	a
