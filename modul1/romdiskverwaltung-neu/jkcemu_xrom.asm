@@ -4,11 +4,12 @@
 ;------------------------------------------------------------------------------
 ; letzter Schritt
 ; Zerlegen und neu Zusammensetzen des ROMs passend für die Speicher des Moduls
+; (bei nxtbnkprc = 2)
 ;
 ; Für den JKCEMU müssen die beiden ROMs verschachtelt werden. JKCEMU
 ; nutzt den klassischen SCCH-Aufbau: 08,09,18,19,28,29,..78,79
 ; 88 ist wieder 08, hier sind nur 2x8 Bänke möglich
-; Der ROM ist 64K-scheibenweise aufgebaut: 
+; Der ROM ist 64K-scheibenweise aufgebaut 
 ;------------------------------------------------------------------------------
 
 

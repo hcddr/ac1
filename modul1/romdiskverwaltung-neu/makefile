@@ -4,11 +4,10 @@
 
 # Anpassen an den Speicherort des Arnold-Assemblers
 
-AS=d:\\hobby3\\programme\\as\\bin\\as.exe
-P2BIN=d:\\hobby3\\programme\\as\\bin\\p2bin.exe
-PLIST=d:\\hobby3\\programme\\as\\bin\\plist.exe
-PERL=d:\\perl\\bin\\perl.exe
-
+AS=c:\\MyUser\\hobby4\\programme\\as\\bin\\asl.exe
+P2BIN=c:\\MyUser\\hobby4\\programme\\as\\bin\\p2bin.exe
+PLIST=c:\\MyUser\\hobby4\\programme\\as\\bin\\plist.exe
+PERL=c:\\perl\\bin\\perl.exe
 
 
 DEPENDFILE = .depend

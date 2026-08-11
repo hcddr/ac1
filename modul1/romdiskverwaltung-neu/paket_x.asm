@@ -12,6 +12,7 @@
 ; 	d.h. Programme wurden wiederholt angezeigt -> bank =ff als Endekennung genutzt.
 ; 27.03.2024 Fehler bei Programmen behoben, bei denen der Header am Ende der Bank liegt
 ;	hier erfolgte die Bankumschaltung zu spät
+; 10.08.2026 Rückbau der letzten Änderung, Korr. Bank-Ende-Kennung auf volle Adr. 0000
 
 
 		include	ac1-2010.asm
@@ -22,13 +23,14 @@
 VERSIONSDATUM	equ	DATE
 
 bnkanf		EQU	8000h
-bnkende		equ	0FFFFh
+bnkende		equ	0FFFFh	; wenn <> FFFF, muss die Bereichsüberschreitung in umlad1, umlad4 umprogrammiert werden!
 firstbnk	equ	08h
 lastbnk		equ	0F9h	; Bänke 0..31, erst ROM1 dann ROM2, muss <> FF sein, sonst menu15+16 ändern!
 nxtbnkprc	equ	2	; Bankumschaltungsroutine
 				; 1- laufende Banknummern liegen im ROM hintereinander (orig Modul1, jkcemu)
 				; 2- Banknummern erst ROM1 x8 dann ROM2 x9 (1-MByte-Modul-1 AC1-2010, 2 ROMs)
-				; 3- Variante Banknummern mit Liste
+				;	jkcemu_xrom.asm enthält dann die ROMS passend zu jkcemu mit nxtbnkprc 1
+				; 3- Variante Banknummern mit Liste (universell)
 
 ;tstsch		equ	0A7Bh	; in V8, 1088, Test Autostart
 
@@ -128,7 +130,9 @@ menu0:		ld	hl,(ARG1)
 
 ;sonst Menü anzeigen		
 menu1:		rst	PRNST
-		db 	0Ch,0Dh,"     * * *  ROM - Disk Verwaltung VP 03/2024 * * *",0Dh,0Dh+80h
+		db 	0Ch,0Dh,"     * * *  ROM - Disk Verwaltung VP 03/2024-"
+		db	nxtbnkprc + 60h
+		db	" * * *",0Dh,0Dh+80h
 		;
 		
 		ld	b, 1		; b'' = Prg.nummer auf Bildschirm
@@ -390,7 +394,7 @@ nxtbnk1: 	ld	(bank),a
 ;;		db	09h,19h,29h,39h,49h,59h,69h,79h
 ;;		db	89h,99h,0A9h,0B9h,0C9h,0D9h,0E9h,0F9h
 
-		elseif nxtbnkprc = 3 ; Bankumschaltungsroutine Nr 2   
+		elseif nxtbnkprc = 3 ; Bankumschaltungsroutine Nr 3   
 
 ;------------------------------------------------------------------------------
 ; Variante Banknummern mit Liste
@@ -685,13 +689,10 @@ rumlad
 		adc	a,0
 		ld	h,a		;hl=adr. im ROM(IX+40h)
 		;
-umlad1		
-		push	af		;flag sichern					
-		dec	h
-		inc	h		;FFFF überschritten?
-					;dann nächste Bank
-		call	z,umlad2
-		pop	af
+umlad1		ld	a,h
+		or	l		;FFFF überschritten?
+		call	z,umlad2	;dann nächste Bank
+
 		ldi			;von (hl) nach (de)
 					;schreiben in unterliegenden RAM
 		jp	pe, umlad1	;weiter bis bc=0
@@ -763,12 +764,13 @@ dzx7_standard:
 
 ;;dzx7_standard:
 	out	(modul1),a
+       	call	umlad4			; falls Pgm auf neuer Bank beginnt
 ;
         ld      a, 080h
 dzx7s_copy_byte_loop:
-       	call	umlad4
         ldi                             ; copy literal byte
         				; schreiben in unterliegenden RAM
+       	call	umlad4
 dzx7s_main_loop:
         call    dzx7s_next_bit
         jr      nc, dzx7s_copy_byte_loop ; next bit indicates either literal or sequence
@@ -833,28 +835,28 @@ dzx7s_exit:
 dzx7s_next_bit:
         add     a, a                    ; check next bit
         ret     nz                      ; no more bits left?
+        ld      a, (hl)                 ; load another group of 8 bits
+        inc     hl
 	;
 	call	umlad4
 	;
-        ld      a, (hl)                 ; load another group of 8 bits
-        inc     hl
         rla
         ret
 
 ; ggf. Bank weiterschalten
 umlad4
-	dec	h
-	inc	h		;FFFF überschritten?
-	ret	nz		; cy ist unverändert!
-	; ja -> nächste Bank
 	push	af
+	ld	a,h
+	or	l		;FFFF überschritten?
+	jr	nz,umlad5	;nein (HL <> 0)
+	; ja -> nächste Bank
 	ld	a,XROM
 	out	(modul1),a
 	call	nxtbnk		; Bank umrechnen
 	;;ld	a,(bank)
 	out	(modul1),a
 	ld	hl,bnkanf
-	pop	af
+umlad5:	pop	af
 	ret
 
 		if $ > ramcodend
