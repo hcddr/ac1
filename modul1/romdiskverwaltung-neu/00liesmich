@@ -152,7 +152,14 @@ Minibasic: Orig.Programm (unverändert) laden, J4003
 27.03.2024 minibasic-Programme laden automatisch minibasic_4000 nach, so dass
 danach J4003 reicht. Fehler bei Programmen am Bankende und am ROMende behoben.
 
+11.08.2026 Die Umschaltung auf die nächste Bank war unsauber. Es gab 3 Probleme:
+- Umschaltung der Bank gleich zu Beginn des Programms (Programmheader steht am Ende der vorigen Bank)
+- Die Prüfung nur auf H reicht nicht, es muss komplett auf FFFF bzw. 0000 geprüft werden
+- Die Prüfung auf 0000 muss immer NACH dem increment von HL erfolgen, darf aber nicht doppelt erfolgen
+Außerdem steht jetzt in der Titelzeile von Programm 'X' der Next-Bank-Code als 'a'..'c'
+
 ;------------------------------------------------------------------------------
+
 Ordnernamen: kein _ , kein Leerzeichen!
 Dateinamen: kein Leerzeichen!
 Adressraum 1880..18FF wird von der Paket-Software genutzt
