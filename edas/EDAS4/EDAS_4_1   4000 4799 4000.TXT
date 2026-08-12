@@ -1,0 +1,66 @@
+                              - и1 -
+
+       Arbeitsblatt zum AC 1 Editor/Assembler EDAS*4
+       ---------------------------------------------
+
+* Programmstart
+  -------------
+
+  Kaltstart: J 4иии aaaa eeee (CR)
+             J 4иии (CR)          ;mit Vorzugseinstellung
+                                   des Editierpuffers
+  Warmstart: J 4ии3 (CR)
+
+  aaaa Anfang Editierpuffer   eeee Ende Editierpuffer
+
+* Abspeichern/Einlesen einer Quelle (mit AC 1 Monitor)
+  ----------------------------------------------------
+
+  S aaaa FREE aaaa name (CR)   oder
+  S: name (CR)               (sofort nach Q !!!)
+
+  L oder L Offset+- ; dann Kaltstart mit arg1 - arg3 und Y
+
+* Format einer Quellzeile
+  -----------------------
+
+  nnnn mmmmmm Befehl Operand(en) ;Kommentar
+
+  nnnn - Zeilennummer   mmmmmm - Marke
+
+* Kommandos des Editor/Assemblers
+  -------------------------------
+
+  A a e    Assembliere Quelle von Zeile a bis e
+  C a e x  Quellzeilen verschieben (von a bis e nach x)
+  E        Wechsel  aktuelle Quelle <--> sec. Quelle
+  /string/ Eingabe einer Zeichenkette zum F - Kommando
+  F        Suchen der angegebenen Zeichenkette
+  G        Start des assemblierten Programms (--> ENT)
+  H h      Setzen der Seitengroesse auf h (hex) Zeilen
+  I a s    Zeileneingabe mit automatischer Nummerierung
+  J h      Ausgabeverzoegerung auf dem Schirm (h и...FF)
+  K h      Ausgabeverzoegerung zum Drucker
+  M marke  Anzeige des Quelltextes ab marke
+  N a s    Erzeugen einer Luecke im Quelltext (s Zeilen)
+  O h      Setzen von Optionen zum Assembler mit Maske h
+  + h      Ergaenze eine Option
+  - h      Streiche eine Option
+  P hhhh   Setze Offset fuer Assembler (ORG + hhhh)
+  Q        Ruecksprung zum Monitor (arg1 - arg3 geladen)
+  R a s    Neunummerierung der Quellzeilen
+  S a e    Vereinbarung einer Zweitquelle (SEC)
+  T a e x  Einfuegen der Zweitquelle in die akt. Quelle
+  V a e    Anzeige des Quelltextes ab Zeilennummer
+  W a e    Assemblieren wie A, nur Fehleranzeige
+  X a e    Streichen von Zeile a bis e in der Quelle
+  Y        Reaktivieren einer Quelle von Kassette
+  Z x      Anzeige der Zeile x zur Korrektur
+
+  a - Anfangszeile   e - Endzeile   s - Schrittweite
+  x - Zielzeile      h - Hexwert
+
+  Cursorsteuerung: CTRL-I -->               CTRL-H <--
+                   CTRL-E Einfuegen         CTRL-S Streichen
+                   CTRL-R <-- + Loeschen    CTRL-T nnnn <--
+                   CTRL-W spezieller Tabulator

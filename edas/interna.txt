@@ -1,0 +1,111 @@
+
+#------------------------------------------------------------------------------
+
+Das Original ZEAP 2.0 für den NAS-Computer ist extrem kompakt: der ganze Assembler belegt nur 4K!
+
+Der Quellcode wird komprimiert abgelegt.
+Assembliert wird Zeile für Zeile im Bildwiederholspeicher.
+2 Pässe: 1. Aufbau der Sybmoltabelle, 2. Assemblieren mit ggf. Listen und ggf. Codeerzeugung
+jedesmal wird der Quellcode auf den Bildschirm entpackt und von dort geparst
+
+Der Assemblerkern wurde unverändert in den EDAS übernommen. 
+Das Arbeiten im Bildwiederholspeicher wurde beibehalten; allerdings ist beim AC1
+der Bildwiederholspeicher genau andersherum aufgebaut (links oben = letzte Adr.)
+Daher mussten die Routinen modifiziert werden, die den Bildwiederholspeicher nutzen (Unpack, Parse, ...)
+
+Der EDAS verwendet eine weitergehene Komprimierung des Quellcodes: Leerzeichen werden zusammengefasst.
+
+Der Assemblerkern enthält keine Tabelle der OP-Codes, stattdessen werden Parse-Bäume genutzt.
+Das spart Speicherplatz, ist aber langsamer als eine einfache Liste.
+Im Mnemonics-Parsebaum ist auch der komplette OP-Maschinencode integriert.
+
+Ein Scanner zerlegt die Quellzeile in Token. Register und Adressen etc. werden zu Token.
+
+Einstieg in den Parser mit dem ersten Token (Tiefe 1). Wenn es gefunden wird, wird mit dem nächsten Token
+ab dieser Position im Baum weitergesucht mit Tiefe 2 usw; bis der Code komplett gefunden wurde (eine Zweigspitze 
+im Baum erreicht wurde).
+z.B. POP rr -> 4 Token: Tiefe 1 "P", Tiefe 2 "O", dann Test auf "P", Test auf Token "rr" -> gefunden
+
+weiter gibt es einen Parsebaum für benannte Parameter (Registernamen, Flagnamen, $)
+
+es gibt einen Ausdrucksevaluator, der Symbole auswertet und einfache Ausdrücke berechnet
+
+es gibt 2 spezielle NAS-Befehle
+RCAL ofs	-> rst 10h n
+SCAL code	-> rst 18h n
+
+#------------------------------------------------------------------------------
+
+Token:
+
+.0 r  		Bits 5..3 ->  38h in unk_42F4
+.3 r'  A..L	Bits 2..0 ->  08h in unk_42F4
+.4 n
+.6 flag
+.8 ofs
+.9 flag n,nz,c,nc
+.c rr BC,DE,HL,SP ('dd')
+.f rr BD,DE,HL,AF ('qq')
+
+20 B
+22 D
+24 E
+26 H
+28 L
+2A	NZ
+2C	Z
+2E	NC
+30	BC
+31,B1	(BC)
+32	PO
+34	PE
+36	P
+38	M
+
+40..5F	die ASCII-Zeichen (Buchstaben)
+
+60,E0	A
+62,E2	HL	+IX,IY
+63	(HL)
+64	DE
+65,e5	(DE)
+66	C
+67,e7	(C)
+68	AF
+6A	SP
+6Bh	(SP)
+6c,ec	I
+6e,ee	R
+
+72,F2 addr
+73,F3 (addr)
+74,F4 n
+75 F5 (n)
+78,F8 ofs
+7A bit 0..7
+7C,FC rst 08..38
+7E,FE n 0..2 (IM-Mode)
+
+--
+
+mc
+header byte in Parse Tree
+bit 7 (8x) 	assembler directive/special code
+bit 6 (4x)	special IX/IY	nur bei jp (hl) (geht hier nur  ohne +d)! 
+bit 4 (1x)	ed prefix
+bit 3 (x8+)	cb prefix
+
+assembler directives/special code
+EQU 	0
+ORG 	1
+DEFS	2
+DEFM	3
+DEFB	4
+DEFW	5
+ENT	80h
+SKIP	81h
+
+nas mc code:
+RCAL ofs	-> rst 10h n
+SCAL code	-> rst 18h n
+

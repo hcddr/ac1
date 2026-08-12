@@ -1,0 +1,847 @@
+Funkamateur 01 bis 04/87
+ 
+"EDAS*4" - ein Editor/Assembler für den Amateurcomputer "AC1"
+J. REUL - Y27XO, F. HEYDER - Y21SO
+
+Wenn man selbst Maschinenprogramme mit dem "AC1" entwickeln will, so ist dafür
+ein Assembler sehr hilfreich. Er verhindert zumindest die syntaktischen Fehler,
+spart Zeit und erlaubt eine ordentliche Dokumentation der Programme. Ist ein
+Drucker vorhanden, kann man sich auch das Assembler-Listing ausdrucken lassen.
+Dann ist es sicher etwas leichter, möglichst schnell die gemachten Denkfehler zu
+finden.
+
+Angeregt und unterstützt von Jürgen, Y23LA, wurde der Editor/Assembler nach [1]
+weiter analysiert, für den "AC1" angepaßt und mit einer speicherökonomischeren
+Quellstruktur versehen, außerdem der Kommandoumfang und damit der Service um
+etliche Befehle erweitert. Auch das Anlegen und Verarbeiten einer
+Unterprogrammbibliothek wird durch die neu geschaffene Möglichkeit der
+Sekundärquellenverarbeitung unterstützt. Einen ersten Eindruck über die
+Leistungsfähigkeit dieses etwa 5 KByte langen Programms vermittelt sicher auch
+das in [2] abgedruckte Listing zur Prüfsummenroutine für den "AC1", das mit
+EDAS*4 erstellt wurde.
+
+EDAS*4 enthält einen Zweilauf-Assembler, der bei entsprechender Option den
+erzeugten Maschinenkode gleich auf den zugehörenden Speicherplatz lädt. Er
+verarbeitet die Mnemoniks größtenteils entsprechend der Syntax, wie sie z.B. der
+U-880-Assembler unter dem UDOS-Betriebssystem akzeptiert [3], [4]. Eine
+Aufstellung der verwendeten Mnemoniks wird am Ende dieses Beitrages gegeben. Die
+erstellten Quelltexte sind mit dem "AC1"-Monitor auf Kassette abspeicherbar und
+frei verschiebbar. Die Argumentzellen werden beim Verlassen von EDAS*4
+entsprechend geladen. EDAS*4 erfordert einen erweiterten "AC1" (32 Zeilen,
+Kleinbuchstaben, Speichererweiterung ab 4000H).
+
+Nicht zuletzt um dem Anbieten wenig helfender "Nachnutzungs-Werbeartikel"
+wirkungsvoll zu begegnen, wird es bei diesem Beitrag einmal anders gemacht. Das
+heißt, nachfolgend wird das vollständige Listing (leider lassen sich bespielte
+Kassetten immer noch nicht drucken!) und eine Kurzbeschreibung in Form eines
+Arbeitsblattes veröffentlicht. Eine ausführlichere Beschreibung folgt in der
+weiteren Fortsetzung des Beitrages. Die beiden Teile des Arbeitsblattes
+veröffentlichen wir in der Ausgabe 2/1987 unserer Zeitschrift. Vorerst kann man
+das Listing eintippen, die Eintippfehler suchen und anhand der Arbeitsblätter
+gleich losprobieren. Wer mit der Kurzbeschreibung (Arbeitsblatt), die als
+Gedächtnisstütze gedacht ist, nicht klar kommt, muß auf die nachfolgende
+ausführliche Beschreibung warten.
+
+Viel Spaß wünschen Y27XO, Y23LA und Y21SO.
+
+Literatur
+[1]	ZEAP 2.0 - 4K-Assembler/Editor, NAS - Elektronische Halbleiter GmbH, München
+[2]	Heyder, F.: Falsche Bytes - schnell gefunden, FUNKAMATEUR 35 (1986) H.11, S.565/566
+[3]	Claßen - Oefler: Wissensspeicher Mikrorechnerprogrammierung, VEB Verlag Technik, Berlin 1986
+[4]	Barthold, H., Bäurich, H.: Mikroprozessoren - Mikroelektronische Schaltkreise und ihre Anwendung,
+Amateurreihe electronica, Band 222/223 und 224/225, Militärverlag der DDR, Berlin 1985
+
+#------------------------------------------------------------------------------
+
+Nachfolgend wird genauer auf die Anwendung der einzelnen Kommandos des EDAS*4
+eingegangen. Allerdings kann und soll es nicht Aufgabe dieses Beitrages sein,
+das Programmieren in Maschinensprache selbst zu erläutern.
+
+EDAS*4 besteht aus zwei Teilen. Die zeilenorientierte Editorkomponente von
+EDAS*4 gestattet es, Quellprogramme in mnemonischer Darstellung zu erstellen und
+zu verändern, sowie die Programme mit Kommentar zu versehen. Der Assemblerteil
+erzeugt aus einer solchen Quelle ein Assemblerlisting. Und wenn die
+entsprechenden Optionsbits gesetzt sind, kann der zugehörende Maschinenkode in
+den Speicher geladen (auch mit Offset) und eine Symboltabelle erzeugt werden.
+Syntaktische Fehler werden angezeigt. In Zusammenarbeit mit dem "AC1"-Monitor
+ist damit ein leichter und schneller Wechsel zwischen Editieren, Assemblieren
+und Testen von Maschinenprogrammen möglich. Da die erstellten Quellen im RAM
+stehen und gerade bei Maschinenprogrammen Fehler auftreten können, die diese
+dann zerstören, gilt auch hier: erst Abspeichern - dann Testen.
+
+Die vorliegende Version ist für den Amateurcomputer "AC1" mit
+Speichererweiterung (min. 16 KByte), 32 Zeilen/Bild und Zeichengenerator mit
+Kleinbuchstaben vorgesehen. Das Programm selbst belegt den Speicher von 4000H
+bis 544FH, sowie den Speicher von 5450H bis 55FFH für Merkzellen. Der restliche
+RAM kann als Quelltextspeicher, auch als Editierpuffer bezeichnet, zugewiesen
+werden. Die mit EDAS*4 erzeugten Quelltexte sind frei verschiebbar, d.h., ein
+Quelltext kann z.B. bei einer späteren Weiterbearbeitung an eine andere Stelle
+im Speicher gebracht werden, als die, wo er erzeugt wurde. Es ist nur wichtig,
+daß dann der zugewiesene Editierpufferanfang mit dem Anfang des Quelltextes
+wieder übereinstimmt. Gegenüber dem Vorbild werden in EDAS*4-Quelltexten
+Leerzeichen komprimiert abgelegt. Damit erhöht sich der Umfang des in einem Zug
+erstellbaren Maschinenkodes auf etwa 4 KByte bei voll aufgerüstetem RAM-
+Speicher, wobei hier natürlich auch der Umfang der Kommentare eine Rolle spielt.
+Für die meisten Anwendungen dürfte das jedoch ausreichen, sonst muß man das
+Programm in mehreren Teilen erzeugen. Man sollte übrigens ausführlicher
+kommentieren, sonst passiert es leicht, daß man nach längerer Zeit nicht mehr
+versteht, was man da programmiert hat.
+
+Das Abspeichern und Einlesen der Quelltexte von Kassette erfolgt mit Hilfe des
+Monitors. Beim Verlassen des Assemblers werden zur Unterstützung die
+Argumentzellen mit den Daten der Quelle geladen, so daß einfach mit S: Name
+abgespeichert werden kann. Um den Bedienkomfort zu erhöhen, verwendet EDAS*4
+eigene Routinen für Bildschirm und Tastatur. Die Eingabe ist mit einer Auto-
+Repeat-Funktion versehen, d.h., nach längerem Drücken wird eine Taste
+automatisch wiederholt. Bei der Kommentareingabe geht die Tastatur automatisch
+in den Schreibmaschinenmodus (Großbuchstaben bei Shift, sonst Kleinbuchstaben)
+über.
+
+
+
+Programmstart
+
+Das Programm verfügt über einen Kalt- und einen Warmstart (Restart mit alten
+Parametern). Der Ansprung erfolgt mit "E" oder "J" aus dem Monitor. Nach dem
+Laden des Programms ist immer erst ein Kaltstart auszuführen, da der Puffer
+vereinbart und die Merkzellen initialisiert werden müssen.
+
+Kaltstart: J 4000 AAAA EEEE (CR)
+
+Warmstart: J 4003 (CR)
+
+Werden Endadresse bzw. Anfangs- und Endadresse weggelassen, so wird folgende
+Vorzugsbelegung eingestellt:
+
+AAAA - 6000H; EEEE - BFFFH
+
+Diese kann durch Verändern der RAM-Zellen 4006H bis 4009H an die jeweiligen
+Gegebenheiten angepaßt werden. Nach dem Laden einer Quelle ist ein Kaltstart
+auszuführen, wobei die der Quelle entsprechende Editierpufferanfangsadresse mit
+angegeben werden muß. Anschließend reaktiviert man die Quelle mit "Y". Hat man
+EDAS*4 mit "Q" verlassen, so genügt zur Weiterarbeit ein Warmstart.
+
+Nach dem Start wird der Bildschirm gelöscht. In den obersten zwei Zeilen
+erscheint auf dem Bildschirm:
+
+AC1-EDITOR/ASSEMBLER FREE: END: SEC:
+
+Die Statusinformationen haben folgende Bedeutung:
+
+FREE - Erster freier Speicher nach dem Quelltext. Nach einem Kaltstart wird eine
+um 6 Bytes höhere Adresse als die eingegebene Anfangsadresse angezeigt. Die
+ersten 5 Bytes (Quellkopf) enthalten Informationen über die Länge der Quelle.
+
+END - Erster freier Speicher nach dem Maschinenkode (wird nach jedem
+Assemblerlauf angezeigt).
+
+SEC - Anfangsadresse der Sekundärquelle (wird nach deren Vereinbarung
+angezeigt).
+
+Das Promptsymbol von EDAS*4, das Zeichen zur Eingabebereitschaft, ist ein
+blinkender Kursor (Tiefstrich). Der Kursor blinkt am linken Anschlag der zweiten
+Zeile von unten. Wenn nicht anders angegeben, führt CTRL-C zum vorzeitigen
+Abbruch des gerade aktuellen Kommandos.
+
+
+
+Abspeichern und Einlesen der Quelltexte
+
+Dazu ist die Arbeit mit dem Editor/Assembler zu beenden und in den Monitor zu
+springen ("Q" cr). Die Argumentzellen des Monitors werden dabei automatisch mit
+den Daten zum Abspeichem des Quelltextes geladen.
+
+Abspeichern - S aaaa FREE aaaa Name oder S: Name; aaaa als drittes Argument
+dient der Kennzeichnung des Editierpufferanfangs, als Hilfe für den Kaltstart.
+Einlesen - L oder L offset -. Die Quelltexte sind nicht adreßgebunden. Beim
+Verschieben oder Laden muß der Anfang beim Kaltstart mit angegeben werden, da
+sonst ein Reaktivieren nicht möglich ist.
+
+
+
+Editor
+
+Der Editor dient zum Eingeben und Verändern von Quelltexten. Jede Quelltextzeile
+hat eine Zeilennummer, nach der sie in den Quelltext eingeordnet wird, analog
+den Programmzeilen in einem BASIC-Programm. Die Zeilennummer darf hierbei
+zwischen 0001 und 9999 liegen, führende Nullen sind nicht notwendig. Eine
+Quelltextzeile hat folgendes Format:
+
+Zeilen-Nr. Marke Befehl Operand(en) ;Kommentar
+
+nnnn mmmmmm bbbb ooooo...ooo ; xxxxxxxxx
+
+Die einzelnen Elemente sind durch mindestens ein Leerzeichen, besser durch den
+speziellen Tabulator von EDAS*4 (CTRL-W) zu trennen. Wird keine Marke
+vereinbart, so sind zwischen der Zeilennummer und dem Befehl mindestens zwei
+Leerzeichen zu setzen, auch hier ist CTRL-W besser. Damit wird die
+Übersichtlichkeit der Quelle verbessert. Durch die Komprimierung der Leerzeichen
+erhöht diese Übersichtlichkeit nicht den Speicherbedarf des Quelltextes.
+
+Eine Marke kann maximal aus sechs Zeichen bestehen. Zwischen der Zeilennummer
+und der Marke darf nur ein Leerzeichen stehen. Ein Abschluß der Marke mit einem
+Doppelpunkt wird nicht unterstützt. Bei 6stelligen Marken ist das auch nicht
+zulässig. Der Marke folgt dann der Maschinenbefehl oder eine Assembleranweisung.
+Nachfolgend ist es möglich, zur besseren Dokumentation, die Zeile mit einem
+Kommentar zu versehen. Dieser beginnt immer mit einem Semikolon. Die Tastatur
+geht dann bis zum Zeilenabschluß mit "cr" automatisch in den
+Schreibmaschinenmodus über. Der Kommentar kann auch auf der ersten Markenstelle
+beginnen. Das ist z.B. für Überschriften günstig.
+
+Die Quelltext- und Kommandoeingabe erfolgt immer in der vorletzten Zeile. Ein
+Verlassen dieser ist nicht möglich. Das Ende der Eingabezeile entspricht nicht
+dem Ende der Bildschirmzeile, sondern ist so weit vorgezogen, daß bei der
+nachfolgenden Assemblierung nichts abgeschnitten wird. Bis zum Zeilenschluß mit
+"cr" kann die Zeile mit Hilfe der Kursorfunktionen in die gewünschte Form
+gebracht werden. Die Stellung des Kursors in der Zeile beim Zeilenabschluß ist
+gleichgültig.
+
+
+
+Anweisungen des Editors
+
+Die Kommandos für den Editor bestehen aus einem Buchstaben und entsprechenden
+Argumenten (wenn notwendig). Die Kennbuchstaben müssen am linken Bildrand
+stehen, die Argumente werden durch Leerzeichen voneinander getrennt. Folgende
+Kommandos stehen im Editor zur Verfügung:
+
+Zeichenkettensuche
+
+/STRING/ - Eingabe der zu suchenden Zeichenkette.
+
+F - Listen der Zeilen, in denen die zuvor in Schrägstriche gestellte und
+eingegebene Zeichenkette enthalten ist.
+
+Damit lassen sich z.B. bestimmte Befehle, Marken und ähnliches im gesamten
+Quelltext suchen.
+
+Seitengröße auf Bildschirm einstellen
+
+H h - Setzen der Seitengröße auf h (hex.).
+
+H - Setzen der Seitengröße auf 25 Zeilen.
+
+H 0 - Setzen auf kontinuierliche Ausgabe.
+
+Nach der Ausgabe von h Zeilen auf dem Bildschirm wird die Ausgabe unterbrochen
+und nach dem Drücken einer Taste um jeweils eine weitere Seitengröße
+fortgesetzt. Nach dem Start ist die Seitengröße auf 25 Zeilen festgelegt.
+
+Automatische Zeilennummerierung
+
+I - ab Zeile 10 Schrittweite 10.
+
+I a - ab Zeile a Schrittweite 10.
+
+I a s - ab Zeile a Schrittweite s.
+
+Wie in BASIC-Interpretern der Auto-Befehl, gestattet das "I"-Kommando eine
+Eingabe mit automatischer Zeilennummernerzeugung. Der Kursor befindet sich bei
+der Zeileneröffnung immer auf der ersten Markenposition. Beendet wird dieses
+Kommando, in dem die letzte Zeilennummer wieder gelöscht wird, z.B. mit CTRL-R.
+
+Ausgabeverzögerung setzen
+
+J h - Setzen einer Schirmausgabeverzögerung (h 1..FF).
+
+J 0 - Rücksetzen der Verzögerung.
+
+K h - Wie J, aber nur bei Druckerausgabe.
+
+Mit dem "J"- bzw. "K"-Kommando läßt sich die Geschwindigkeit der Bildschirm bzw.
+Druckerausgabe steuern, in dem entsprechend dem Argument h nach jedem cr
+gewartet wird. Nach dem Start sind beide Verzögerungen ausgeschaltet.
+
+Neunumerierung der gesamten Quelle
+
+R - 1. Zeile 10 Schrittweite 10.
+
+R a - Zeile a Schrittweite 10.
+
+R a s - Zeile a Schrittweite S.
+
+Zur Verbesserung der Form bzw. zum Platzschaffen für Einfügungen kann hiermit
+die gesamte Quelle mit neuen Zeilennummern versehen werden.
+
+Neunumerierung ab Zeile bis Quellende
+
+N a s - ab Zeile a mit einer Lücke von s Zeilen zur vorhergehenden a Zeile.
+
+Dieses Kommando ist immer dann nützlich, wenn man noch nachträglich etwas in die
+Quelle einfügen muß und dafür Platz benötigt.
+
+Anzeige des Quelltextes auf dem Schirm
+
+V - Anzeige des gesamten Quelltextes.
+
+V a - Anzeige ab Zeile a bis zum Ende.
+
+V a e - Anzeige ab Zeile a bis Zeile e.
+
+Hiermit kann man den Quelltext ganz oder teilweise auf dem Schirm ausgeben.
+
+Anzeige des Quelltextes ab Marke
+
+M Marke - Anzeige des Quelltexte, ab Marke bis Ende.
+
+Dieses Kommando dient ebenfalls zur Anzeige des Quelltextes, wobei hier ab der
+angegebenen Marke begonnen wird.
+
+Löschen von Quelltextzeilen
+
+X a e - Streichen der Zeilen ab a bis e einschließlich.
+
+Mit diesem Kommando können eingegebene Quelltextzeilen wieder gelöscht werden.
+Dieses Kommando wird nur dann ausgeführt, wenn beide Argumente angegeben sind,
+sonst erfolgt eine Fehlermeldung.
+
+Reaktivieren eines vorhandenen Quelltextes
+
+Y - Reaktivieren des Editierpuffers. Hiermit kann ein im Speicher vorhandener
+Quelltext nach einem Kaltstart von EDAS*4 wieder aktiviert werden. Das ist
+notwendig, wenn eine Quelle von Kassette geladen wurde oder wenn nach einem
+eventuellen Systemabsturz die Quelle noch erhalten geblieben ist. Ein
+Reaktivieren ist jedoch nur so lange möglich, wie noch keine Quellzeile
+eingegeben wurde. Außerdem muß natürlich der Anfang des vereinbarten
+Editierpuffers mit dem Anfang des Quelltextes übereinstimmen.
+
+Ändern einer Quellzeile
+
+Z - Korrigiere in zuletzt eingegebener Zeile.
+
+Z x - Korrigiere in Zeile x.
+
+Kursorsteuerung:
+
+CTRL - I ==>
+
+CTRL - H <==
+
+CTRL - E Einfügen
+
+CTRL - S Streichen
+
+CTRL - R Rückwärtslöschen
+
+CTRL - T Kursor hinter Zeilennummer
+
+CTRL - W spezieller Tabulator
+
+Mit diesem Kommando kann man mit Hilfe der oben genannten Funktionen nach
+Belieben in der ausgewählten Zeile ändern. Wird die Zeilennummer selbst damit
+geändert, so bleibt die Zeile aber auch unter der vorhergehenden Nummer im
+Quelltext. Damit ist es z.B. möglich, Zeilen zu doppeln. Die Kursorfunktionen
+sind natürlich während der gesamten Arbeit mit EDAS*4 nutzbar, nicht nur im "Z"-
+Kommando. Der spezielle Tabulator ist so eingeteilt, daß man die einzelnen
+Elemente einer Quellzeile übersichtlich spaltenweise ablegen kann.
+
+Ansprung des assemblierten Programms
+
+G - direkter Ansprung des assemblierten Programms zur Adresse, die mit ENT
+markiert wurde. Voraussetzung zur Ausführung dieses Kommandos sind ein
+Assemblerlauf mit gesetztem Bit 1 und eine ENT-Anweisung im Quelltext. Vor
+Ausführung dieses Kommandos empfiehlt es sich, die aktuelle Quelle auf Kassette
+zu sichern, da man nie sicher ist, ob sich nicht doch ein Fehler im Programm
+befindet.
+
+Beenden der Arbeit mit EDAS*4
+
+Q - Rücksprung zum Monitor.
+
+Dieses Kommando übergibt die Steuerung wieder dem "AC1"-Monitor, zuvor wurden
+die Argumentzeilen Arg1 bis Arg3 so geladen, daß der Quelltext einfach mit S:
+name abgespeichert werden kann. EDAS*4 ist nun jederzeit wieder über einen
+Warmstart zu aktivieren. Alle vor dem Verlassen eingestellten Parameter bleiben
+erhalten, natürlich vorausgesetzt, es wurde nichts durch eine
+Speichermanipulation zerstört. Soweit das EDAS*4 selbst betrifft, merkt er das
+durch seine Prüfsumme und kehrt sofort zum Monitor zurück. Dann muß man EDAS*4
+neu von der Kassette laden. Wenn man Glück hat und der Quelltext ist erhalten
+geblieben, so läßt er sich mit "Y" reaktivieren.
+
+Teile einer EDAS-Quelle verschieben
+
+C a e x - Verschiebe von Zeile a bis Zeile e nach Zeile x und folgende.
+
+Hiermit kann man Teilstücke des Quelltextes nachträglich an eine andere Stelle
+in der Quelle bringen. Die Zeilen von a bis e werden ab der Zeile x mit der
+Schrittweite 1 neu plaziert.
+
+Die nachfolgenden drei Kommandos zum Arbeiten mit einer Zweitquelle gestatten
+es, eine Unterprogrammbibliothek anzulegen und dann die entsprechenden
+Unterprogramme, nachdem sie von Kassette geladen wurden, unverändert oder
+modifiziert, ganz oder teilweise, in die aktuelle Quelle einzufügen.
+
+Vereinbaren einer Zweit-Quelle (SEC)
+
+S a e - Puffervereinbarung für die Zweitquelle von aaaa bis eeee (hexadezimal).
+
+Vor dieser Vereinbarung muß sich ab aaaa bereits eine Quelle oder mindestens ein
+Quellkopf befinden. Hinter SEC: erscheint aa, die Anfangsadresse des
+Zweitquellenpuffers. Man muß darauf achten, daß sich der Zweitquellenpuffer
+nicht mit dem aktuellen Quellpuffer oder mit EDAS*4 selbst überschneidet.
+Hierbei darf eeee auch größer sein als das Ende einer von Kassette eingelesenen
+Zweitquelle, will man diese dann noch erweitern, so ist es auch erforderlich.
+
+Editieren in der Zweit-Quelle
+
+E - Austausch aktuelle Quelle gegen Zweit-Quelle
+
+Hiermit wird EDAS*4 der Pufferbereich der Zweitquelle zugewiesen, so daß nun in
+dieser gearbeitet werden kann. Ein weiteres "E" macht diese Zuweisung dann
+wieder rückgängig. Die Angaben hinter FREE: und SEC: geben dabei immer Auskunft,
+in welcher Quelle gerade gearbeitet wird. Hinter FREE: steht immer der erste
+freie Speicherplatz in der aktuellen Quelle, hinter SEC: wird der Anfang der
+zuletzt eingestellten Zweitquelle angegeben.
+
+Einfügen einer Zweit-Quelle
+
+T a e x - Plaziere die Zeilen a bis e der Zweitquelle ab Zeile x in der
+aktuellen Quelle.
+
+Dieses Kommando ermöglicht es, die gesamte Zweitquelle oder Teile davon in die
+aktuelle Quelle einzufügen. Bei längeren Quelltexten kann das ohne weiteres
+längere Zeit beanspruchen. Ist das Kommando ausgeführt, so erscheint wieder der
+blinkende Kursor.
+
+Kommandos des Assemblers
+
+Der Assembler in EDAS*4 hat die Aufgabe, aus dem erstellten Quellprogramm den
+entsprechenden lauffähigen Maschinenkode für den Mikroprozessor U 880 D zu
+erzeugen. Der Quelltext wird hierbei einer Syntaxkontrolle unterzogen und
+auftretende Fehler werden angezeigt. EDAS*4 erzeugt ein formatiertes,
+übersichtliches Assemblerlisting, das bei Vorhandensein eines Druckers dann auch
+abgeheftet werden kann. Die Übergabe zum Drucker ist so gestaltet, daß jeder den
+bei ihm vorhandenen Drucker leicht anpassen kann. Der Assembler ist ein
+Zweilauf-Assembler, d.h., zur Erzeugung des Maschinenkodes wird der Quelltext
+zweimal durchlaufen. Im ersten Lauf wird u.a. eine Syntaxkontrolle durchgeführt
+und eine Markentabelle erstellt. Im zweiten Lauf werden dann der Maschinenkode
+erzeugt und das Listing ausgegeben. Einige Funktionen des Assemblers sind durch
+sogenannte Optionsbits steuerbar. Im Anfangszustand nach dem Start, wenn noch
+keins dieser Bits gesetzt ist, wird nur ein Assemblerlisting auf dem Bildschirm
+erzeugt. Am Ende des Assemblerlaufes wird die Summe der gefundenen Fehler dem
+Listing angefügt.
+
+Um mit möglichst wenig Speicherplatz auszukommen, verwenden Assembler und Editor
+die vorletzte Bildschirmzeile als Zwischenspeicher. Dadurch ist das Arbeiten des
+Assemblers auch im Lauf 1 auf dem Bildschirm zu verfolgen. So kommt man bei
+längeren Quellen wenigstens nicht auf den Gedanken, das Programm sei abgestürzt.
+Da das jeweilige Zeilenende mit 0AH gekennzeichnet bzw. aufgefüllt wird,
+erscheint auf dem Bildschirm dann auch kurzzeitig das dementsprechende Muster
+(wenn ein 2-KByte-Zeichengenerator eingesetzt ist). Der Assembler verfügt über
+folgende Kommandos:
+
+Quelltext assemblieren
+
+A - Assembliere den gesamten Quelltext.
+
+A a - Assembliere von Zeile a bis Ende.
+
+A a e - Assembliere von Zeile a bis Zeile e.
+
+Entsprechend den Optionsbits und den Argumenten wird der Assemblerlauf
+durchgeführt. Ist das Druckbit gesetzt und nur eine teilweise Assemblierung
+angewiesen, so wird die gesamte Quelle assembliert, aber nur der angegebene Teil
+als Liste ausgegeben, so daß man bei längeren Quellen auch nur Auszüge drucken
+kann.
+
+Quelltext assemblieren, nur Fehler ausgeben
+
+W (a e) - Argumente analog dem "A"-Kommando.
+
+Zur Fehlerkorrektur ist es übersichtlicher, wenn nur die fehlerhaften Zeilen
+aufgelistet werden, die man dann leicht mit dem "Z"-Kommando berichtigen kann.
+
+Maschinenkode um Hexwert verschoben im Speicher ablegen
+
+P hhhh - Der vom Assembler erzeugte Maschinenkode wird auf den vorgesehenen
+Speicherplatz + hhhh (Offset-Hex) geladen.
+
+Dieses Kommando muß vor dem entsprechenden Assemblerlauf gegeben werden. Hiermit
+kann man auch Programme assemblieren, die sonst reservierte Speicherbereiche von
+EDAS*4 zerstören würden. Mit dem "T"-Befehl des Monitors sind sie dann auf den
+Speicherplatz zu bringen, auf dem sie laut Listing lauffähig sind.
+
+Assembleroptionen setzen/rücksetzen
+
+O x - Setze Assembler-Option mit Maske (1 Byte).
+
++x - Ergänze Option (nur bitweise).
+
+-x - Streiche Option (nur bitweise).
+
+Bit 0 +01 - Unterdrücke Assemblerlisting; fehlerhafte Zeilen werden trotzdem
+ausgegeben.
+
+Bit 1 +02 - Maschinenkode in Speicher laden; nur wenn dieses Bit gesetzt ist,
+wird der Maschinenkode im zugehörenden Speicher abgelegt.
+
+Bit 2 +04 - Assemblerlisting zur Druckerschnittstelle; das Assemblerlisting wird
+zeichenweise der Druckerschnittstelle übergeben.
+
+Bit 4 + 10 - Erzwinge 2. Lauf bei Fehlern im 1. Lauf; im Normalfall wird bei
+Fehlern im Lauf 1 an dessen Ende der Assembler abgebrochen.
+
+Bit 5 +20 - Relative Sprungdistanzen sind absolut angegeben; hiermit kann z.B.
+der Sprungangabe bei SYPS K 1520 entsprochen werden (z.B. JR marke-$).
+
+Bit 7 + 80 - Ausgabe einer Symboltabelle; im Anschluß an den zweiten
+Assemblerlauf wird eine alphabetisch geordnete Liste aller verwendeten Symbole
+erzeugt, die auch deren Werte und die Zeilen, in denen sie definiert wurden,
+enthält.
+
+Mit dem "O"-Kommando läßt sich der Assembler steuern. Zum besseren Verständnis
+noch zwei Beispiele dafür:
+
+erste Eingabe
+
+O86 - Maschinenkode zum Speicher, Ausgabe der Symboltabelle und Listing zum
+Drucker.
+
+zweite Eingabe
+
+-04 - Drucker ausschalten, d.h. nur noch Maschinenkode zum Speicher und Ausgabe
+der Symboltabelle.
+
+In der folgenden Ausgabe beenden wir die ausführlichere Beschreibung mit der
+Kommentierung der Fehlermeldungen und Hinweisen zum Druckeranschluß, um Listings
+auszugeben. Eine Tabelle mit allen Mnemoniks zum U 880 D in der Syntax von
+EDAS*4 erscheint in einer der folgenden Ausgaben.
+
+
+
+Fehlermeldungen
+
+Werden bei der Arbeit mit EDAS*4 syntaktische oder Bedienfehler gemacht, so
+quittiert EDAS*4 das mit einer Fehlermeldung. Logische Fehler im Quellprogramm
+kann EDAS*4 natürlich nicht erkennen! Eine Fehlermeldung hat die Form, Error xx"
+wobei xx eine zweistellige Zahl ist, die die Art des Fehlers angibt.
+Bedienfehler werden sofort nach der falschen Kommandoeingabe angezeigt. Die
+meisten Syntaxfehler werden bereits im ersten Assemblerlauf erkannt und
+angezeigt, und wenn es nicht ausdrücklich durch das Optionsbit 4 verlangt wurde,
+wird auch der Assembler nach dem ersten Lauf gestoppt. Alle fehlerhaften Zeilen
+wurden nach oben geschoben, so daß alle auf dem Bildschirm zu sehen sind, sofern
+die Zeilenzahl ausreicht. Hierbei steht immer am Anfang der Zeile die
+Fehlermeldung, danach folgt die fehlerhafte Quellzeile selbst. Erkennt der
+Computer den Fehler erst im zweiten Assemblerlauf, so stoppt er diesen Lauf
+nicht, sondern fügt nach der fehlerhaften Anweisung eine Zeile ein, die die
+Fehlermeldung enthält. Außerdem wird am Ende des Assemblerlaufes immer die Zahl
+der gefundenen Fehler ausgegeben. Hat man den Fehler im Listing auf dem
+Bildschirm übersehen, so kann man sich mit "W" nur die Fehler auflisten lassen.
+EDAS*4 kennt die folgenden 26 verschiedenen Fehlermeldungen.
+
+Error 00 - Speicherüberlauf
+
+Die soeben eingegebene Quellzeile würde den vereinbarten Editierpuffer
+überschreiten. Die Zeile wurde nicht übernommen.
+
+Error 01 - Zeilennummerüberlauf
+
+Bei der Neunumerierung des Quelltextes wurde die Zeilennummer größer als 9999.
+Daraufhin wurde die Quelle ab Zeile 1 in Schritten zu 1 neu numeriert.
+
+Error 02 - Überlauf im I-Mode
+
+Im I-Kommando wurde die Zeilennummer größer als 9999, das I-Kommando wurde
+abgebrochen.
+
+Error 03 - nicht existierende Zeile
+
+Mit dem Z-Kommando wurde versucht, eine nicht existierende Zeile aufzurufen.
+
+Error 04 - illegaler GO-Befehl
+
+Ein G-Kommando wurde aufgerufen, bei dem folgende Bedingungen nicht vollständig
+erfüllt waren: 
+	- Option "Maschinenkode zum Speicher" gesetzt,
+	- Assembleroffset = 0,
+	- Assembleranweisung ,ENT' im Quelltext.
+
+Error 05 - Reaktivieren des Puffers nicht möglich
+
+Beim Aufruf des V-Kommandos wurde im Editierpuffer keine alte EDAS-Quelle
+gefunden. Der Editierpuffer bleibt unverändert. Ein Reaktivieren des vorherigen
+Inhalts ist nicht möglich.
+
+Error 06 - Inkrement ist 0
+
+Das Zeileninkrement ist Null, das Kommando wird nicht ausgeführt.
+
+Error 07 - Zeilennummerbereich nicht ausreichend
+
+Der Zeilennummerbereich reicht für die verlangte Manipulation des Quelltextes
+nicht aus, die Operation wird abgebrochen.
+
+Error 08 - unzulässige Argumenteingabe Beim C-Befehl überlappen sich Quell- und
+Zielbereich, d.h., das Argument befindet sich zwischen x und e. Das ist nicht
+möglich.
+
+Error 09 - Zweitquelle fehlt
+
+Es wurde ein Befehl zur Arbeit mit der Zweitquelle aufgerufen, ohne daß diese
+bereits vereinbart war.
+
+Error 10 - illegale Befehlszeile
+
+Eine Marke ist länger als 6 Zeichen bzw. eine Mnemonik ist länger als 4 Zeichen
+oder sie fehlt ganz. Die Zeile wird ignoriert.
+
+Error 20 - unbekannte Mnemonik
+
+Im Feld für den Operationskode steht eine Abkürzung, die nicht als Mnemonik
+vereinbart ist, die Zeile wird ignoriert.
+
+Error 21 - Kontext-Fehler
+
+Die Kombination von Mnemonik und Operandentyp ist unzulässig oder das Mnemonik
+zu kurz, die Zeile wird ignoriert.
+
+Error 22 - Indexregister-Fehler
+
+IX oder IY werden so verwendet, wie es nur für HL zugelassen ist oder bei einem
+IP (IX) bzw. IP (IY) ist der Offset nicht Null. Die Zeile wird ignoriert.
+
+Error 23 - Wert bzw. Distanz zu groß
+
+Ein 8-Bit-Operand ist größer als 255 oder kleiner als -128, oder eine
+Indexregisterdistanz ist nicht im Bereich -128...+127, oder Offset für einen
+relativen Sprung ist nicht im Bereich -126...+129, oder die Nummer bei den BIT-,
+RES-, SET-Befehlen ist nicht im Bereich 0...7, oder die Adresse beim Restart-
+Befehl ist unzulässig, oder der Mode der IM-Anweisung ist nicht 0, 1 oder 2. Von
+dem in Frage kommenden Wert wird der Teil abgeschnitten, der im zulässigen
+Bereich liegt und der Assemblerlauf fortgesetzt.
+
+Error 24 - zu viele Register
+
+Register sind in dieser Anweisung nicht zugelassen oder es sind zu viele
+Register im Operandenteil, die Zeile wird ignoriert.
+
+Error 25 - unzulässige Operandenkombination
+
+Die Kombination der Operandentypen ist unzulässig, die Zeile wird ignoriert.
+
+Error 26 - illegales Zeichen
+
+Im Operandenfeld befindet sich ein Zeichen, dessen Bedeutung in der Syntax der
+Assemblersprache nicht zulässig ist, die Zeile wird ignoriert.
+
+Error 27 - illegaler Operand
+
+Die Kombination eines Registers mit einer Marke oder einer Konstante ist in
+diesem Zusammenhang nicht erlaubt, die Zeile wird ignoriert.
+
+Error 28 - Klammer-Fehler
+
+In einer Assembleranweisung befindet sich eine linke Klammer, oder mehr als eine
+linke Klammer befinden sich in einem Befehlsoperanden, die Zeile wird ignoriert.
+
+Error 30 - Marke nicht gefunden
+
+Das in dem Ausdruck verwendete Symbol befindet sich in keiner Quellzeile in der
+Markenspalte. Das Symbol wird so behandelt, als wenn es den Wert Null hätte, die
+Assemblierung wird fortgesetzt.
+
+Error 31 - Marke doppelt definiert.
+
+Das Symbol im Markenfeld wurde zuvor schon einmal definiert bzw. es ist ein
+Registename. Die Zeile wird ignoriert.
+
+Error 40 - Pseudo-Befehl-Fehler
+
+In einer Assembleranweisung (Pseudobefehl) befinden sich zu viele oder zu wenig
+Operanden, die Zeile wird ignoriert.
+
+Error 41 - illegale Vorwärtsreferenz
+
+Ein Markensymbol in einer EQU-, ORG- oder DEFS-Assembleranweisung wird erst
+definiert, nach dem diese bereits abgearbeitet worden ist, die Zeile wird
+ignoriert.
+
+Error 61 - Bereichsüberschreitung
+
+Der durch den Assemblerlauf erzeugte Maschinenkode würde EDAS*4 oder den
+Editierpuffer überschreiben. Die Abspeicherung des Maschinenkodes wurde
+abgebrochen.
+
+Error 99 - illegales Kommando
+
+Ein unzulässiges Kommando oder eine falsch gestaltete Quellzeile wurde
+eingegeben. Die Zeileneingabe wurde ignoriert.
+
+Um die fehlerhafte Assemblierung durch teilweise Veränderungen von EDAS*4, wie
+sie beispielsweise bei Speicherfehlern auftreten können, zu vermeiden, bildet
+EDAS*4 selbständig eine Prüfsumme zu sich selbst. Im Fehlerfall erfolgt die
+Ausschrift "Error" und EDAS*4 springt zum Monitor zurück. Außerdem werden die
+Argumentzellen mit den Daten der aktuellen Quelle geladen. Wenn der Quellkopf
+nicht zerstört wurde, kann man diese erst einmal auf Kassette abspeichern und
+dann in Ruhe den Fehler im Speicher suchen.
+
+
+
+Druckeranschluß
+
+Wie vorangehend bereits erwähnt, bietet EDAS*4 auch die Möglichkeit, das Listing
+mit einem Drucker auszugeben. Dazu muß an zwei Stellen ein Sprung zu den
+entsprechenden Routinen eingetragen werden.
+
+
+
+- Druckerinitialisierung
+
+Diese Routine wird je Assemblerlauf mit gesetztem Druckbit einmal zu Beginn
+aufgerufen. Sie dient solchen Operationen wie Seitenvorschub und Null-Setzen des
+Seitenzählers. Wer das nicht braucht, kann hier auch den Sprung auf MS30
+belassen. Ansonsten trägt man auf Adresse 5440H den Sprung zu seiner
+Initialisierung ein.
+
+- Einzelzeichenausgabe
+
+Der Sprung zu dieser Routine befindet sich auf der Adresse 400AH. Die
+Listingzeilen werden zeichenweise im Akku an diese Schnittstelle übergeben. Die
+eigenen Routinen dürfen außer dem Akku keine Register verändern und müssen mit
+RET beendet werden. Es empfiehlt sich, EDAS*4 mit dem eigenen Druckeranschluß zu
+versehen und dann erneut auf Kassette abzuspeichern, und dann mit dieser
+Arbeitsversion zu arbeiten. Ein nachträglicher Eintrag der Sprünge und ein
+nachfolgender Warmstart funktionieren nicht, das Listing erscheint nach wie vor
+nur auf dem Schirm.
+
+Damit ist die Beschreibung von EDAS*4 beendet. Wir wünschen allen viel Spaß bei
+der Arbeit mit diesem Assembler/Editor. Eine Tabelle mit allen Mnemoniks zum U
+880 D in der Syntax von EDAS*4 erscheint in einer der nächsten Ausgaben des
+FUNKAMATEUR.
+
+#------------------------------------------------------------------------------
+
+                              - Ø1 -
+
+       Arbeitsblatt zum AC 1 Editor/Assembler EDAS*4
+       ---------------------------------------------
+
+* Programmstart
+  -------------
+
+  Kaltstart: J 4ØØØ aaaa eeee (CR)
+             J 4ØØØ (CR)          ;mit Vorzugseinstellung
+                                   des Editierpuffers
+  Warmstart: J 4ØØ3 (CR)
+
+  aaaa Anfang Editierpuffer   eeee Ende Editierpuffer
+
+* Abspeichern/Einlesen einer Quelle (mit AC 1 Monitor)
+  ----------------------------------------------------
+
+  S aaaa FREE aaaa name (CR)   oder
+  S: name (CR)               (sofort nach Q !!!)
+
+  L oder L Offset+- ; dann Kaltstart mit arg1 - arg3 und Y
+
+* Format einer Quellzeile
+  -----------------------
+
+  nnnn mmmmmm Befehl Operand(en) ;Kommentar
+
+  nnnn - Zeilennummer   mmmmmm - Marke
+
+* Kommandos des Editor/Assemblers
+  -------------------------------
+
+  A a e    Assembliere Quelle von Zeile a bis e
+  C a e x  Quellzeilen verschieben (von a bis e nach x)
+  E        Wechsel  aktuelle Quelle <--> sec. Quelle
+  /string/ Eingabe einer Zeichenkette zum F - Kommando
+  F        Suchen der angegebenen Zeichenkette
+  G        Start des assemblierten Programms (--> ENT)
+  H h      Setzen der Seitengroesse auf h (hex) Zeilen
+  I a s    Zeileneingabe mit automatischer Nummerierung
+  J h      Ausgabeverzoegerung auf dem Schirm (h Ø...FF)
+  K h      Ausgabeverzoegerung zum Drucker
+  M marke  Anzeige des Quelltextes ab marke
+  N a s    Erzeugen einer Luecke im Quelltext (s Zeilen)
+  O h      Setzen von Optionen zum Assembler mit Maske h
+  + h      Ergaenze eine Option
+  - h      Streiche eine Option
+  P hhhh   Setze Offset fuer Assembler (ORG + hhhh)
+  Q        Ruecksprung zum Monitor (arg1 - arg3 geladen)
+  R a s    Neunummerierung der Quellzeilen
+  S a e    Vereinbarung einer Zweitquelle (SEC)
+  T a e x  Einfuegen der Zweitquelle in die akt. Quelle
+  V a e    Anzeige des Quelltextes ab Zeilennummer
+  W a e    Assemblieren wie A, nur Fehleranzeige
+  X a e    Streichen von Zeile a bis e in der Quelle
+  Y        Reaktivieren einer Quelle von Kassette
+  Z x      Anzeige der Zeile x zur Korrektur
+
+  a - Anfangszeile   e - Endzeile   s - Schrittweite
+  x - Zielzeile      h - Hexwert
+
+  Cursorsteuerung: CTRL-I -->               CTRL-H <--
+                   CTRL-E Einfuegen         CTRL-S Streichen
+                   CTRL-R <-- + Loeschen    CTRL-T nnnn <--
+                   CTRL-W spezieller Tabulator
+
+#------------------------------------------------------------------------------
+
+                              - Ø2 -
+
+* Optionen zum Assembler
+  ----------------------
+
+  Bit Ø    +Ø1  Unterdruecke Assemblerliste
+  Bit 1    +Ø2  Maschinencode zum Speicher
+  Bit 2    +Ø4  Drucke Assemblerliste
+  Bit 4    +1Ø  Aktiviere 2. Lauf bei Fehlern im 1. Lauf
+  Bit 5    +2Ø  relative Sprungdistanz absolut (SYPS K152Ø)
+  Bit 7    +8Ø  Ausgabe der Symboltabelle
+
+* Pseudobefehle des Assemblers
+  ----------------------------
+
+  DEFB arg,arg,... definiere Byte
+                   arg:xx - dez; #xx o. xxH - hex; 'x - ASCII
+  DEFW arg,arg,... definiere Wort (Doppelbyte)
+  DEFM 'string'    definiere Zeichenkette (ASCII)
+  DEFS n           reserviere n Speicherplaetze
+  ORG  n           Zuweisung des Speicherplatzzaehlers
+  EQU  n           Vereinbarung eines Ausdrucks (Marke)
+  ENT              Startadresse fuer G - Kommando
+  SKIP             erzeuge Leerzeile in der Assemblerliste
+  $    (24H)       Adresszaehlersymbol
+
+                   n - Zahl (hex o. dez), Marke o. Ausdruck
+
+* Fehlermeldungen
+  ---------------
+
+       ØØ  Speicherueberlauf, Editierpuffer voll
+       Ø1  Zeilennummernueberlauf (groesser 9999)
+       Ø2  Ueberlauf im I Kommando (groesser 9999)
+       Ø3  Zeile existiert nicht
+       Ø4  unzulaessiger G Befehl (ENT nicht definiert)
+       Ø5  Reaktivieren des Puffers nicht moeglich
+       Ø6  Schrittweite Ø
+       Ø7  Zeilennummernbereich zu klein
+       Ø8  unzulaessige Argumenteingabe
+       Ø9  Zweitquelle nicht aktiviert
+       1Ø  unzulaessige Befehlszeile (Marke oder Mnemonik)
+       2Ø  unbekannte Mnemonik
+       21  Operand passt nicht zum Operationscode
+       22  Befehl mit Indexregistern nicht moeglich
+       23  Operand bzw. Distanz zu gross
+       24  zu viele Register
+       25  unzulaessige Operandenkombination
+       26  unzulaessiges Zeichen
+       27  unzulaessiger Operand
+       28  Klammer-Fehler
+       3Ø  Marke nicht gefunden
+       31  Marke mehrfach definiert
+       4Ø  falsche Assembleranweisung (Pseudo-Befehl)
+       41  unzulaessige Vorwaertsreferenz (bei EQU,ORG,DEFS)
+       61  erzeugter MC wuerde EDAS ueberschreiben
+       99  unzulaessiges Kommando
+
+* wichtige Systemadressen
+  -----------------------
+
+  4ØØ6H - 4ØØ7H  Vorzugseinstellung Editierpufferanfang
+  4ØØ8H - 4ØØ9H  Vorzugseinstellung Editierpufferende
+  4ØØAH - 4ØØCH  JP Druckerausgabe (Zeichen in A)
+  544ØH - 5442H  JP Druckerinitialisierung

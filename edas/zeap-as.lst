@@ -1,0 +1,3084 @@
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 1 - 2/24/2026 13:49:26
+
+
+    1/   0 :                            ; File Name   :	d:\hobby3\ac1-2010\edas\zeap20\ZEAP20.bin
+    2/   0 :                            ; Format      :	Binary file
+    3/   0 :                            ; Base Address:	0000h Range: 1000h - 2008h Loaded length: 1008h
+    4/   0 :                            ; Segment type:	Pure code
+    5/   0 :                            ; segment "ROM"
+    6/   0 :                            
+    7/   0 :                            		cpu z80
+    8/   0 :                            
+    9/   0 :                            
+   10/   0 :                            ; NAS-SYS:
+   11/   0 : =18H                       SCAL:	     equ 	0018h		; call the NAS-SYS routines
+   12/   0 : =28H                       PRS:	     equ	0028h		; Output the string
+   13/   0 : =38H                       RDEL:	     equ	0038h		; Wait for a period of time dependent on the
+   14/   0 :                            					; value	in the A register.  A is set to	0.
+   15/   0 :                            
+   16/   0 :                            ; 0800	     The video RAM
+   17/   0 :                            ; 0800	     There is a	10 byte	margin at the left of each line,
+   18/   0 :                            ; 0800	     then a 48 byte line, then a 6 byte	margin on the right
+   19/   0 :                            ; 0800
+   20/   0 :                            ; 0800	     LINE NO LEFT MARGIN
+   21/   0 :                            ; 0800	     16	     0BC0
+   22/   0 :                            ; 0800	     1	     0800
+   23/   0 :                            ; 0800	     2	     0840
+   24/   0 :                            ; 0800	     3	     0880
+   25/   0 :                            ; 0800	     4	     08C0
+   26/   0 :                            ; 0800	     5	     0900
+   27/   0 :                            ; 0800	     6	     0940
+   28/   0 :                            ; 0800	     7	     0980
+   29/   0 :                            ; 0800	     8	     09C0
+   30/   0 :                            ; 0800	     9	     0A00
+   31/   0 :                            ; 0800	     10	     0A40
+   32/   0 :                            ; 0800	     11	     0A80
+   33/   0 :                            ; 0800	     12	     0AC0
+   34/   0 :                            ; 0800	     13	     0B00
+   35/   0 :                            ; 0800	     14	     0B40
+   36/   0 :                            ; 0800	     15	     0B80
+   37/   0 :                            
+   38/   0 :                            ; NAS-SYS	WORKSPACE
+   39/   0 : =0C00H                     PORT0:	     equ	0C00h		; Copy of current state of	output part 0.
+   40/   0 : =0C0AH                     ARGC:	     equ	0C0Ah		; Command letter or routine number	last processed for command execution or	input/output.
+   41/   0 : =0C0BH                     ARGH:	     equ	0C0Bh		; Number of values	in input line
+   42/   0 : =0C0CH                     ARG1:	     equ	0C0Ch		;	Frst value entered.
+   43/   0 : =0C0EH                     ARG2:	     equ	0C0Eh		; Second value entered.
+   44/   0 : =0C10H                     ARG3:	     equ	0C10h		; Third value entered.
+   45/   0 : =0C21H                     NUMV:	     equ	0C21h		; Value returned by routine NUM.
+   46/   0 : =0C29H                     CURSOR:	     equ	0C29h		; Position	of the cursor.
+   47/   0 : =0C2BH                     ARGX:	     equ	0C2Bh		; Last command letter entered.
+   48/   0 : =0C78H                     SUOUT:	     equ	0C78h		; user specified output routine
+   49/   0 :                            
+   50/   0 :                            ;RAM
+   51/   0 : =0F00H                     BUFBEG:	     equ	0F00h	     ; edit buffer
+   52/   0 : =0F02H                     BUFEND:	     equ	0F02h	     ; Buffer Ende
+   53/   0 : =0F04H                     outch:	     equ	0F04h	     ; external	output routine
+   54/   0 : =0F07H                     byte_F07:	     equ	0F07h
+   55/   0 : =0F08H                     word_F08:	     equ	0F08h
+   56/   0 : =0F0AH                     mc_ofs:	     equ	0F0Ah	     ; offset for code generation
+   57/   0 : =0F0CH                     word_F0C:	equ	0F0Ch
+   58/   0 : =0F0EH                     word_F0E:	equ	0F0Eh
+   59/   0 : =0F10H                     word_F10:	equ	0F10h
+   60/   0 : =0F12H                     word_F12:	equ	0F12h
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 2 - 2/24/2026 13:49:26
+
+
+   61/   0 : =0F14H                     byte_F14:	equ	0F14h
+   62/   0 : =0F15H                     word_F15:	equ	0F15h
+   63/   0 : =0F17H                     word_F17:	equ	0F17h
+   64/   0 : =0F19H                     word_F19:	equ	0F19h
+   65/   0 : =0F1BH                     word_F1B:	equ	0F1Bh
+   66/   0 : =0F2DH                     unk_F2D:	equ	0F2Dh
+   67/   0 : =0F2EH                     unk_F2E:	equ	0F2Eh
+   68/   0 : =0F2FH                     unk_F2F:	equ	0F2Fh
+   69/   0 : =0F6FH                     unk_F6F:	equ	0F6Fh
+   70/   0 : =0F75H                     word_F75:	equ	0F75h
+   71/   0 : =0F77H                     byte_F77:	equ	0F77h
+   72/   0 : =0F78H                     word_F78:	equ	0F78h
+   73/   0 : =0F7AH                     unk_F7A:	equ	0F7Ah
+   74/   0 : =0F7CH                     word_F7C:	equ	0F7Ch
+   75/   0 : =0F7EH                     word_F7E:	equ	0F7Eh
+   76/   0 : =0F80H                     word_F80:	equ	0F80h
+   77/   0 : =0F82H                     word_F82:	equ	0F82h
+   78/   0 : =0F84H                     byte_F84:	equ	0F84h
+   79/   0 : =0F85H                     word_F85:	equ	0F85h
+   80/   0 : =0F87H                     word_F87:	equ	0F87h
+   81/   0 : =0F89H                     word_F89:	equ	0F89h
+   82/   0 : =0FF2H                     word_FF2:	equ	0FF2h
+   83/   0 : =0FF6H                     unk_FF6:	equ	0FF6h
+   84/   0 : =0FFEH                     byte_FFE:	equ	0FFEh
+   85/   0 :                            
+   86/   0 :                            
+   87/   0 :                            
+   88/1000 :                            		org 1000h
+   89/1000 : C3 36 1B                   		jp	cold		; cold start
+   90/1003 : C3 78 1B                   		jp	warm		; warm start
+   91/1006 :                            ;1006..1035 wird nach bufp kopiert
+   92/1006 :                            ; phase bufp
+   93/1006 :                            ; RAM:0F00 ?? ??	     BUFP:
+   94/1006 :                            ; RAM:0F00
+   95/1006 :                            ; RAM:0F02 ??	     unk_F02:
+   96/1006 :                            ; RAM:0F03 ??
+   97/1006 :                            ; RAM:0F04 ??	     outch:
+   98/1006 :                            ; RAM:0F05 ??
+   99/1006 :                            ; RAM:0F06 ??
+  100/1006 :                            ; RAM:0F07 ??	     byte_F07:
+  101/1006 :                            ; RAM:0F08 ?? ??	     word_F08:
+  102/1006 :                            ; RAM:0F0A ?? ??	     mc_ofs:
+  103/1006 :                            ; RAM:0F0C ?? ??	     word_F0C:	     14EAr
+  104/1006 :                            ; RAM:0F0E ?? ??	     word_F0E:
+  105/1006 :                            ; RAM:0F10 ?? ??	     word_F10:
+  106/1006 :                            ; RAM:0F12 ?? ??	     word_F12:
+  107/1006 :                            ; RAM:0F14 ??	     byte_F14:	     w
+  108/1006 :                            ; RAM:0F15 ??	     unk_F15:
+  109/1006 :                            ; RAM:0F17 ?? ??	     word_F17:
+  110/1006 :                            ; RAM:0F19 ?? ??	     word_F19:
+  111/1006 :                            ; RAM:0F1B ?? ??	     word_F1B:
+  112/1006 :                            ; RAM:0F2D ??	     unk_F2D:
+  113/1006 :                            ; RAM:0F2E ??	     unk_F2E:
+  114/1006 :                            ; RAM:0F2F ??	     unk_F2F:
+  115/1006 :                            
+  116/1006 : 00 20                      word_1006:	dw 2000h
+  117/1008 : 00 50                      		dw 5000h
+  118/100A : C3 BF 13                   		jp	nas_outch
+  119/100D : 00                         		db    0
+  120/100E : 00                         		db    0
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 3 - 2/24/2026 13:49:26
+
+
+  121/100F : 00                         		db    0
+  122/1010 : 00                         		db    0
+  123/1011 : 00                         		db    0
+  124/1012 : FF                         		db 0FFh
+  125/1013 : FF                         		db 0FFh
+  126/1014 : FF                         		db 0FFh
+  127/1015 : FF                         		db 0FFh
+  128/1016 : 00 00                      		dw 0			; word_F10
+  129/1018 : 00 00                      		dw 0			; word_F12
+  130/101A : 00                         		db 0			; byte_F14
+  131/101B : 36 10                      		dw kdotab		; unk_F15
+  132/101D : AA 10                      		dw unk_10AA		; word_F17
+  133/101F : 8F 12                      		dw unk_128F		; word_F19
+  134/1021 : F4 12                      		dw unk_12F4		; word_F1B
+  135/1023 : 91                         		db  91h	; æ
+  136/1024 : 20                         		db  20h
+  137/1025 : 2C                         		db  2Ch	; ,
+  138/1026 : 98                         		db  98h	; ÿ
+  139/1027 : 3B                         		db  3Bh	; ;
+  140/1028 : 00                         		db    0
+  141/1029 : 82                         		db  82h	; é
+  142/102A : 2B                         		db  2Bh	; +
+  143/102B : 29                         		db  29h	; )
+  144/102C : 27                         		db  27h	; '
+  145/102D : C0                         		db 0C0h	; +
+  146/102E : 24                         		db  24h	; $
+  147/102F : A0                         		db 0A0h	; á
+  148/1030 : 23                         		db  23h	; #
+  149/1031 : 22                         		db  22h	; "
+  150/1032 : 80                         		db  80h	; Ç
+  151/1033 : 00                         		db    0			; unk_F2D
+  152/1034 : A0                         		db 0A0h	; á		; unk_F2E
+  153/1035 : A0                         		db 0A0h	; á		; unk_F2F
+  154/1036 :                            ;Kommandos
+  155/1036 : 56                         kdotab:		db  56h	; V
+  156/1037 : 70 19                      		dw kdo_v		; VDU List
+  157/1039 : 55                         		db  55h	; U
+  158/103A : 63 19                      		dw kdo_u
+  159/103C : 4E                         		db  4Eh	; N
+  160/103D : 13 19                      		dw kdo_n
+  161/103F : 52                         		db  52h	; R
+  162/1040 : 78 19                      		dw kdo_r
+  163/1042 : 4F                         		db  4Fh	; O
+  164/1043 : 24 19                      		dw kdo_o
+  165/1045 : 41                         		db  41h	; A
+  166/1046 : 2D 1D                      		dw kdo_a
+  167/1048 : 46                         		db  46h	; F
+  168/1049 : A2 19                      		dw kdo_f
+  169/104B : 58                         		db  58h	; X
+  170/104C : 1E 1A                      		dw kdo_x
+  171/104E : 5A                         		db  5Ah	; Z
+  172/104F : FA 19                      		dw kdo_z
+  173/1051 : 49                         		db  49h	; I
+  174/1052 : 0B 1B                      		dw kdo_i
+  175/1054 : 50                         		db  50h	; P
+  176/1055 : 5F 19                      		dw kdo_p
+  177/1057 : 3A                         		db  3Ah	; :
+  178/1058 : CC 1F                      		dw kdo_dpoint
+  179/105A : 48                         		db  48h	; H
+  180/105B : 2C 19                      		dw kdo_h
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 4 - 2/24/2026 13:49:26
+
+
+  181/105D : 2B                         		db  2Bh	; +
+  182/105E : 17 19                      		dw kdo_plus
+  183/1060 : 2D                         		db  2Dh	; -
+  184/1061 : 1D 19                      		dw kdo_minus
+  185/1063 : 57                         		db  57h	; W
+  186/1064 : 23 1D                      		dw kdo_w
+  187/1066 : 4A                         		db  4Ah	; J
+  188/1067 : 51 19                      		dw kdo_j
+  189/1069 : 4B                         		db  4Bh	; K
+  190/106A : 56 19                      		dw kdo_k
+  191/106C : 47                         		db  47h	; G
+  192/106D : 35 19                      		dw kdo_g
+  193/106F : 59                         		db  59h	; Y
+  194/1070 : F3 18                      		dw kdo_y
+  195/1072 : 2F                         		db  2Fh	; /
+  196/1073 : 9D 19                      		dw kdo_slash
+  197/1075 : 00                         		db    0
+  198/1076 :                            
+  199/1076 : 5A 45 41 50 20 32 2E 30 2F aZeap2_0A498Fre:db "ZEAP 2.0/A498  Free=      End=      Ent"
+      107F : 41 34 39 38 20 20 46 72 65
+      1088 : 65 3D 20 20 20 20 20 20 45
+      1091 : 6E 64 3D 20 20 20 20 20 20
+      109A : 45 6E 74                  
+  200/109D : 3D 5A 5A 5A 5A 5A 5A       aZzzzzz:	db "=ZZZZZZ"
+  201/10A4 :                            
+  202/10A4 : 5A                         unk_10A4:	db  5Ah
+  203/10A5 : 20                         		db  20h
+  204/10A6 : 67                         		db  67h
+  205/10A7 : 5B                         		db  5Bh
+  206/10A8 : 75                         unk_10A8:	db  75h
+  207/10A9 : 00                         		db    0
+  208/10AA : 80                         unk_10AA:	db  80h
+  209/10AB : 00                         		db    0
+  210/10AC : 01                         		db    1
+  211/10AD : 4C                         		db  4Ch
+  212/10AE : 44                         		db  44h
+  213/10AF : 60                         		db  60h
+  214/10B0 : 83                         		db  83h
+  215/10B1 : 78                         		db  78h
+  216/10B2 : 04                         		db    4
+  217/10B3 : F4                         		db 0F4h
+  218/10B4 : 3E                         		db  3Eh
+  219/10B5 : 04                         		db    4
+  220/10B6 : B1                         		db 0B1h
+  221/10B7 : 0A                         		db  0Ah
+  222/10B8 : 04                         		db    4
+  223/10B9 : E5                         		db 0E5h
+  224/10BA : 1A                         		db  1Ah
+  225/10BB : 04                         		db    4
+  226/10BC : F3                         		db 0F3h
+  227/10BD : 3A                         		db  3Ah
+  228/10BE : 14                         		db  14h
+  229/10BF : EC                         		db 0ECh
+  230/10C0 : 57                         		db  57h
+  231/10C1 : 14                         		db  14h
+  232/10C2 : EE                         		db 0EEh
+  233/10C3 : 5F                         		db  5Fh
+  234/10C4 : 03                         		db    3
+  235/10C5 : 00                         		db    0
+  236/10C6 : 83                         		db  83h
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 5 - 2/24/2026 13:49:26
+
+
+  237/10C7 : 40                         		db  40h
+  238/10C8 : 04                         		db    4
+  239/10C9 : F4                         		db 0F4h
+  240/10CA : 06                         		db    6
+  241/10CB : 03                         		db    3
+  242/10CC : 62                         		db  62h
+  243/10CD : F2                         		db 0F2h
+  244/10CE : 21                         		db  21h
+  245/10CF : 04                         		db    4
+  246/10D0 : F3                         		db 0F3h
+  247/10D1 : 2A                         		db  2Ah
+  248/10D2 : 03                         		db    3
+  249/10D3 : 6A                         		db  6Ah
+  250/10D4 : F2                         		db 0F2h
+  251/10D5 : 31                         		db  31h
+  252/10D6 : 04                         		db    4
+  253/10D7 : E2                         		db 0E2h
+  254/10D8 : F9                         		db 0F9h
+  255/10D9 : 14                         		db  14h
+  256/10DA : F3                         		db 0F3h
+  257/10DB : 7B                         		db  7Bh
+  258/10DC : 03                         		db    3
+  259/10DD : 0C                         		db  0Ch
+  260/10DE : F2                         		db 0F2h
+  261/10DF : 01                         		db    1
+  262/10E0 : 14                         		db  14h
+  263/10E1 : F3                         		db 0F3h
+  264/10E2 : 4B                         		db  4Bh
+  265/10E3 : 03                         		db    3
+  266/10E4 : 73                         		db  73h
+  267/10E5 : E2                         		db 0E2h
+  268/10E6 : 22                         		db  22h
+  269/10E7 : 14                         		db  14h
+  270/10E8 : 8C                         		db  8Ch
+  271/10E9 : 43                         		db  43h
+  272/10EA : 04                         		db    4
+  273/10EB : E0                         		db 0E0h
+  274/10EC : 32                         		db  32h
+  275/10ED : 03                         		db    3
+  276/10EE : 31                         		db  31h
+  277/10EF : E0                         		db 0E0h
+  278/10F0 : 02                         		db    2
+  279/10F1 : 03                         		db    3
+  280/10F2 : 65                         		db  65h
+  281/10F3 : E0                         		db 0E0h
+  282/10F4 : 12                         		db  12h
+  283/10F5 : 13                         		db  13h
+  284/10F6 : C9                         		db 0C9h
+  285/10F7 : A0                         		db 0A0h
+  286/10F8 : 14                         		db  14h
+  287/10F9 : D2                         		db 0D2h
+  288/10FA : B0                         		db 0B0h
+  289/10FB : 13                         		db  13h
+  290/10FC : C4                         		db 0C4h
+  291/10FD : A8                         		db 0A8h
+  292/10FE : 14                         		db  14h
+  293/10FF : D2                         		db 0D2h
+  294/1100 : B8                         		db 0B8h
+  295/1101 : 13                         		db  13h
+  296/1102 : 6C                         		db  6Ch
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 6 - 2/24/2026 13:49:26
+
+
+  297/1103 : E0                         		db 0E0h
+  298/1104 : 47                         		db  47h
+  299/1105 : 13                         		db  13h
+  300/1106 : 6E                         		db  6Eh
+  301/1107 : E0                         		db 0E0h
+  302/1108 : 4F                         		db  4Fh
+  303/1109 : 01                         		db    1
+  304/110A : 4A                         		db  4Ah
+  305/110B : 52                         		db  52h
+  306/110C : F8                         		db 0F8h
+  307/110D : 18                         		db  18h
+  308/110E : 03                         		db    3
+  309/110F : 09                         		db    9
+  310/1110 : F8                         		db 0F8h
+  311/1111 : 20                         		db  20h
+  312/1112 : 02                         		db    2
+  313/1113 : 50                         		db  50h
+  314/1114 : F2                         		db 0F2h
+  315/1115 : C3                         		db 0C3h
+  316/1116 : 03                         		db    3
+  317/1117 : 06                         		db    6
+  318/1118 : F2                         		db 0F2h
+  319/1119 : C2                         		db 0C2h
+  320/111A : 43                         		db  43h
+  321/111B : E3                         		db 0E3h
+  322/111C : E9                         		db 0E9h
+  323/111D : 01                         		db    1
+  324/111E : 50                         		db  50h
+  325/111F : 55                         		db  55h
+  326/1120 : 53                         		db  53h
+  327/1121 : 48                         		db  48h
+  328/1122 : 8F                         		db  8Fh
+  329/1123 : C5                         		db 0C5h
+  330/1124 : 02                         		db    2
+  331/1125 : 4F                         		db  4Fh
+  332/1126 : 50                         		db  50h
+  333/1127 : 8F                         		db  8Fh
+  334/1128 : C1                         		db 0C1h
+  335/1129 : 01                         		db    1
+  336/112A : 43                         		db  43h
+  337/112B : 41                         		db  41h
+  338/112C : 4C                         		db  4Ch
+  339/112D : 4C                         		db  4Ch
+  340/112E : F2                         		db 0F2h
+  341/112F : CD                         		db 0CDh
+  342/1130 : 05                         		db    5
+  343/1131 : 06                         		db    6
+  344/1132 : F2                         		db 0F2h
+  345/1133 : C4                         		db 0C4h
+  346/1134 : 02                         		db    2
+  347/1135 : 50                         		db  50h
+  348/1136 : 83                         		db  83h
+  349/1137 : B8                         		db 0B8h
+  350/1138 : 03                         		db    3
+  351/1139 : F4                         		db 0F4h
+  352/113A : FE                         		db 0FEh
+  353/113B : 03                         		db    3
+  354/113C : CC                         		db 0CCh
+  355/113D : 2F                         		db  2Fh
+  356/113E : 13                         		db  13h
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 7 - 2/24/2026 13:49:26
+
+
+  357/113F : C9                         		db 0C9h
+  358/1140 : A1                         		db 0A1h
+  359/1141 : 14                         		db  14h
+  360/1142 : D2                         		db 0D2h
+  361/1143 : B1                         		db 0B1h
+  362/1144 : 13                         		db  13h
+  363/1145 : C4                         		db 0C4h
+  364/1146 : A9                         		db 0A9h
+  365/1147 : 14                         		db  14h
+  366/1148 : D2                         		db 0D2h
+  367/1149 : B9                         		db 0B9h
+  368/114A : 02                         		db    2
+  369/114B : 43                         		db  43h
+  370/114C : C6                         		db 0C6h
+  371/114D : 3F                         		db  3Fh
+  372/114E : 81                         		db  81h
+  373/114F : 45                         		db  45h
+  374/1150 : 51                         		db  51h
+  375/1151 : D5                         		db 0D5h
+  376/1152 : 00                         		db    0
+  377/1153 : 02                         		db    2
+  378/1154 : 58                         		db  58h
+  379/1155 : 68                         		db  68h
+  380/1156 : E8                         		db 0E8h
+  381/1157 : 08                         		db    8
+  382/1158 : 03                         		db    3
+  383/1159 : 64                         		db  64h
+  384/115A : E2                         		db 0E2h
+  385/115B : EB                         		db 0EBh
+  386/115C : 03                         		db    3
+  387/115D : 6B                         		db  6Bh
+  388/115E : E2                         		db 0E2h
+  389/115F : E3                         		db 0E3h
+  390/1160 : 03                         		db    3
+  391/1161 : D8                         		db 0D8h
+  392/1162 : D9                         		db 0D9h
+  393/1163 : 02                         		db    2
+  394/1164 : C9                         		db 0C9h
+  395/1165 : FB                         		db 0FBh
+  396/1166 : 82                         		db  82h
+  397/1167 : 4E                         		db  4Eh
+  398/1168 : D4                         		db 0D4h
+  399/1169 : 80                         		db  80h
+  400/116A : 01                         		db    1
+  401/116B : 49                         		db  49h
+  402/116C : 4E                         		db  4Eh
+  403/116D : 43                         		db  43h
+  404/116E : 80                         		db  80h
+  405/116F : 04                         		db    4
+  406/1170 : 04                         		db    4
+  407/1171 : 8C                         		db  8Ch
+  408/1172 : 03                         		db    3
+  409/1173 : 03                         		db    3
+  410/1174 : 60                         		db  60h
+  411/1175 : F5                         		db 0F5h
+  412/1176 : DB                         		db 0DBh
+  413/1177 : 14                         		db  14h
+  414/1178 : E7                         		db 0E7h
+  415/1179 : 78                         		db  78h
+  416/117A : 13                         		db  13h
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 8 - 2/24/2026 13:49:26
+
+
+  417/117B : 00                         		db    0
+  418/117C : E7                         		db 0E7h
+  419/117D : 40                         		db  40h
+  420/117E : 13                         		db  13h
+  421/117F : C9                         		db 0C9h
+  422/1180 : A2                         		db 0A2h
+  423/1181 : 14                         		db  14h
+  424/1182 : D2                         		db 0D2h
+  425/1183 : B2                         		db 0B2h
+  426/1184 : 13                         		db  13h
+  427/1185 : C4                         		db 0C4h
+  428/1186 : AA                         		db 0AAh
+  429/1187 : 14                         		db  14h
+  430/1188 : D2                         		db 0D2h
+  431/1189 : BA                         		db 0BAh
+  432/118A : 12                         		db  12h
+  433/118B : 4D                         		db  4Dh
+  434/118C : FE                         		db 0FEh
+  435/118D : 46                         		db  46h
+  436/118E : 81                         		db  81h
+  437/118F : 44                         		db  44h
+  438/1190 : 45                         		db  45h
+  439/1191 : 46                         		db  46h
+  440/1192 : C2                         		db 0C2h
+  441/1193 : 04                         		db    4
+  442/1194 : 84                         		db  84h
+  443/1195 : D7                         		db 0D7h
+  444/1196 : 05                         		db    5
+  445/1197 : 84                         		db  84h
+  446/1198 : CD                         		db 0CDh
+  447/1199 : 03                         		db    3
+  448/119A : 84                         		db  84h
+  449/119B : D3                         		db 0D3h
+  450/119C : 02                         		db    2
+  451/119D : 03                         		db    3
+  452/119E : 43                         		db  43h
+  453/119F : 80                         		db  80h
+  454/11A0 : 05                         		db    5
+  455/11A1 : 04                         		db    4
+  456/11A2 : 8C                         		db  8Ch
+  457/11A3 : 0B                         		db  0Bh
+  458/11A4 : 02                         		db    2
+  459/11A5 : 4A                         		db  4Ah
+  460/11A6 : 4E                         		db  4Eh
+  461/11A7 : 5A                         		db  5Ah
+  462/11A8 : F8                         		db 0F8h
+  463/11A9 : 10                         		db  10h
+  464/11AA : 02                         		db    2
+  465/11AB : 41                         		db  41h
+  466/11AC : C1                         		db 0C1h
+  467/11AD : 27                         		db  27h
+  468/11AE : 02                         		db    2
+  469/11AF : C9                         		db 0C9h
+  470/11B0 : F3                         		db 0F3h
+  471/11B1 : 11                         		db  11h
+  472/11B2 : 53                         		db  53h
+  473/11B3 : 42                         		db  42h
+  474/11B4 : 43                         		db  43h
+  475/11B5 : 62                         		db  62h
+  476/11B6 : 8C                         		db  8Ch
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 9 - 2/24/2026 13:49:26
+
+
+  477/11B7 : 42                         		db  42h
+  478/11B8 : 04                         		db    4
+  479/11B9 : 60                         		db  60h
+  480/11BA : 83                         		db  83h
+  481/11BB : 98                         		db  98h
+  482/11BC : 05                         		db    5
+  483/11BD : F4                         		db 0F4h
+  484/11BE : DE                         		db 0DEh
+  485/11BF : 02                         		db    2
+  486/11C0 : 55                         		db  55h
+  487/11C1 : 42                         		db  42h
+  488/11C2 : 83                         		db  83h
+  489/11C3 : 90                         		db  90h
+  490/11C4 : 04                         		db    4
+  491/11C5 : F4                         		db 0F4h
+  492/11C6 : D6                         		db 0D6h
+  493/11C7 : 82                         		db  82h
+  494/11C8 : 4B                         		db  4Bh
+  495/11C9 : 49                         		db  49h
+  496/11CA : D0                         		db 0D0h
+  497/11CB : 81                         		db  81h
+  498/11CC : 0A                         		db  0Ah
+  499/11CD : 4C                         		db  4Ch
+  500/11CE : 41                         		db  41h
+  501/11CF : 83                         		db  83h
+  502/11D0 : 20                         		db  20h
+  503/11D1 : 0A                         		db  0Ah
+  504/11D2 : 52                         		db  52h
+  505/11D3 : 41                         		db  41h
+  506/11D4 : 83                         		db  83h
+  507/11D5 : 28                         		db  28h
+  508/11D6 : 0B                         		db  0Bh
+  509/11D7 : 4C                         		db  4Ch
+  510/11D8 : 83                         		db  83h
+  511/11D9 : 38                         		db  38h
+  512/11DA : 0A                         		db  0Ah
+  513/11DB : 45                         		db  45h
+  514/11DC : 54                         		db  54h
+  515/11DD : 7A                         		db  7Ah
+  516/11DE : 83                         		db  83h
+  517/11DF : C0                         		db 0C0h
+  518/11E0 : 02                         		db    2
+  519/11E1 : 43                         		db  43h
+  520/11E2 : C6                         		db 0C6h
+  521/11E3 : 37                         		db  37h
+  522/11E4 : 03                         		db    3
+  523/11E5 : 41                         		db  41h
+  524/11E6 : 4C                         		db  4Ch
+  525/11E7 : F4                         		db 0F4h
+  526/11E8 : DF                         		db 0DFh
+  527/11E9 : 01                         		db    1
+  528/11EA : 52                         		db  52h
+  529/11EB : 45                         		db  45h
+  530/11EC : D4                         		db 0D4h
+  531/11ED : C9                         		db 0C9h
+  532/11EE : 04                         		db    4
+  533/11EF : 86                         		db  86h
+  534/11F0 : C0                         		db 0C0h
+  535/11F1 : 14                         		db  14h
+  536/11F2 : C9                         		db 0C9h
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 10 - 2/24/2026 13:49:26
+
+
+  537/11F3 : 4D                         		db  4Dh
+  538/11F4 : 14                         		db  14h
+  539/11F5 : CE                         		db 0CEh
+  540/11F6 : 45                         		db  45h
+  541/11F7 : 0B                         		db  0Bh
+  542/11F8 : 53                         		db  53h
+  543/11F9 : 7A                         		db  7Ah
+  544/11FA : 83                         		db  83h
+  545/11FB : 80                         		db  80h
+  546/11FC : 02                         		db    2
+  547/11FD : 43                         		db  43h
+  548/11FE : 41                         		db  41h
+  549/11FF : 4C                         		db  4Ch
+  550/1200 : F8                         		db 0F8h
+  551/1201 : D7                         		db 0D7h
+  552/1202 : 0A                         		db  0Ah
+  553/1203 : 4C                         		db  4Ch
+  554/1204 : 43                         		db  43h
+  555/1205 : 83                         		db  83h
+  556/1206 : 00                         		db    0
+  557/1207 : 04                         		db    4
+  558/1208 : C1                         		db 0C1h
+  559/1209 : 07                         		db    7
+  560/120A : 0B                         		db  0Bh
+  561/120B : 83                         		db  83h
+  562/120C : 10                         		db  10h
+  563/120D : 03                         		db    3
+  564/120E : C1                         		db 0C1h
+  565/120F : 17                         		db  17h
+  566/1210 : 13                         		db  13h
+  567/1211 : C4                         		db 0C4h
+  568/1212 : 6F                         		db  6Fh
+  569/1213 : 0A                         		db  0Ah
+  570/1214 : 52                         		db  52h
+  571/1215 : 43                         		db  43h
+  572/1216 : 83                         		db  83h
+  573/1217 : 08                         		db    8
+  574/1218 : 04                         		db    4
+  575/1219 : C1                         		db 0C1h
+  576/121A : 0F                         		db  0Fh
+  577/121B : 0B                         		db  0Bh
+  578/121C : 83                         		db  83h
+  579/121D : 18                         		db  18h
+  580/121E : 03                         		db    3
+  581/121F : C1                         		db 0C1h
+  582/1220 : 1F                         		db  1Fh
+  583/1221 : 13                         		db  13h
+  584/1222 : C4                         		db 0C4h
+  585/1223 : 67                         		db  67h
+  586/1224 : 02                         		db    2
+  587/1225 : 53                         		db  53h
+  588/1226 : 54                         		db  54h
+  589/1227 : FC                         		db 0FCh
+  590/1228 : C7                         		db 0C7h
+  591/1229 : 01                         		db    1
+  592/122A : 4F                         		db  4Fh
+  593/122B : 52                         		db  52h
+  594/122C : 83                         		db  83h
+  595/122D : B0                         		db 0B0h
+  596/122E : 03                         		db    3
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 11 - 2/24/2026 13:49:26
+
+
+  597/122F : F4                         		db 0F4h
+  598/1230 : F6                         		db 0F6h
+  599/1231 : 83                         		db  83h
+  600/1232 : C7                         		db 0C7h
+  601/1233 : 01                         		db    1
+  602/1234 : 02                         		db    2
+  603/1235 : 55                         		db  55h
+  604/1236 : 54                         		db  54h
+  605/1237 : 75                         		db  75h
+  606/1238 : E0                         		db 0E0h
+  607/1239 : D3                         		db 0D3h
+  608/123A : 14                         		db  14h
+  609/123B : 67                         		db  67h
+  610/123C : 80                         		db  80h
+  611/123D : 41                         		db  41h
+  612/123E : 14                         		db  14h
+  613/123F : C9                         		db 0C9h
+  614/1240 : A3                         		db 0A3h
+  615/1241 : 14                         		db  14h
+  616/1242 : C4                         		db 0C4h
+  617/1243 : AB                         		db 0ABh
+  618/1244 : 12                         		db  12h
+  619/1245 : 54                         		db  54h
+  620/1246 : 49                         		db  49h
+  621/1247 : D2                         		db 0D2h
+  622/1248 : B3                         		db 0B3h
+  623/1249 : 13                         		db  13h
+  624/124A : 44                         		db  44h
+  625/124B : D2                         		db 0D2h
+  626/124C : BB                         		db 0BBh
+  627/124D : 01                         		db    1
+  628/124E : 41                         		db  41h
+  629/124F : 44                         		db  44h
+  630/1250 : 44                         		db  44h
+  631/1251 : 60                         		db  60h
+  632/1252 : 83                         		db  83h
+  633/1253 : 80                         		db  80h
+  634/1254 : 05                         		db    5
+  635/1255 : F4                         		db 0F4h
+  636/1256 : C6                         		db 0C6h
+  637/1257 : 04                         		db    4
+  638/1258 : 62                         		db  62h
+  639/1259 : 8C                         		db  8Ch
+  640/125A : 09                         		db    9
+  641/125B : 03                         		db    3
+  642/125C : 43                         		db  43h
+  643/125D : 60                         		db  60h
+  644/125E : 83                         		db  83h
+  645/125F : 88                         		db  88h
+  646/1260 : 05                         		db    5
+  647/1261 : F4                         		db 0F4h
+  648/1262 : CE                         		db 0CEh
+  649/1263 : 14                         		db  14h
+  650/1264 : 62                         		db  62h
+  651/1265 : 8C                         		db  8Ch
+  652/1266 : 4A                         		db  4Ah
+  653/1267 : 02                         		db    2
+  654/1268 : 4E                         		db  4Eh
+  655/1269 : 44                         		db  44h
+  656/126A : 83                         		db  83h
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 12 - 2/24/2026 13:49:26
+
+
+  657/126B : A0                         		db 0A0h
+  658/126C : 04                         		db    4
+  659/126D : F4                         		db 0F4h
+  660/126E : E6                         		db 0E6h
+  661/126F : 01                         		db    1
+  662/1270 : 58                         		db  58h
+  663/1271 : 4F                         		db  4Fh
+  664/1272 : 52                         		db  52h
+  665/1273 : 83                         		db  83h
+  666/1274 : A8                         		db 0A8h
+  667/1275 : 04                         		db    4
+  668/1276 : F4                         		db 0F4h
+  669/1277 : EE                         		db 0EEh
+  670/1278 : 09                         		db    9
+  671/1279 : 42                         		db  42h
+  672/127A : 49                         		db  49h
+  673/127B : 54                         		db  54h
+  674/127C : 7A                         		db  7Ah
+  675/127D : 83                         		db  83h
+  676/127E : 40                         		db  40h
+  677/127F : 11                         		db  11h
+  678/1280 : 4E                         		db  4Eh
+  679/1281 : 45                         		db  45h
+  680/1282 : C7                         		db 0C7h
+  681/1283 : 44                         		db  44h
+  682/1284 : 02                         		db    2
+  683/1285 : 4F                         		db  4Fh
+  684/1286 : D0                         		db 0D0h
+  685/1287 : 00                         		db    0
+  686/1288 : 01                         		db    1
+  687/1289 : 48                         		db  48h
+  688/128A : 41                         		db  41h
+  689/128B : 4C                         		db  4Ch
+  690/128C : D4                         		db 0D4h
+  691/128D : 76                         		db  76h
+  692/128E : 00                         		db    0
+  693/128F : 80                         unk_128F:	db  80h
+  694/1290 : 00                         		db    0
+  695/1291 : 01                         		db    1
+  696/1292 : C8                         		db 0C8h
+  697/1293 : 26                         		db  26h
+  698/1294 : 02                         		db    2
+  699/1295 : CC                         		db 0CCh
+  700/1296 : 62                         		db  62h
+  701/1297 : 01                         		db    1
+  702/1298 : C1                         		db 0C1h
+  703/1299 : 60                         		db  60h
+  704/129A : 02                         		db    2
+  705/129B : C6                         		db 0C6h
+  706/129C : 68                         		db  68h
+  707/129D : 01                         		db    1
+  708/129E : C4                         		db 0C4h
+  709/129F : 22                         		db  22h
+  710/12A0 : 02                         		db    2
+  711/12A1 : C5                         		db 0C5h
+  712/12A2 : 64                         		db  64h
+  713/12A3 : 01                         		db    1
+  714/12A4 : C2                         		db 0C2h
+  715/12A5 : 20                         		db  20h
+  716/12A6 : 02                         		db    2
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 13 - 2/24/2026 13:49:26
+
+
+  717/12A7 : C3                         		db 0C3h
+  718/12A8 : 30                         		db  30h
+  719/12A9 : 01                         		db    1
+  720/12AA : DA                         		db 0DAh
+  721/12AB : 2C                         		db  2Ch
+  722/12AC : 01                         		db    1
+  723/12AD : C3                         		db 0C3h
+  724/12AE : 66                         		db  66h
+  725/12AF : 01                         		db    1
+  726/12B0 : 4E                         		db  4Eh
+  727/12B1 : DA                         		db 0DAh
+  728/12B2 : 2A                         		db  2Ah
+  729/12B3 : 02                         		db    2
+  730/12B4 : C3                         		db 0C3h
+  731/12B5 : 2E                         		db  2Eh
+  732/12B6 : 01                         		db    1
+  733/12B7 : 53                         		db  53h
+  734/12B8 : D0                         		db 0D0h
+  735/12B9 : 6A                         		db  6Ah
+  736/12BA : 81                         		db  81h
+  737/12BB : A4                         		db 0A4h
+  738/12BC : 00                         		db    0
+  739/12BD : 01                         		db    1
+  740/12BE : C5                         		db 0C5h
+  741/12BF : 24                         		db  24h
+  742/12C0 : 01                         		db    1
+  743/12C1 : CC                         		db 0CCh
+  744/12C2 : 28                         		db  28h
+  745/12C3 : 01                         		db    1
+  746/12C4 : C9                         		db 0C9h
+  747/12C5 : 6C                         		db  6Ch
+  748/12C6 : 12                         		db  12h
+  749/12C7 : D8                         		db 0D8h
+  750/12C8 : 62                         		db  62h
+  751/12C9 : 32                         		db  32h
+  752/12CA : D9                         		db 0D9h
+  753/12CB : 62                         		db  62h
+  754/12CC : 01                         		db    1
+  755/12CD : CD                         		db 0CDh
+  756/12CE : 38                         		db  38h
+  757/12CF : 01                         		db    1
+  758/12D0 : D0                         		db 0D0h
+  759/12D1 : 36                         		db  36h
+  760/12D2 : 02                         		db    2
+  761/12D3 : C5                         		db 0C5h
+  762/12D4 : 34                         		db  34h
+  763/12D5 : 02                         		db    2
+  764/12D6 : CF                         		db 0CFh
+  765/12D7 : 32                         		db  32h
+  766/12D8 : 01                         		db    1
+  767/12D9 : D2                         		db 0D2h
+  768/12DA : 6E                         		db  6Eh
+  769/12DB : 00                         		db    0
+  770/12DC : 60                         unk_12DC:	db  60h
+  771/12DD : 63                         		db  63h
+  772/12DE : 28                         		db  28h
+  773/12DF : 26                         		db  26h
+  774/12E0 : 24                         		db  24h
+  775/12E1 : 22                         		db  22h
+  776/12E2 : 66                         		db  66h
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 14 - 2/24/2026 13:49:26
+
+
+  777/12E3 : 20                         		db  20h
+  778/12E4 : 38                         unk_12E4:	db  38h
+  779/12E5 : 36                         		db  36h
+  780/12E6 : 34                         		db  34h
+  781/12E7 : 32                         		db  32h
+  782/12E8 : 66                         unk_12E8:       db  66h 
+  783/12E9 : 2E                                         db  2Eh 
+  784/12EA : 2C                                         db  2Ch 
+  785/12EB : 2A                                         db  2Ah 
+  786/12EC : 6A                         unk_12EC:       db  6Ah 
+  787/12ED : 62                                         db  62h 
+  788/12EE : 64                                         db  64h 
+  789/12EF : 30                                         db  30h 
+  790/12F0 : 68                         unk_12F0:       db  68h 
+  791/12F1 : 62                                         db  62h 
+  792/12F2 : 64                                         db  64h 
+  793/12F3 : 30                                         db  30h 
+  794/12F4 : 38                         unk_12F4:       db  38h 
+  795/12F5 : DC 12                                      dw unk_12DC
+  796/12F7 : 08                                         db    8
+  797/12F8 : DC 12                                      dw unk_12DC
+  798/12FA : 38                                         db  38h ; 8
+  799/12FB : E4 12                                      dw unk_12E4
+  800/12FD : 34                                         db  34h ; 4
+  801/12FE : E8 12                                      dw unk_12E8
+  802/1300 : 44                                         db  44h ; D
+  803/1301 : EC 12                                      dw unk_12EC
+  804/1303 : 44                                         db  44h ; D
+  805/1304 : F0 12                                      dw unk_12F0
+  806/1306 :                            sub_1306:					; sub_1DB5:loc_1E29p ...
+  807/1306 : D9                         		exx
+  808/1307 : E1                         		pop	hl
+  809/1308 : D1                         		pop	de
+  810/1309 : E3                         		ex	(sp), hl
+  811/130A : 47                         		ld	b, a
+  812/130B : 14                         		inc	d
+  813/130C : CB 7E                      		bit	7, (hl)
+  814/130E : 20 77                      		jr	nz, loc_1387
+  815/1310 : 23                         loc_1310:		inc	hl
+  816/1311 : 7E                         		ld	a, (hl)
+  817/1312 : E6 7F                      		and	7Fh ; ''
+  818/1314 : FE 70                      		cp	70h ; 'p'
+  819/1316 : 38 32                      		jr	c, loc_134A
+  820/1318 : 4F                         		ld	c, a
+  821/1319 : A8                         		xor	b
+  822/131A : 0F                         		rrca
+  823/131B : FE 08                      		cp	8
+  824/131D : 30 62                      		jr	nc, loc_1381
+  825/131F : FE 05                      		cp	5
+  826/1321 : 38 73                      		jr	c, loc_1396
+  827/1323 : 08                         		ex	af, af'	;'
+  828/1324 : FD 7E F5                   		ld	a, (iy-0Bh)
+  829/1327 : B7                         		or	a
+  830/1328 : 20 1B                      		jr	nz, loc_1345
+  831/132A : 08                         		ex	af, af'	;'
+  832/132B : FE 06                      		cp	6
+  833/132D : FD 7E F4                   		ld	a, (iy-0Ch)
+  834/1330 : 38 0B                      		jr	c, loc_133D
+  835/1332 : 28 0C                      		jr	z, loc_1340
+  836/1334 : FE 03                      		cp	3
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 15 - 2/24/2026 13:49:26
+
+
+  837/1336 : 3D                         		dec	a
+  838/1337 : 30 0C                      		jr	nc, loc_1345
+  839/1339 : 3C                         		inc	a
+  840/133A : 28 01                      		jr	z, loc_133D
+  841/133C : 3C                         		inc	a
+  842/133D : 07                         loc_133D:		rlca
+  843/133E : 07                         		rlca
+  844/133F : 07                         		rlca
+  845/1340 : FD 77 F3                   loc_1340:		ld	(iy-0Dh), a
+  846/1343 : E6 C7                      		and	0C7h ; 'Ã'
+  847/1345 : C4 B5 13                   loc_1345:		call	nz, sub_13B5
+  848/1348 : 18 4F                      		jr	loc_1399
+  849/134A : FE 20                      loc_134A:		cp	20h ; ' '
+  850/134C : 30 30                      		jr	nc, loc_137E
+  851/134E : E5                         		push	hl
+  852/134F : 2A 1B 0F                   		ld	hl, (word_F1B)
+  853/1352 : 85                         		add	a, l
+  854/1353 : 6F                         		ld	l, a
+  855/1354 : 30 01                      		jr	nc, loc_1357
+  856/1356 : 24                         		inc	h
+  857/1357 : 78                         loc_1357:		ld	a, b
+  858/1358 : 08                         		ex	af, af'	;'
+  859/1359 : 7E                         		ld	a, (hl)
+  860/135A : E6 0F                      		and	0Fh
+  861/135C : 4F                         		ld	c, a
+  862/135D : 7E                         		ld	a, (hl)
+  863/135E : 08                         		ex	af, af'	;'
+  864/135F : 23                         		inc	hl
+  865/1360 : 46                         		ld	b, (hl)
+  866/1361 : 23                         		inc	hl
+  867/1362 : 66                         		ld	h, (hl)
+  868/1363 : 68                         		ld	l, b
+  869/1364 : 06 00                      		ld	b, 0
+  870/1366 : ED B1                      		cpir
+  871/1368 : E1                         		pop	hl
+  872/1369 : 47                         		ld	b, a
+  873/136A : 20 15                      		jr	nz, loc_1381
+  874/136C : 08                         		ex	af, af'	;'
+  875/136D : CB 21                      loc_136D:		sla	c
+  876/136F : D6 10                      		sub	10h
+  877/1371 : 30 FA                      		jr	nc, loc_136D
+  878/1373 : CB 39                      		srl	c
+  879/1375 : FD 7E F3                   		ld	a, (iy-0Dh)
+  880/1378 : B1                         		or	c
+  881/1379 : FD 77 F3                   		ld	(iy-0Dh), a
+  882/137C : 18 1B                      		jr	loc_1399
+  883/137E : B8                         loc_137E:		cp	b
+  884/137F : 28 18                      		jr	z, loc_1399
+  885/1381 : CB 7E                      loc_1381:		bit	7, (hl)
+  886/1383 : 23                         		inc	hl
+  887/1384 : 28 FB                      		jr	z, loc_1381
+  888/1386 : 2B                         		dec	hl
+  889/1387 : 23                         loc_1387:		inc	hl
+  890/1388 : 23                         		inc	hl
+  891/1389 : 7E                         		ld	a, (hl)
+  892/138A : 5F                         		ld	e, a
+  893/138B : E6 07                      		and	7
+  894/138D : BA                         		cp	d
+  895/138E : CA 10 13                   		jp	z, loc_1310
+  896/1391 : 23                         		inc	hl
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 16 - 2/24/2026 13:49:26
+
+
+  897/1392 : 30 ED                      		jr	nc, loc_1381
+  898/1394 : D9                         		exx
+  899/1395 : C9                         		ret
+  900/1396 : FD 77 F2                   loc_1396:		ld	(iy-0Eh), a
+  901/1399 : E3                         loc_1399:		ex	(sp), hl
+  902/139A : D5                         		push	de
+  903/139B : E5                         		push	hl
+  904/139C : D9                         		exx
+  905/139D : B7                         		or	a
+  906/139E : C9                         		ret
+  907/139F :                            sub_139F:					; sub_1DB5+8Bp	...
+  908/139F : D9                         		exx
+  909/13A0 : E1                         		pop	hl
+  910/13A1 : D1                         		pop	de
+  911/13A2 : E3                         		ex	(sp), hl
+  912/13A3 : 7E                         		ld	a, (hl)
+  913/13A4 : FE 80                      		cp	80h ; 'Ç'
+  914/13A6 : 23                         		inc	hl
+  915/13A7 : 56                         		ld	d, (hl)
+  916/13A8 : D5                         		push	de
+  917/13A9 : D9                         		exx
+  918/13AA : D1                         		pop	de
+  919/13AB : 7A                         		ld	a, d
+  920/13AC : C9                         		ret
+  921/13AD :                            sub_13AD:					; sub_1DB5+16Dp
+  922/13AD : 7A                         		ld	a, d
+  923/13AE : F6 7F                      		or	7Fh ; ''
+  924/13B0 : A3                         		and	e
+  925/13B1 :                            sub_13B1:					; sub_1DB5+168p
+  926/13B1 : 07                         		rlca
+  927/13B2 : 9F                         		sbc	a, a
+  928/13B3 : 92                         		sub	d
+  929/13B4 : C8                         		ret	z
+  930/13B5 : FD CB 00 4E                sub_13B5:		bit	1, (iy+0)
+  931/13B9 : C8                         		ret	z
+  932/13BA : FD CB F6 F6                		set	6, (iy-0Ah)
+  933/13BE : C9                         		ret
+  934/13BF :                            
+  935/13BF :                            ;
+  936/13BF : DF                         nas_outch:		rst	18h		; call the NAS-SYS routines
+  937/13C0 : 6F                         		db 6Fh			; SRLX
+  938/13C1 :                            					; Send the character in	the A register directly	to the serial output port
+  939/13C1 : C9                         		ret
+  940/13C2 : 44                         sub_13C2:		ld	b, h
+  941/13C3 : 4D                         		ld	c, l
+  942/13C4 : 2A 85 0F                   		ld	hl, (word_F85)
+  943/13C7 : B7                         		or	a
+  944/13C8 : ED 52                      		sbc	hl, de
+  945/13CA : 19                         		add	hl, de
+  946/13CB : 38 0B                      		jr	c, loc_13D8
+  947/13CD : ED 42                      		sbc	hl, bc
+  948/13CF : 30 03                      		jr	nc, loc_13D4
+  949/13D1 : B7                         		or	a
+  950/13D2 : ED 62                      		sbc	hl, hl
+  951/13D4 : 19                         loc_13D4:		add	hl, de
+  952/13D5 : 22 85 0F                   		ld	(word_F85), hl
+  953/13D8 : EB                         loc_13D8:		ex	de, hl
+  954/13D9 : CD 35 14                   		call	sub_1435
+  955/13DC : EB                         		ex	de, hl
+  956/13DD : B7                         		or	a
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 17 - 2/24/2026 13:49:26
+
+
+  957/13DE : ED 42                      		sbc	hl, bc
+  958/13E0 : C5                         		push	bc
+  959/13E1 : E3                         		ex	(sp), hl
+  960/13E2 : C1                         		pop	bc
+  961/13E3 : C5                         		push	bc
+  962/13E4 : ED B0                      		ldir
+  963/13E6 : CD 42 14                   		call	sub_1442
+  964/13E9 : C1                         		pop	bc
+  965/13EA : C9                         		ret
+  966/13EB :                            
+  967/13EB :                            ; DE dez ascii -> hex num HL
+  968/13EB :                            datoh:					; sub_1D0F-2CCp ...
+  969/13EB : 21 00 00                   		ld	hl, 0
+  970/13EE : 1A                         datoh1:		ld	a, (de)
+  971/13EF : D6 30                      		sub	30h ; '0'
+  972/13F1 : D8                         		ret	c		; Ende,	wenn keine Dezimalziffer
+  973/13F2 : FE 0A                      		cp	0Ah
+  974/13F4 : D0                         		ret	nc		; Ende,	wenn keine Dezimalziffer
+  975/13F5 : D5                         		push	de
+  976/13F6 : 54                         		ld	d, h
+  977/13F7 : 5D                         		ld	e, l
+  978/13F8 : 29                         		add	hl, hl		; *10
+  979/13F9 : 29                         		add	hl, hl
+  980/13FA : 19                         		add	hl, de
+  981/13FB : 29                         		add	hl, hl
+  982/13FC : 16 00                      		ld	d, 0
+  983/13FE : 5F                         		ld	e, a
+  984/13FF : 19                         		add	hl, de
+  985/1400 : D1                         		pop	de
+  986/1401 : 13                         		inc	de
+  987/1402 : 18 EA                      		jr	datoh1
+  988/1404 :                            
+  989/1404 :                            ;
+  990/1404 : 2A 0C 0C                   sub_1404:		ld	hl, (ARG1)
+  991/1407 : 3A 0B 0C                   		ld	a, (ARGH)	; Number of values in input line
+  992/140A : FE 02                      		cp	2
+  993/140C : 3E 10                      		ld	a, 10h
+  994/140E : 20 03                      		jr	nz, loc_1413
+  995/1410 : 3A 0E 0C                   		ld	a, (ARG2)	; Second value entered.
+  996/1413 : 32 84 0F                   loc_1413:		ld	(byte_F84), a
+  997/1416 : B7                         		or	a
+  998/1417 : 3E 06                      		ld	a, 6
+  999/1419 : CA 19 1B                   		jp	z, loc_1B19
+ 1000/141C : 7C                         		ld	a, h
+ 1001/141D : B5                         		or	l
+ 1002/141E : C0                         		ret	nz
+ 1003/141F : 3A 84 0F                   sub_141F:		ld	a, (byte_F84)
+ 1004/1422 : 85                         		add	a, l
+ 1005/1423 : 27                         		daa
+ 1006/1424 : 6F                         		ld	l, a
+ 1007/1425 : 7C                         		ld	a, h
+ 1008/1426 : CE 00                      		adc	a, 0
+ 1009/1428 : 27                         		daa
+ 1010/1429 : 67                         		ld	h, a
+ 1011/142A : C9                         		ret
+ 1012/142B :                            sub_142B:					; sub_1D0F-26Ap
+ 1013/142B : 23                         		inc	hl
+ 1014/142C : 23                         loc_142C:		inc	hl
+ 1015/142D : AF                         loc_142D:		xor	a
+ 1016/142E : 47                         		ld	b, a
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 18 - 2/24/2026 13:49:26
+
+
+ 1017/142F : 4F                         		ld	c, a
+ 1018/1430 : ED B1                      		cpir
+ 1019/1432 : 3D                         		dec	a
+ 1020/1433 : BE                         		cp	(hl)
+ 1021/1434 : C9                         		ret
+ 1022/1435 : E5                         sub_1435:		push	hl
+ 1023/1436 : 2A 00 0F                   		ld	hl, (BUFBEG)	; edit buffer
+ 1024/1439 : 5E                         		ld	e, (hl)
+ 1025/143A : 23                         		inc	hl
+ 1026/143B : 56                         		ld	d, (hl)
+ 1027/143C : 2B                         		dec	hl
+ 1028/143D : EB                         		ex	de, hl
+ 1029/143E : 19                         		add	hl, de
+ 1030/143F : EB                         		ex	de, hl
+ 1031/1440 : E1                         		pop	hl
+ 1032/1441 : C9                         		ret
+ 1033/1442 :                            sub_1442:					; sub_1D0F-23Ep
+ 1034/1442 : E5                         		push	hl
+ 1035/1443 : D5                         		push	de
+ 1036/1444 : 2A 00 0F                   		ld	hl, (BUFBEG)	; edit buffer
+ 1037/1447 : EB                         		ex	de, hl
+ 1038/1448 : B7                         		or	a
+ 1039/1449 : ED 52                      		sbc	hl, de
+ 1040/144B : EB                         		ex	de, hl
+ 1041/144C : 18 12                      		jr	loc_1460
+ 1042/144E : E5                         sub_144E:		push	hl
+ 1043/144F : 2A 00 0F                   		ld	hl, (BUFBEG)	; edit buffer
+ 1044/1452 : 23                         		inc	hl
+ 1045/1453 : 23                         		inc	hl
+ 1046/1454 : 5E                         		ld	e, (hl)
+ 1047/1455 : 23                         		inc	hl
+ 1048/1456 : 56                         		ld	d, (hl)
+ 1049/1457 : E1                         		pop	hl
+ 1050/1458 : C9                         		ret
+ 1051/1459 :                            sub_1459:					; sub_1D0F-24Dp
+ 1052/1459 : E5                         		push	hl
+ 1053/145A : D5                         		push	de
+ 1054/145B : 2A 00 0F                   		ld	hl, (BUFBEG)	; edit buffer
+ 1055/145E : 23                         		inc	hl
+ 1056/145F : 23                         		inc	hl
+ 1057/1460 : 73                         loc_1460:		ld	(hl), e
+ 1058/1461 : 23                         		inc	hl
+ 1059/1462 : 72                         		ld	(hl), d
+ 1060/1463 : D1                         		pop	de
+ 1061/1464 : E1                         		pop	hl
+ 1062/1465 : C9                         		ret
+ 1063/1466 :                            sub_1466:					; sub_1D0F-120p ...
+ 1064/1466 : CD 35 14                   		call	sub_1435
+ 1065/1469 : EB                         		ex	de, hl
+ 1066/146A : CD 4E 14                   		call	sub_144E
+ 1067/146D : 19                         		add	hl, de
+ 1068/146E : C9                         		ret
+ 1069/146F : DF                         sub_146F:		rst	18h		; call the NAS-SYS routines
+ 1070/1470 : 5F                         		db 5Fh			; MFLP	      Alter the	state of (turn an or off) the tape drive LED.
+ 1071/1471 :                            					;			     Register A	is modified.
+ 1072/1471 : 3E FF                      loc_1471:		ld	a, 0FFh
+ 1073/1473 : B7                         sub_1473:		or	a
+ 1074/1474 : C8                         		ret	z
+ 1075/1475 : C5                         		push	bc
+ 1076/1476 : 47                         		ld	b, a
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 19 - 2/24/2026 13:49:26
+
+
+ 1077/1477 : AF                         loc_1477:		xor	a
+ 1078/1478 : FF                         		rst	RDEL		; RDEL	  Wait for a period of time dependent on the
+ 1079/1479 :                            					;				     value in the A register.  A is set	to 0.
+ 1080/1479 : CD 08 1D                   		call	sub_1D08
+ 1081/147C : 10 F9                      		djnz	loc_1477
+ 1082/147E : C1                         		pop	bc
+ 1083/147F : C9                         		ret
+ 1084/1480 : 3E 0D                      sub_1480:		ld	a, 0Dh
+ 1085/1482 : CD 19 1D                   		call	sub_1D19
+ 1086/1485 : 3E 0A                      		ld	a, 0Ah
+ 1087/1487 : CD 19 1D                   		call	sub_1D19
+ 1088/148A : 3A 08 0F                   		ld	a, (word_F08)
+ 1089/148D : 18 E4                      		jr	sub_1473
+ 1090/148F : 3E 20                      sub_148F:		ld	a, 20h ; ' '
+ 1091/1491 : 36 A0                      		ld	(hl), 0A0h ; 'á'
+ 1092/1493 : 2B                         		dec	hl
+ 1093/1494 : AE                         		xor	(hl)
+ 1094/1495 : E6 7F                      		and	7Fh ; ''
+ 1095/1497 : 28 F6                      		jr	z, sub_148F
+ 1096/1499 : E5                         		push	hl
+ 1097/149A : AF                         loc_149A:		xor	a
+ 1098/149B : 2B                         		dec	hl
+ 1099/149C : AE                         		xor	(hl)
+ 1100/149D : 28 09                      		jr	z, loc_14A8
+ 1101/149F : 3E A0                      		ld	a, 0A0h	; 'á'
+ 1102/14A1 : AE                         		xor	(hl)
+ 1103/14A2 : 20 F6                      		jr	nz, loc_149A
+ 1104/14A4 : 36 20                      		ld	(hl), 20h ; ' '
+ 1105/14A6 : 18 F2                      		jr	loc_149A
+ 1106/14A8 : E1                         loc_14A8:		pop	hl
+ 1107/14A9 : C9                         		ret
+ 1108/14AA :                            
+ 1109/14AA :                            ;
+ 1110/14AA : EF                         sub_14AA:	rst	28h		; Output the string
+ 1111/14AB : 5A 45 41 50 20 5A 38 30 20 		db "ZEAP Z80 Assembler - ",0
+      14B4 : 41 73 73 65 6D 62 6C 65 72
+      14BD : 20 2D 20 00               
+ 1112/14C1 : C9                         locret_14C1:		ret
+ 1113/14C2 :                            
+ 1114/14C2 :                            ;
+ 1115/14C2 : C5                         sub_14C2:		push	bc
+ 1116/14C3 : 2B                         		dec	hl
+ 1117/14C4 : E5                         		push	hl
+ 1118/14C5 : ED 5B 19 0F                		ld	de, (word_F19)
+ 1119/14C9 : D5                         		push	de
+ 1120/14CA : 16 00                      		ld	d, 0
+ 1121/14CC : D5                         		push	de
+ 1122/14CD : CD 4C 16                   loc_14CD:		call	sub_164C
+ 1123/14D0 : CB 71                      		bit	6, c
+ 1124/14D2 : 28 0D                      		jr	z, loc_14E1
+ 1125/14D4 : CD 06 13                   		call	sub_1306
+ 1126/14D7 : 30 F4                      		jr	nc, loc_14CD
+ 1127/14D9 : CD 35 14                   loc_14D9:		call	sub_1435
+ 1128/14DC : 2A 89 0F                   		ld	hl, (word_F89)
+ 1129/14DF : 18 1C                      		jr	loc_14FD
+ 1130/14E1 : CD 9F 13                   loc_14E1:		call	sub_139F
+ 1131/14E4 : 38 F3                      		jr	c, loc_14D9
+ 1132/14E6 : CB 7B                      		bit	7, e
+ 1133/14E8 : 28 39                      		jr	z, loc_1523
+ 1134/14EA : ED 5B 0C 0F                loc_14EA:		ld	de, (word_F0C)
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 20 - 2/24/2026 13:49:26
+
+
+ 1135/14EE : 18 33                      		jr	loc_1523
+ 1136/14F0 : CD 55 15                   loc_14F0:		call	sub_1555
+ 1137/14F3 : 38 0D                      		jr	c, loc_1502
+ 1138/14F5 : 13                         		inc	de
+ 1139/14F6 : 13                         		inc	de
+ 1140/14F7 : CD 26 15                   		call	sub_1526
+ 1141/14FA : 28 19                      		jr	z, loc_1515
+ 1142/14FC : C1                         		pop	bc
+ 1143/14FD : C1                         loc_14FD:		pop	bc
+ 1144/14FE : C5                         		push	bc
+ 1145/14FF : C5                         		push	bc
+ 1146/1500 : 18 EE                      		jr	loc_14F0
+ 1147/1502 : E1                         loc_1502:		pop	hl
+ 1148/1503 : CD 4C 16                   loc_1503:		call	sub_164C
+ 1149/1506 : CB 71                      		bit	6, c
+ 1150/1508 : 20 F9                      		jr	nz, loc_1503
+ 1151/150A : 11 00 00                   loc_150A:		ld	de, 0
+ 1152/150D : FD CB F6 DE                		set	3, (iy-0Ah)
+ 1153/1511 : 37                         		scf
+ 1154/1512 : 9F                         		sbc	a, a
+ 1155/1513 : 18 0E                      		jr	loc_1523
+ 1156/1515 : DD E5                      loc_1515:		push	ix
+ 1157/1517 : E3                         		ex	(sp), hl
+ 1158/1518 : 23                         		inc	hl
+ 1159/1519 : B7                         		or	a
+ 1160/151A : ED 52                      		sbc	hl, de
+ 1161/151C : E1                         		pop	hl
+ 1162/151D : EB                         		ex	de, hl
+ 1163/151E : 2B                         		dec	hl
+ 1164/151F : 56                         		ld	d, (hl)
+ 1165/1520 : 2B                         		dec	hl
+ 1166/1521 : 5E                         		ld	e, (hl)
+ 1167/1522 : E1                         		pop	hl
+ 1168/1523 : C1                         loc_1523:		pop	bc
+ 1169/1524 : C1                         		pop	bc
+ 1170/1525 : C9                         		ret
+ 1171/1526 : 44                         sub_1526:		ld	b, h
+ 1172/1527 : 4D                         		ld	c, l
+ 1173/1528 : E1                         		pop	hl
+ 1174/1529 : E3                         		ex	(sp), hl
+ 1175/152A : C5                         		push	bc
+ 1176/152B : E3                         		ex	(sp), hl
+ 1177/152C : E3                         loc_152C:		ex	(sp), hl
+ 1178/152D : CD 4C 16                   		call	sub_164C
+ 1179/1530 : E3                         		ex	(sp), hl
+ 1180/1531 : CB 71                      		bit	6, c
+ 1181/1533 : 28 10                      		jr	z, loc_1545
+ 1182/1535 : 23                         		inc	hl
+ 1183/1536 : BE                         		cp	(hl)
+ 1184/1537 : 28 F3                      		jr	z, loc_152C
+ 1185/1539 : F5                         		push	af
+ 1186/153A : CD 4D 16                   		call	loc_164D
+ 1187/153D : F1                         		pop	af
+ 1188/153E : CB 71                      		bit	6, c
+ 1189/1540 : 20 0C                      		jr	nz, loc_154E
+ 1190/1542 : B1                         		or	c
+ 1191/1543 : 18 09                      		jr	loc_154E
+ 1192/1545 : CD 4C 16                   loc_1545:		call	sub_164C
+ 1193/1548 : AF                         		xor	a
+ 1194/1549 : CB 71                      		bit	6, c
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 21 - 2/24/2026 13:49:26
+
+
+ 1195/154B : 28 01                      		jr	z, loc_154E
+ 1196/154D : 91                         		sub	c
+ 1197/154E : E3                         loc_154E:		ex	(sp), hl
+ 1198/154F : C1                         		pop	bc
+ 1199/1550 : E3                         		ex	(sp), hl
+ 1200/1551 : E5                         		push	hl
+ 1201/1552 : 60                         		ld	h, b
+ 1202/1553 : 69                         		ld	l, c
+ 1203/1554 : C9                         		ret
+ 1204/1555 :                            sub_1555:					; sub_1555+Dj ...
+ 1205/1555 : CD 2D 14                   		call	loc_142D
+ 1206/1558 : D5                         		push	de
+ 1207/1559 : CD 38 16                   		call	sub_1638
+ 1208/155C : D1                         		pop	de
+ 1209/155D : D8                         		ret	c
+ 1210/155E : 23                         		inc	hl
+ 1211/155F : CD 4C 16                   		call	sub_164C
+ 1212/1562 : 30 F1                      		jr	nc, sub_1555
+ 1213/1564 : 2B                         		dec	hl
+ 1214/1565 : B7                         		or	a
+ 1215/1566 : C9                         		ret
+ 1216/1567 : CD 9C 1C                   sub_1567:		call	sub_1C9C
+ 1217/156A : CD AA 14                   		call	sub_14AA
+ 1218/156D : EF                         		rst	28h		; Output the string
+ 1219/156E : 53 79 6D 62 6F 6C 20 54 61 		db "Symbol Table",0
+      1577 : 62 6C 65 00               
+ 1220/157B : CD 9C 1C                   		call	sub_1C9C
+ 1221/157E : CD 9C 1C                   		call	sub_1C9C
+ 1222/1581 : 11 A4 10                   		ld	de, unk_10A4
+ 1223/1584 : 21 9D 10                   loc_1584:		ld	hl, aZzzzzz	; "=ZZZZZZ"
+ 1224/1587 : E5                         		push	hl
+ 1225/1588 : E5                         		push	hl
+ 1226/1589 : 2A 89 0F                   		ld	hl, (word_F89)
+ 1227/158C : CD 55 15                   loc_158C:		call	sub_1555
+ 1228/158F : 38 18                      		jr	c, loc_15A9
+ 1229/1591 : E5                         		push	hl
+ 1230/1592 : D5                         		push	de
+ 1231/1593 : CD 26 15                   		call	sub_1526
+ 1232/1596 : C1                         		pop	bc
+ 1233/1597 : C1                         		pop	bc
+ 1234/1598 : 30 F2                      		jr	nc, loc_158C
+ 1235/159A : E1                         		pop	hl
+ 1236/159B : E5                         		push	hl
+ 1237/159C : C5                         		push	bc
+ 1238/159D : C5                         		push	bc
+ 1239/159E : CD 26 15                   		call	sub_1526
+ 1240/15A1 : E1                         		pop	hl
+ 1241/15A2 : C1                         		pop	bc
+ 1242/15A3 : 30 E7                      		jr	nc, loc_158C
+ 1243/15A5 : F1                         		pop	af
+ 1244/15A6 : C5                         		push	bc
+ 1245/15A7 : 18 E3                      		jr	loc_158C
+ 1246/15A9 : E1                         loc_15A9:		pop	hl
+ 1247/15AA : C1                         		pop	bc
+ 1248/15AB : B7                         		or	a
+ 1249/15AC : ED 42                      		sbc	hl, bc
+ 1250/15AE : 09                         		add	hl, bc
+ 1251/15AF : CA 9C 1C                   		jp	z, sub_1C9C
+ 1252/15B2 : E5                         		push	hl
+ 1253/15B3 : E5                         		push	hl
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 22 - 2/24/2026 13:49:26
+
+
+ 1254/15B4 : 23                         		inc	hl
+ 1255/15B5 : CD C2 14                   		call	sub_14C2
+ 1256/15B8 : E1                         		pop	hl
+ 1257/15B9 : 28 20                      		jr	z, loc_15DB
+ 1258/15BB : E5                         		push	hl
+ 1259/15BC : EB                         		ex	de, hl
+ 1260/15BD : DF                         		rst	18h		; call the NAS-SYS routines
+ 1261/15BE : 66                         		db 66h			; TBCD3
+ 1262/15BF :                            					; Output the value in the HL register in ASCII,	followed by a space. Also add H	and L into the C register. The A register is modified.
+ 1263/15BF : EF                         		rst	28h		; Output the string
+ 1264/15C0 : 08 48 20 00                		db 8,"H ",0
+ 1265/15C4 : E1                         loc_15C4:		pop	hl
+ 1266/15C5 : 2B                         		dec	hl
+ 1267/15C6 : CD 0C 16                   		call	sub_160C
+ 1268/15C9 : 06 07                      loc_15C9:		ld	b, 7
+ 1269/15CB : CD 82 16                   		call	sub_1682
+ 1270/15CE : 21 5E F4                   		ld	hl, -0BA2h	; -unk_ba2
+ 1271/15D1 : 19                         		add	hl, de
+ 1272/15D2 : 11 A2 0B                   		ld	de, 0BA2h
+ 1273/15D5 : D4 21 16                   		call	nc, sub_1621
+ 1274/15D8 : DC 9C 1C                   		call	c, sub_1C9C
+ 1275/15DB : D1                         loc_15DB:		pop	de
+ 1276/15DC : 18 A6                      		jr	loc_1584
+ 1277/15DE : 2A 00 0F                   sub_15DE:		ld	hl, (BUFBEG)	; edit buffer
+ 1278/15E1 : 23                         		inc	hl
+ 1279/15E2 : 23                         		inc	hl
+ 1280/15E3 : CD 2B 14                   loc_15E3:		call	sub_142B
+ 1281/15E6 : C8                         		ret	z
+ 1282/15E7 : 5E                         		ld	e, (hl)
+ 1283/15E8 : 23                         		inc	hl
+ 1284/15E9 : 56                         		ld	d, (hl)
+ 1285/15EA : 2B                         		dec	hl
+ 1286/15EB : E5                         		push	hl
+ 1287/15EC : 21 8F 18                   		ld	hl, unk_188F
+ 1288/15EF : 7E                         		ld	a, (hl)
+ 1289/15F0 : 34                         		inc	(hl)
+ 1290/15F1 : BE                         		cp	(hl)
+ 1291/15F2 : 00                         		nop
+ 1292/15F3 : 35                         		dec	(hl)
+ 1293/15F4 : 2A 0C 0C                   		ld	hl, (ARG1)
+ 1294/15F7 : B7                         		or	a
+ 1295/15F8 : ED 52                      		sbc	hl, de
+ 1296/15FA : E1                         		pop	hl
+ 1297/15FB : 3F                         		ccf
+ 1298/15FC : D0                         		ret	nc
+ 1299/15FD : C8                         		ret	z
+ 1300/15FE : 18 E3                      		jr	loc_15E3
+ 1301/1600 : 23                         sub_1600:		inc	hl
+ 1302/1601 : B7                         		or	a
+ 1303/1602 : 3E A0                      		ld	a, 0A0h	; 'á'
+ 1304/1604 : 12                         		ld	(de), a
+ 1305/1605 : C8                         		ret	z
+ 1306/1606 : 2B                         		dec	hl
+ 1307/1607 : CD 49 16                   		call	sub_1649
+ 1308/160A : 18 F4                      		jr	sub_1600
+ 1309/160C : CD 38 16                   sub_160C:		call	sub_1638
+ 1310/160F : D8                         		ret	c
+ 1311/1610 : E5                         		push	hl
+ 1312/1611 : EB                         		ex	de, hl
+ 1313/1612 : DF                         		rst	18h		; call the NAS-SYS routines
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 23 - 2/24/2026 13:49:26
+
+
+ 1314/1613 : 66                         		ld	h, (hl)
+ 1315/1614 : 22 12 0F                   		ld	(word_F12), hl
+ 1316/1617 : E1                         		pop	hl
+ 1317/1618 : 23                         		inc	hl
+ 1318/1619 : CD 4C 16                   		call	sub_164C
+ 1319/161C : CB 7F                      		bit	7, a
+ 1320/161E : 11 8B 0F                   sub_161E:		ld	de, 0F8Bh
+ 1321/1621 : E5                         sub_1621:		push	hl
+ 1322/1622 : 2A 29 0C                   		ld	hl, (CURSOR)	; Position of the cursor.
+ 1323/1625 : EB                         		ex	de, hl
+ 1324/1626 : 22 29 0C                   		ld	(CURSOR), hl	; Position of the cursor.
+ 1325/1629 : E1                         		pop	hl
+ 1326/162A : C9                         		ret
+ 1327/162B :                            sub_162B:					; sub_1DB5:loc_1EEAp
+ 1328/162B : 11 FA 0B                   		ld	de, 0BFAh
+ 1329/162E : 06 70                      		ld	b, 70h ; 'p'
+ 1330/1630 : 3E 20                      sub_1630:		ld	a, 20h ; ' '
+ 1331/1632 : 1B                         loc_1632:		dec	de
+ 1332/1633 : 12                         		ld	(de), a
+ 1333/1634 : 10 FC                      		djnz	loc_1632
+ 1334/1636 : 18 E9                      		jr	sub_1621
+ 1335/1638 : 7E                         sub_1638:		ld	a, (hl)
+ 1336/1639 : C6 01                      		add	a, 1
+ 1337/163B : 9F                         		sbc	a, a
+ 1338/163C : D8                         		ret	c
+ 1339/163D : 5E                         		ld	e, (hl)
+ 1340/163E : 23                         		inc	hl
+ 1341/163F : 56                         		ld	d, (hl)
+ 1342/1640 : 2B                         		dec	hl
+ 1343/1641 : E5                         		push	hl
+ 1344/1642 : 2A 0E 0C                   		ld	hl, (ARG2)	; Second value entered.
+ 1345/1645 : ED 52                      		sbc	hl, de
+ 1346/1647 : E1                         		pop	hl
+ 1347/1648 : C9                         		ret
+ 1348/1649 : 7E                         sub_1649:		ld	a, (hl)
+ 1349/164A : 12                         		ld	(de), a
+ 1350/164B : 13                         		inc	de
+ 1351/164C :                            sub_164C:					; sub_14AA:loc_1503p ...
+ 1352/164C : 23                         		inc	hl
+ 1353/164D :                            loc_164D:					; sub_1682:loc_1690p ...
+ 1354/164D : 7E                         		ld	a, (hl)
+ 1355/164E : FE 30                      		cp	30h ; '0'
+ 1356/1650 : 38 13                      		jr	c, loc_1665
+ 1357/1652 : FE 41                      		cp	41h ; 'A'
+ 1358/1654 : 38 0A                      		jr	c, loc_1660
+ 1359/1656 : 0E C0                      		ld	c, 0C0h	; '+'
+ 1360/1658 : FE 5B                      		cp	5Bh ; '['
+ 1361/165A : D8                         		ret	c
+ 1362/165B : 0E 98                      		ld	c, 98h ; 'ÿ'
+ 1363/165D : FE A0                      		cp	0A0h ; 'á'
+ 1364/165F : C8                         		ret	z
+ 1365/1660 : 0E E0                      loc_1660:		ld	c, 0E0h	; 'Ó'
+ 1366/1662 : FE 3A                      		cp	3Ah ; ':'
+ 1367/1664 : D8                         		ret	c
+ 1368/1665 : E5                         loc_1665:		push	hl
+ 1369/1666 : E6 7F                      		and	7Fh ; ''
+ 1370/1668 : 32 2D 0F                   		ld	(unk_F2D), a
+ 1371/166B : 21 1D 0F                   		ld	hl, 0F1Dh
+ 1372/166E : 4E                         loc_166E:		ld	c, (hl)
+ 1373/166F : 23                         loc_166F:		inc	hl
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 24 - 2/24/2026 13:49:26
+
+
+ 1374/1670 : CB 7E                      		bit	7, (hl)
+ 1375/1672 : 20 FA                      		jr	nz, loc_166E
+ 1376/1674 : BE                         		cp	(hl)
+ 1377/1675 : 20 F8                      		jr	nz, loc_166F
+ 1378/1677 : E1                         		pop	hl
+ 1379/1678 : CB 61                      		bit	4, c
+ 1380/167A : C0                         		ret	nz
+ 1381/167B : 37                         		scf
+ 1382/167C : C9                         		ret
+ 1383/167D : CB 59                      sub_167D:		bit	3, c
+ 1384/167F : C0                         		ret	nz
+ 1385/1680 : 06 05                      		ld	b, 5
+ 1386/1682 : CB 61                      sub_1682:		bit	4, c
+ 1387/1684 : 20 07                      		jr	nz, loc_168D
+ 1388/1686 : CD 49 16                   		call	sub_1649
+ 1389/1689 : 10 F7                      		djnz	sub_1682
+ 1390/168B : 04                         		inc	b
+ 1391/168C : C9                         		ret
+ 1392/168D : 13                         loc_168D:		inc	de
+ 1393/168E : 10 FD                      		djnz	loc_168D
+ 1394/1690 : CD 4D 16                   loc_1690:		call	loc_164D
+ 1395/1693 : CB 41                      sub_1693:		bit	0, c
+ 1396/1695 : C8                         		ret	z
+ 1397/1696 : CD 4C 16                   		call	sub_164C
+ 1398/1699 : 18 F8                      		jr	sub_1693
+ 1399/169B :                            sub_169B:					; sub_1D0F-111p ...
+ 1400/169B : 7C                         		ld	a, h
+ 1401/169C : A5                         		and	l
+ 1402/169D : 3C                         		inc	a
+ 1403/169E : C8                         		ret	z
+ 1404/169F : CD 21 16                   		call	sub_1621
+ 1405/16A2 : DF                         		rst	18h
+ 1406/16A3 : 66                         		db 66h			; TBCD3
+ 1407/16A4 :                            					; Output the value in the HL register in ASCII,	followed by a space. Also add H	and L into the C register. The A register is modified.
+ 1408/16A4 : C9                         		ret
+ 1409/16A5 : 06 00                      sub_16A5:		ld	b, 0
+ 1410/16A7 :                            sub_16A7:					; sub_1DB5+103p
+ 1411/16A7 : E5                         		push	hl
+ 1412/16A8 : FD 66 F6                   		ld	h, (iy-0Ah)
+ 1413/16AB : 2E 70                      		ld	l, 70h ; 'p'
+ 1414/16AD : E3                         		ex	(sp), hl
+ 1415/16AE : 11 00 00                   		ld	de, 0
+ 1416/16B1 : CD 4D 16                   		call	loc_164D
+ 1417/16B4 : FE 28                      		cp	28h ; '('
+ 1418/16B6 : 20 2E                      		jr	nz, loc_16E6
+ 1419/16B8 : E3                         		ex	(sp), hl
+ 1420/16B9 : CB 54                      		bit	2, h
+ 1421/16BB : 20 78                      		jr	nz, loc_1735
+ 1422/16BD : CB D4                      		set	2, h
+ 1423/16BF : 2C                         		inc	l
+ 1424/16C0 : CB 98                      loc_16C0:		res	3, b
+ 1425/16C2 : E3                         loc_16C2:		ex	(sp), hl
+ 1426/16C3 : CD 4C 16                   		call	sub_164C
+ 1427/16C6 : 38 1E                      		jr	c, loc_16E6
+ 1428/16C8 : E3                         		ex	(sp), hl
+ 1429/16C9 : FD 74 F6                   		ld	(iy-0Ah), h
+ 1430/16CC : CB 60                      		bit	4, b
+ 1431/16CE : 20 0A                      		jr	nz, loc_16DA
+ 1432/16D0 : CB 48                      		bit	1, b
+ 1433/16D2 : 20 0D                      		jr	nz, loc_16E1
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 25 - 2/24/2026 13:49:26
+
+
+ 1434/16D4 : ED 53 F2 0F                		ld	(word_FF2), de
+ 1435/16D8 : 18 07                      		jr	loc_16E1
+ 1436/16DA : 7B                         loc_16DA:		ld	a, e
+ 1437/16DB : CD B1 13                   		call	sub_13B1
+ 1438/16DE : FD 73 F7                   		ld	(iy-9), e
+ 1439/16E1 : 45                         loc_16E1:		ld	b, l
+ 1440/16E2 : E1                         		pop	hl
+ 1441/16E3 : C3 90 16                   		jp	loc_1690
+ 1442/16E6 : ED 53 82 0F                loc_16E6:		ld	(word_F82), de
+ 1443/16EA : CB 69                      		bit	5, c
+ 1444/16EC : 28 38                      		jr	z, loc_1726
+ 1445/16EE : FE 22                      		cp	22h ; '"'
+ 1446/16F0 : 20 0F                      		jr	nz, loc_1701
+ 1447/16F2 : CD 4C 16                   		call	sub_164C
+ 1448/16F5 : 16 00                      		ld	d, 0
+ 1449/16F7 : 5F                         		ld	e, a
+ 1450/16F8 : FE A0                      		cp	0A0h ; 'á'
+ 1451/16FA : 20 27                      		jr	nz, loc_1723
+ 1452/16FC : 1E 20                      		ld	e, 20h ; ' '
+ 1453/16FE : 2B                         		dec	hl
+ 1454/16FF : 18 22                      		jr	loc_1723
+ 1455/1701 : EB                         loc_1701:		ex	de, hl
+ 1456/1702 : FE 23                      		cp	23h ; '#'
+ 1457/1704 : 28 15                      		jr	z, loc_171B
+ 1458/1706 : D5                         		push	de
+ 1459/1707 : DF                         		rst	18h		; call the NAS-SYS routines
+ 1460/1708 : 64                         		db 64h			; NUM
+ 1461/1709 :                            					; Examine an input line	and convert a hexadecimal value	from ASCII to binary
+ 1462/1709 : 1A                         		ld	a, (de)
+ 1463/170A : FE 48                      		cp	48h ; 'H'
+ 1464/170C : 20 07                      		jr	nz, loc_1715
+ 1465/170E : E1                         		pop	hl
+ 1466/170F : 2A 21 0C                   		ld	hl, (NUMV)	; Value	returned by routine NUM.
+ 1467/1712 : 13                         		inc	de
+ 1468/1713 : 18 0C                      		jr	loc_1721
+ 1469/1715 : D1                         loc_1715:		pop	de
+ 1470/1716 : CD EB 13                   		call	datoh		; DE dez ascii -> hex num HL
+ 1471/1719 : 18 06                      		jr	loc_1721
+ 1472/171B : 13                         loc_171B:		inc	de
+ 1473/171C : DF                         		rst	18h		; call the NAS-SYS routines
+ 1474/171D : 64                         		db 64h			; NUM
+ 1475/171E :                            					; Examine an input line	and convert a hexadecimal value	from ASCII to binary
+ 1476/171E : 2A 21 0C                   		ld	hl, (NUMV)	; Value	returned by routine NUM.
+ 1477/1721 : EB                         loc_1721:		ex	de, hl
+ 1478/1722 : 2B                         		dec	hl
+ 1479/1723 : E3                         loc_1723:		ex	(sp), hl
+ 1480/1724 : 18 58                      		jr	loc_177E
+ 1481/1726 : CB 71                      loc_1726:		bit	6, c
+ 1482/1728 : 28 74                      		jr	z, loc_179E
+ 1483/172A : CD C2 14                   		call	sub_14C2
+ 1484/172D : 2B                         		dec	hl
+ 1485/172E : E3                         		ex	(sp), hl
+ 1486/172F : 20 3E                      		jr	nz, loc_176F
+ 1487/1731 : CB 48                      		bit	1, b
+ 1488/1733 : 3E 24                      		ld	a, 24h ; '$'
+ 1489/1735 : 20 75                      loc_1735:		jr	nz, loc_17AC
+ 1490/1737 : CB 50                      		bit	2, b
+ 1491/1739 : 20 71                      		jr	nz, loc_17AC
+ 1492/173B : CB C8                      		set	1, b
+ 1493/173D : 7A                         		ld	a, d
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 26 - 2/24/2026 13:49:26
+
+
+ 1494/173E : FE 62                      		cp	62h ; 'b'
+ 1495/1740 : 20 21                      		jr	nz, loc_1763
+ 1496/1742 : 7B                         		ld	a, e
+ 1497/1743 : E6 30                      		and	30h ; '0'
+ 1498/1745 : F5                         		push	af
+ 1499/1746 : B0                         		or	b
+ 1500/1747 : 47                         		ld	b, a
+ 1501/1748 : 0F                         		rrca
+ 1502/1749 : 0F                         		rrca
+ 1503/174A : 0F                         		rrca
+ 1504/174B : 0F                         		rrca
+ 1505/174C : A5                         		and	l
+ 1506/174D : E6 01                      		and	1
+ 1507/174F : B4                         		or	h
+ 1508/1750 : 67                         		ld	h, a
+ 1509/1751 : F1                         		pop	af
+ 1510/1752 : CB 7C                      		bit	7, h
+ 1511/1754 : 20 06                      		jr	nz, loc_175C
+ 1512/1756 : CB FC                      		set	7, h
+ 1513/1758 : B4                         		or	h
+ 1514/1759 : 67                         		ld	h, a
+ 1515/175A : 18 07                      		jr	loc_1763
+ 1516/175C : AC                         loc_175C:		xor	h
+ 1517/175D : E6 30                      		and	30h ; '0'
+ 1518/175F : 3E 25                      		ld	a, 25h ; '%'
+ 1519/1761 : 20 49                      		jr	nz, loc_17AC
+ 1520/1763 : 7D                         loc_1763:		ld	a, l
+ 1521/1764 : E6 01                      		and	1
+ 1522/1766 : B2                         		or	d
+ 1523/1767 : 6F                         		ld	l, a
+ 1524/1768 : ED 5B 82 0F                		ld	de, (word_F82)
+ 1525/176C : C3 C0 16                   loc_176C:		jp	loc_16C0
+ 1526/176F : 30 0D                      loc_176F:		jr	nc, loc_177E
+ 1527/1771 : FD 7E F6                   		ld	a, (iy-0Ah)
+ 1528/1774 : E6 08                      		and	8
+ 1529/1776 : B4                         		or	h
+ 1530/1777 : 67                         		ld	h, a
+ 1531/1778 : CB 40                      		bit	0, b
+ 1532/177A : 3E 41                      		ld	a, 41h ; 'A'
+ 1533/177C : 20 2E                      		jr	nz, loc_17AC
+ 1534/177E :                            loc_177E:					; sub_16A7:loc_176Fj
+ 1535/177E : E5                         		push	hl
+ 1536/177F : CB 58                      		bit	3, b
+ 1537/1781 : 2A 82 0F                   		ld	hl, (word_F82)
+ 1538/1784 : 20 03                      		jr	nz, loc_1789
+ 1539/1786 : 19                         		add	hl, de
+ 1540/1787 : 18 03                      		jr	loc_178C
+ 1541/1789 : B7                         loc_1789:		or	a
+ 1542/178A : ED 52                      		sbc	hl, de
+ 1543/178C : EB                         loc_178C:		ex	de, hl
+ 1544/178D : E1                         		pop	hl
+ 1545/178E : CB 48                      		bit	1, b
+ 1546/1790 : 28 DA                      		jr	z, loc_176C
+ 1547/1792 : CB 60                      		bit	4, b
+ 1548/1794 : 3E 27                      		ld	a, 27h ; '''
+ 1549/1796 : 28 14                      		jr	z, loc_17AC
+ 1550/1798 : CB 45                      		bit	0, l
+ 1551/179A : 28 10                      		jr	z, loc_17AC
+ 1552/179C : 18 CE                      		jr	loc_176C
+ 1553/179E : CB D8                      loc_179E:		set	3, b
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 27 - 2/24/2026 13:49:26
+
+
+ 1554/17A0 : E3                         		ex	(sp), hl
+ 1555/17A1 : FE 2D                      		cp	2Dh ; '-'
+ 1556/17A3 : CA C2 16                   		jp	z, loc_16C2
+ 1557/17A6 : CB 49                      		bit	1, c
+ 1558/17A8 : 20 C2                      		jr	nz, loc_176C
+ 1559/17AA : 3E 26                      		ld	a, 26h ; '&'
+ 1560/17AC :                            loc_17AC:					; sub_16A7+92j	...
+ 1561/17AC : C3 19 1B                   		jp	loc_1B19
+ 1562/17AF :                            sub_17AF:					; sub_1DB5:loc_1F62p
+ 1563/17AF : D9                         		exx
+ 1564/17B0 : 2A 0C 0F                   		ld	hl, (word_F0C)
+ 1565/17B3 : FD CB 00 4E                		bit	1, (iy+0)
+ 1566/17B7 : CA 4C 18                   		jp	z, loc_184C
+ 1567/17BA : FD CB 01 5E                		bit	3, (iy+1)
+ 1568/17BE : 28 32                      		jr	z, loc_17F2
+ 1569/17C0 : ED 4B 7C 0F                		ld	bc, (word_F7C)
+ 1570/17C4 : ED 5B 7E 0F                		ld	de, (word_F7E)
+ 1571/17C8 : FD CB 00 5E                loc_17C8:		bit	3, (iy+0)
+ 1572/17CC : 28 03                      		jr	z, loc_17D1
+ 1573/17CE : 10 18                      		djnz	loc_17E8
+ 1574/17D0 : 04                         		inc	b
+ 1575/17D1 : FD CB 01 5E                loc_17D1:		bit	3, (iy+1)
+ 1576/17D5 : CD 57 18                   		call	sub_1857
+ 1577/17D8 : 41                         		ld	b, c
+ 1578/17D9 : 11 2F 0F                   		ld	de, 0F2Fh
+ 1579/17DC : 2A 0C 0F                   		ld	hl, (word_F0C)
+ 1580/17DF : 22 80 0F                   		ld	(word_F80), hl
+ 1581/17E2 : FD CB 00 DE                		set	3, (iy+0)
+ 1582/17E6 : 18 E0                      		jr	loc_17C8
+ 1583/17E8 : 12                         loc_17E8:		ld	(de), a
+ 1584/17E9 : 13                         		inc	de
+ 1585/17EA : ED 43 7C 0F                		ld	(word_F7C), bc
+ 1586/17EE : ED 53 7E 0F                		ld	(word_F7E), de
+ 1587/17F2 : 2A 0C 0F                   loc_17F2:		ld	hl, (word_F0C)
+ 1588/17F5 : E5                         		push	hl
+ 1589/17F6 : FD CB 01 4E                		bit	1, (iy+1)
+ 1590/17FA : 28 2B                      		jr	z, loc_1827
+ 1591/17FC : ED 5B 0A 0F                		ld	de, (mc_ofs)	; offset for code generation
+ 1592/1800 : 19                         		add	hl, de
+ 1593/1801 : FD CB 00 76                		bit	6, (iy+0)
+ 1594/1805 : 20 20                      		jr	nz, loc_1827
+ 1595/1807 : 01 00 0F                   		ld	bc, 0F00h
+ 1596/180A : 11 00 10                   		ld	de, 1000h
+ 1597/180D : CD DE 18                   		call	sub_18DE
+ 1598/1810 : 01 00 10                   		ld	bc, 1000h
+ 1599/1813 : 11 00 20                   		ld	de, 2000h
+ 1600/1816 : CD DE 18                   		call	sub_18DE
+ 1601/1819 : ED 4B 00 0F                		ld	bc, (BUFBEG)	; edit buffer
+ 1602/181D : E5                         		push	hl
+ 1603/181E : CD 66 14                   		call	sub_1466
+ 1604/1821 : EB                         		ex	de, hl
+ 1605/1822 : E1                         		pop	hl
+ 1606/1823 : CD DE 18                   		call	sub_18DE
+ 1607/1826 : 77                         		ld	(hl), a
+ 1608/1827 : FD CB 00 46                loc_1827:		bit	0, (iy+0)
+ 1609/182B : 20 1E                      		jr	nz, loc_184B
+ 1610/182D : 2A 29 0C                   		ld	hl, (CURSOR)	; Position of the cursor.
+ 1611/1830 : 11 69 F4                   		ld	de, 0F469h
+ 1612/1833 : 19                         		add	hl, de
+ 1613/1834 : 30 13                      		jr	nc, loc_1849
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 28 - 2/24/2026 13:49:26
+
+
+ 1614/1836 : F5                         		push	af
+ 1615/1837 : CD 9C 1C                   		call	sub_1C9C
+ 1616/183A : 11 D0 0B                   		ld	de, 0BD0h
+ 1617/183D : 06 46                      		ld	b, 46h ; 'F'
+ 1618/183F : CD 30 16                   		call	sub_1630
+ 1619/1842 : 11 8F 0B                   		ld	de, 0B8Fh
+ 1620/1845 : CD 21 16                   		call	sub_1621
+ 1621/1848 : F1                         		pop	af
+ 1622/1849 : DF                         loc_1849:		rst	18h		; call the NAS-SYS routines
+ 1623/184A : 68                         		db 68h			; SPACE	     Output a space. The A register is set to a	space.
+ 1624/184B : E1                         loc_184B:		pop	hl
+ 1625/184C : 23                         loc_184C:		inc	hl
+ 1626/184D : 22 0C 0F                   		ld	(word_F0C), hl
+ 1627/1850 : D9                         		exx
+ 1628/1851 : C9                         		ret
+ 1629/1852 : ED 4B 7C 0F                sub_1852:		ld	bc, (word_F7C)
+ 1630/1856 : BF                         		cp	a
+ 1631/1857 : C5                         sub_1857:		push	bc
+ 1632/1858 : F5                         		push	af
+ 1633/1859 : 79                         		ld	a, c
+ 1634/185A : 90                         		sub	b
+ 1635/185B : CA DB 18                   		jp	z, loc_18DB
+ 1636/185E : 21 1E 1D                   		ld	hl, sub_1D1E
+ 1637/1861 : 22 78 0C                   		ld	(SUOUT), hl
+ 1638/1864 : 2A 80 0F                   		ld	hl, (word_F80)
+ 1639/1867 : FD CB 01 76                		bit	6, (iy+1)
+ 1640/186B : 20 23                      		jr	nz, loc_1890
+ 1641/186D : 0E 00                      		ld	c, 0
+ 1642/186F : DF                         		rst	18h		; call the NAS-SYS routines
+ 1643/1870 : 66                         		db 66h			; TBCD3	     Output the	value in the HL	register in ASCII, followed
+ 1644/1871 :                            					;			     by	a space. Also add H and	L into the C register.The
+ 1645/1871 :                            					;			     A register	is modified.
+ 1646/1871 : 21 2F 0F                   		ld	hl, unk_F2F
+ 1647/1874 : 06 08                      		ld	b, 8
+ 1648/1876 : 7E                         loc_1876:		ld	a, (hl)
+ 1649/1877 : DF                         		rst	18h		; call the NAS-SYS routines
+ 1650/1878 : 67                         		db 67h			; TBCD2	     Output the	value in the A register	in ASCII. Also
+ 1651/1879 :                            					;			     add A into	the C register.	The A register is modified.
+ 1652/1879 : 23                         		inc	hl
+ 1653/187A : EF                         		rst	28h		; Output the string
+ 1654/187B : 20 00                      		db ' ',0
+ 1655/187D : 10 F7                      loc_187D:		djnz	loc_1876
+ 1656/187F : 79                         		ld	a, c
+ 1657/1880 : DF                         		rst	18h		; call the NAS-SYS routines
+ 1658/1881 : 68                         		db 68h			; B2HEX	     Output the	value in the A register	in ASCII. The A
+ 1659/1882 :                            					;			     register is modified.
+ 1660/1882 : EF                         		rst	28h		; Output the string
+ 1661/1883 : 0D 00                      		db 0Dh,0
+ 1662/1885 : F1                         		pop	af
+ 1663/1886 : F5                         		push	af
+ 1664/1887 : 20 4C                      		jr	nz, loc_18D5
+ 1665/1889 : EF                         		rst	28h		; Output the string
+ 1666/188A : 2E 0D 00                   		db '.',0Dh,0
+ 1667/188D : 18 46                      		jr	loc_18D5
+ 1668/188F : 00                         unk_188F:	db    0
+ 1669/1890 : 47                         loc_1890:		ld	b, a
+ 1670/1891 : AF                         		xor	a
+ 1671/1892 : CD 1E 1D                   		call	sub_1D1E
+ 1672/1895 : EF                         		rst	28h		; Output the string
+ 1673/1896 : FF FF FF FF 00             		db 0FFh,0FFh,0FFh,0FFh,0
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 29 - 2/24/2026 13:49:26
+
+
+ 1674/189B : 7D                         		ld	a, l
+ 1675/189C : CD 1E 1D                   		call	sub_1D1E
+ 1676/189F : 7C                         		ld	a, h
+ 1677/18A0 : CD 1E 1D                   		call	sub_1D1E
+ 1678/18A3 : 78                         		ld	a, b
+ 1679/18A4 : CD 1E 1D                   		call	sub_1D1E
+ 1680/18A7 : F1                         		pop	af
+ 1681/18A8 : F5                         		push	af
+ 1682/18A9 : 3E FF                      		ld	a, 0FFh
+ 1683/18AB : 20 01                      		jr	nz, loc_18AE
+ 1684/18AD : AF                         		xor	a
+ 1685/18AE : 4F                         loc_18AE:		ld	c, a
+ 1686/18AF : CD 1E 1D                   		call	sub_1D1E
+ 1687/18B2 : 7D                         		ld	a, l
+ 1688/18B3 : 84                         		add	a, h
+ 1689/18B4 : 80                         		add	a, b
+ 1690/18B5 : 81                         		add	a, c
+ 1691/18B6 : CD 1E 1D                   		call	sub_1D1E
+ 1692/18B9 : 21 2F 0F                   		ld	hl, unk_F2F
+ 1693/18BC : 0E 00                      		ld	c, 0
+ 1694/18BE : 7E                         loc_18BE:		ld	a, (hl)
+ 1695/18BF : 23                         		inc	hl
+ 1696/18C0 : F5                         		push	af
+ 1697/18C1 : 81                         		add	a, c
+ 1698/18C2 : 4F                         		ld	c, a
+ 1699/18C3 : F1                         		pop	af
+ 1700/18C4 : CD 1E 1D                   		call	sub_1D1E
+ 1701/18C7 : 10 F5                      		djnz	loc_18BE
+ 1702/18C9 : 79                         		ld	a, c
+ 1703/18CA : CD 1E 1D                   		call	sub_1D1E
+ 1704/18CD : 06 0A                      		ld	b, 0Ah
+ 1705/18CF : AF                         loc_18CF:		xor	a
+ 1706/18D0 : CD 1E 1D                   		call	sub_1D1E
+ 1707/18D3 : 10 FA                      		djnz	loc_18CF
+ 1708/18D5 : 21 F4 1C                   loc_18D5:		ld	hl, loc_1CF4
+ 1709/18D8 : 22 78 0C                   		ld	(SUOUT), hl
+ 1710/18DB : F1                         loc_18DB:		pop	af
+ 1711/18DC : C1                         		pop	bc
+ 1712/18DD : C9                         		ret
+ 1713/18DE : E5                         sub_18DE:		push	hl
+ 1714/18DF : B7                         		or	a
+ 1715/18E0 : ED 52                      		sbc	hl, de
+ 1716/18E2 : E1                         		pop	hl
+ 1717/18E3 : D0                         		ret	nc
+ 1718/18E4 : E5                         		push	hl
+ 1719/18E5 : B7                         		or	a
+ 1720/18E6 : ED 42                      		sbc	hl, bc
+ 1721/18E8 : E1                         		pop	hl
+ 1722/18E9 : D8                         		ret	c
+ 1723/18EA : FD CB 00 F6                		set	6, (iy+0)
+ 1724/18EE : 3E 60                      		ld	a, 60h ; '`'
+ 1725/18F0 : C3 19 1B                   		jp	loc_1B19
+ 1726/18F3 : 2A 00 0F                   kdo_y:		ld	hl, (BUFBEG)	; edit buffer
+ 1727/18F6 : 23                         		inc	hl
+ 1728/18F7 : 23                         		inc	hl
+ 1729/18F8 : 23                         		inc	hl
+ 1730/18F9 : 23                         		inc	hl
+ 1731/18FA : 23                         		inc	hl
+ 1732/18FB : 7E                         		ld	a, (hl)
+ 1733/18FC : FE FF                      		cp	0FFh
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 30 - 2/24/2026 13:49:26
+
+
+ 1734/18FE : 3E 05                      		ld	a, 5
+ 1735/1900 : C2 1D 1B                   		jp	nz, sub_1B1D
+ 1736/1903 : 2A 75 0F                   		ld	hl, (word_F75)
+ 1737/1906 : 22 00 0F                   		ld	(BUFBEG), hl	; edit buffer
+ 1738/1909 : 11 6F 0F                   		ld	de, unk_F6F
+ 1739/190C : 01 06 00                   		ld	bc, 6
+ 1740/190F : EB                         		ex	de, hl
+ 1741/1910 : ED B0                      		ldir
+ 1742/1912 : C9                         		ret
+ 1743/1913 :                            ; The "N" editor command returns control to NAS-SYS ("N" is a mnemonic
+ 1744/1913 :                            ; NAS-SYS).
+ 1745/1913 : DF                         kdo_n:		rst	18h		; call the NAS-SYS routines
+ 1746/1914 : 77                         		db 77h
+ 1747/1915 : DF                         		rst	18h		; call the NAS-SYS routines
+ 1748/1916 : 5B                         		db 5Bh			; MRET	      end a program and	return control to NAS-SYS.
+ 1749/1917 :                            
+ 1750/1917 :                            ; each option specified is turned ON
+ 1751/1917 : 7D                         kdo_plus:		ld	a, l
+ 1752/1918 : FD B6 01                   		or	(iy+1)
+ 1753/191B : 18 08                      		jr	loc_1925
+ 1754/191D :                            
+ 1755/191D :                            ; each option specified is turned OFF
+ 1756/191D : 7D                         kdo_minus:		ld	a, l
+ 1757/191E : 2F                         		cpl
+ 1758/191F : FD A6 01                   		and	(iy+1)
+ 1759/1922 : 18 01                      		jr	loc_1925
+ 1760/1924 :                            
+ 1761/1924 :                            ; The "O" editor command allows various options to be set which define
+ 1762/1924 :                            ; the output required from the assembler ("O" is a mnemonic for
+ 1763/1924 :                            ; Options).
+ 1764/1924 : 7D                         kdo_o:		ld	a, l
+ 1765/1925 : FD 77 01                   loc_1925:		ld	(iy+1),	a
+ 1766/1928 : 32 07 0F                   		ld	(byte_F07), a
+ 1767/192B : C9                         		ret
+ 1768/192C :                            
+ 1769/192C :                            ; The "H" editor command sets the page size for page mode operation
+ 1770/192C : 7B                         kdo_h:		ld	a, e
+ 1771/192D : 20 02                      		jr	nz, loc_1931
+ 1772/192F : 3E 0F                      		ld	a, 0Fh
+ 1773/1931 : 32 14 0F                   loc_1931:		ld	(byte_F14), a
+ 1774/1934 : C9                         		ret
+ 1775/1935 :                            
+ 1776/1935 :                            ;The "G" editor command ("G" is a mnemonic for Go) causes control to be
+ 1777/1935 :                            ;passed to the object program produced in the last assembly,
+ 1778/1935 : 2A 0A 0F                   kdo_g:		ld	hl, (mc_ofs)	; offset for code generation
+ 1779/1938 : 7C                         		ld	a, h
+ 1780/1939 : B5                         		or	l
+ 1781/193A : 20 10                      		jr	nz, loc_194C
+ 1782/193C : FD CB 01 4E                		bit	1, (iy+1)
+ 1783/1940 : 28 0A                      		jr	z, loc_194C
+ 1784/1942 : 2A 0E 0F                   		ld	hl, (word_F0E)
+ 1785/1945 : 23                         		inc	hl
+ 1786/1946 : 7C                         		ld	a, h
+ 1787/1947 : B5                         		or	l
+ 1788/1948 : 28 02                      		jr	z, loc_194C
+ 1789/194A : 2B                         		dec	hl
+ 1790/194B : E9                         		jp	(hl)
+ 1791/194C : 3E 04                      loc_194C:		ld	a, 4
+ 1792/194E : C3 19 1B                   		jp	loc_1B19
+ 1793/1951 :                            
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 31 - 2/24/2026 13:49:26
+
+
+ 1794/1951 :                            ; The "J"	editor command sets the	delay at the end of each line of
+ 1795/1951 :                            ; output to the VDU, and therefore controls the display speed.
+ 1796/1951 : 7B                         kdo_j:		ld	a, e
+ 1797/1952 : 32 09 0F                   		ld	(word_F08+1), a
+ 1798/1955 : C9                         		ret
+ 1799/1956 :                            
+ 1800/1956 :                            ; The "K"	editor command is identical to the "J" command,	except that it
+ 1801/1956 :                            ; controls the delay for output to the UART
+ 1802/1956 : 7B                         kdo_k:		ld	a, e
+ 1803/1957 : 32 08 0F                   		ld	(word_F08), a
+ 1804/195A : C9                         		ret
+ 1805/195B : 22 08 0F                   		ld	(word_F08), hl
+ 1806/195E : C9                         		ret
+ 1807/195F :                            
+ 1808/195F :                            ; The "P"	editor command allows object code generated by the assembler
+ 1809/195F :                            ; under the MEMORY option	to be placed at	a physical address different
+ 1810/195F :                            ; from the logical address of the	assembly,
+ 1811/195F : 22 0A 0F                   kdo_p:		ld	(mc_ofs), hl	; offset for code generation
+ 1812/1962 : C9                         		ret
+ 1813/1963 :                            
+ 1814/1963 :                            ; store all or part of it	on cassette
+ 1815/1963 :                            ; tape. This is archieved	by the "U" editor command ("U" is a mnemonic
+ 1816/1963 :                            ; for UART List).
+ 1817/1963 : FD CB 00 D6                kdo_u:		set	2, (iy+0)
+ 1818/1967 : CD 6F 14                   		call	sub_146F
+ 1819/196A : CD 80 14                   		call	sub_1480
+ 1820/196D : CD 71 14                   		call	loc_1471
+ 1821/1970 :                            
+ 1822/1970 :                            ; examine	the contents of	part or	all of the Edit	Buffer
+ 1823/1970 :                            ; using the "V" editor command. ("V" is a	mnemonic for VDU List).
+ 1824/1970 : CD DE 15                   kdo_v:		call	sub_15DE	; VDU List
+ 1825/1973 : CD 93 1C                   loc_1973:		call	sub_1C93
+ 1826/1976 : 18 FB                      		jr	loc_1973
+ 1827/1978 :                            
+ 1828/1978 :                            ; The "R"	editor command ("R" is a mnemonic for Resequence) allows the
+ 1829/1978 :                            ; entire source program to be renumbered.
+ 1830/1978 : CD 04 14                   kdo_r:		call	sub_1404
+ 1831/197B : EB                         		ex	de, hl
+ 1832/197C : 2A 00 0F                   loc_197C:		ld	hl, (BUFBEG)	; edit buffer
+ 1833/197F : 23                         		inc	hl
+ 1834/1980 : 23                         		inc	hl
+ 1835/1981 : 23                         		inc	hl
+ 1836/1982 : CD 2C 14                   loc_1982:		call	loc_142C
+ 1837/1985 : C8                         		ret	z
+ 1838/1986 : 73                         		ld	(hl), e
+ 1839/1987 : 23                         		inc	hl
+ 1840/1988 : 72                         		ld	(hl), d
+ 1841/1989 : EB                         		ex	de, hl
+ 1842/198A : CD 1F 14                   		call	sub_141F
+ 1843/198D : EB                         		ex	de, hl
+ 1844/198E : 30 F2                      		jr	nc, loc_1982
+ 1845/1990 : 3E 01                      		ld	a, 1
+ 1846/1992 : 32 84 0F                   		ld	(byte_F84), a
+ 1847/1995 : CD 1D 1B                   		call	sub_1B1D
+ 1848/1998 : 11 01 00                   		ld	de, 1
+ 1849/199B : 18 DF                      		jr	loc_197C
+ 1850/199D :                            
+ 1851/199D :                            ; The "/"	editor command may be used to search for a string from a
+ 1852/199D :                            ; specified line in the edit buffer.
+ 1853/199D : CD DE 15                   kdo_slash:		call	sub_15DE
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 32 - 2/24/2026 13:49:26
+
+
+ 1854/19A0 : 18 2B                      		jr	loc_19CD
+ 1855/19A2 :                            
+ 1856/19A2 :                            ; The "F"	editor command ("F" is a mnemonic for Find) enables the	user
+ 1857/19A2 :                            ; to find	the first and thereafter subsequent occurrences	of any string
+ 1858/19A2 :                            ; which will fit on one line in the source program.
+ 1859/19A2 : 2A 29 0C                   kdo_f:		ld	hl, (CURSOR)	; Position of the cursor.
+ 1860/19A5 : 11 C1 FF                   		ld	de, -3Fh
+ 1861/19A8 : 19                         		add	hl, de
+ 1862/19A9 : 7E                         		ld	a, (hl)
+ 1863/19AA : EB                         		ex	de, hl
+ 1864/19AB : 2A 85 0F                   		ld	hl, (word_F85)
+ 1865/19AE : FE 20                      		cp	20h ; ' '
+ 1866/19B0 : 28 1B                      		jr	z, loc_19CD
+ 1867/19B2 : 21 41 00                   		ld	hl, 41h	; 'A'
+ 1868/19B5 : 19                         		add	hl, de
+ 1869/19B6 : 01 43 00                   		ld	bc, 43h	; 'C'
+ 1870/19B9 : ED B9                      		cpdr
+ 1871/19BB : EB                         		ex	de, hl
+ 1872/19BC : 11 2E 0F                   		ld	de, unk_F2E
+ 1873/19BF : ED B0                      		ldir
+ 1874/19C1 : 1B                         		dec	de
+ 1875/19C2 : 3E A0                      		ld	a, 0A0h	; 'á'
+ 1876/19C4 : 12                         		ld	(de), a
+ 1877/19C5 : 2A 00 0F                   		ld	hl, (BUFBEG)	; edit buffer
+ 1878/19C8 : 23                         		inc	hl
+ 1879/19C9 : 23                         		inc	hl
+ 1880/19CA : 23                         		inc	hl
+ 1881/19CB : 23                         		inc	hl
+ 1882/19CC : 23                         		inc	hl
+ 1883/19CD : 22 85 0F                   loc_19CD:		ld	(word_F85), hl
+ 1884/19D0 : 7E                         		ld	a, (hl)
+ 1885/19D1 : 3C                         		inc	a
+ 1886/19D2 : C8                         		ret	z
+ 1887/19D3 : 23                         		inc	hl
+ 1888/19D4 : 23                         		inc	hl
+ 1889/19D5 : E5                         loc_19D5:		push	hl
+ 1890/19D6 : 11 2F 0F                   		ld	de, unk_F2F
+ 1891/19D9 : 1A                         loc_19D9:		ld	a, (de)
+ 1892/19DA : 13                         		inc	de
+ 1893/19DB : FE A0                      		cp	0A0h ; 'á'
+ 1894/19DD : 28 0C                      		jr	z, loc_19EB
+ 1895/19DF : BE                         		cp	(hl)
+ 1896/19E0 : 23                         		inc	hl
+ 1897/19E1 : 28 F6                      		jr	z, loc_19D9
+ 1898/19E3 : E1                         		pop	hl
+ 1899/19E4 : 7E                         		ld	a, (hl)
+ 1900/19E5 : 23                         		inc	hl
+ 1901/19E6 : B7                         		or	a
+ 1902/19E7 : 20 EC                      		jr	nz, loc_19D5
+ 1903/19E9 : 18 E2                      		jr	loc_19CD
+ 1904/19EB : E1                         loc_19EB:		pop	hl
+ 1905/19EC : CD 2D 14                   		call	loc_142D
+ 1906/19EF : EB                         		ex	de, hl
+ 1907/19F0 : 2A 85 0F                   		ld	hl, (word_F85)
+ 1908/19F3 : ED 53 85 0F                		ld	(word_F85), de
+ 1909/19F7 : C3 93 1C                   		jp	sub_1C93
+ 1910/19FA :                            ; The "Z"	editor command merely presents a source	line for editing using
+ 1911/19FA :                            ; the NAS-SYS cursor control facilities.
+ 1912/19FA : 20 06                      kdo_z:		jr	nz, loc_1A02
+ 1913/19FC : 2A 10 0F                   		ld	hl, (word_F10)
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 33 - 2/24/2026 13:49:26
+
+
+ 1914/19FF : 22 0C 0C                   		ld	(ARG1),	hl
+ 1915/1A02 : CD DE 15                   loc_1A02:		call	sub_15DE
+ 1916/1A05 : 3E 03                      		ld	a, 3
+ 1917/1A07 : D2 19 1B                   		jp	nc, loc_1B19
+ 1918/1A0A : CD 93 1C                   		call	sub_1C93
+ 1919/1A0D : AF                         		xor	a
+ 1920/1A0E : 32 FE 0F                   		ld	(byte_FFE), a
+ 1921/1A11 : EF                         		rst	28h		; Output the string
+ 1922/1A12 : 13 12 12 12 12 12 00       		db 13h,12h,12h,12h,12h,12h,0
+ 1923/1A19 : DF                         		rst	18h		; call the NAS-SYS routines
+ 1924/1A1A : 63                         		db 63h			; INLIN	      Obtain an	input line
+ 1925/1A1B :                            					; The DE register is set to the	address	of the
+ 1926/1A1B :                            					;			     start of the line where the cursor	was when the
+ 1927/1A1B :                            					;			     line was entered.
+ 1928/1A1B : C3 3C 1A                   		jp	loc_1A3C
+ 1929/1A1E :                            
+ 1930/1A1E :                            ; Deleting a block of source code	is made	easier by the "X" editor
+ 1931/1A1E :                            ; command	("X" is	a mnemonic for eXpunge).
+ 1932/1A1E : FE 02                      kdo_x:		cp	2
+ 1933/1A20 : C2 17 1B                   		jp	nz, loc_1B17
+ 1934/1A23 : CD DE 15                   		call	sub_15DE
+ 1935/1A26 : E5                         		push	hl
+ 1936/1A27 : 2B                         		dec	hl
+ 1937/1A28 : CD 4E 14                   		call	sub_144E
+ 1938/1A2B : CD 55 15                   loc_1A2B:		call	sub_1555
+ 1939/1A2E : 38 05                      		jr	c, loc_1A35
+ 1940/1A30 : 1B                         		dec	de
+ 1941/1A31 : 1B                         		dec	de
+ 1942/1A32 : 23                         		inc	hl
+ 1943/1A33 : 18 F6                      		jr	loc_1A2B
+ 1944/1A35 : CD 59 14                   loc_1A35:		call	sub_1459
+ 1945/1A38 : D1                         		pop	de
+ 1946/1A39 : C3 C2 13                   		jp	sub_13C2
+ 1947/1A3C : 1A                         loc_1A3C:		ld	a, (de)
+ 1948/1A3D : FE 20                      		cp	20h ; ' '
+ 1949/1A3F : CA 17 1B                   		jp	z, loc_1B17
+ 1950/1A42 : D5                         		push	de
+ 1951/1A43 : CD EB 13                   		call	datoh		; DE dez ascii -> hex num HL
+ 1952/1A46 : C6 10                      		add	a, 10h
+ 1953/1A48 : C2 17 1B                   		jp	nz, loc_1B17
+ 1954/1A4B : EB                         		ex	de, hl
+ 1955/1A4C : D1                         		pop	de
+ 1956/1A4D : B7                         		or	a
+ 1957/1A4E : ED 52                      		sbc	hl, de
+ 1958/1A50 : 01 FB FF                   		ld	bc, -5
+ 1959/1A53 : 09                         		add	hl, bc
+ 1960/1A54 : DA 17 1B                   		jp	c, loc_1B17
+ 1961/1A57 : DF                         		rst	18h
+ 1962/1A58 : 64                         		db 64h			; NUM	    Examine an input line and convert a	hexadecimal value The resulting
+ 1963/1A59 :                            					;			     value is placed in	NUMV (0C21-0C22)
+ 1964/1A59 :                            					;			     The HL and	A registers are	modified.
+ 1965/1A59 :                            					;
+ 1966/1A59 : 2A 21 0C                   		ld	hl, (NUMV)	; Value	returned by routine NUM.
+ 1967/1A5C : 7C                         		ld	a, h
+ 1968/1A5D : B5                         		or	l
+ 1969/1A5E : CA 17 1B                   		jp	z, loc_1B17
+ 1970/1A61 : 22 0C 0C                   		ld	(ARG1),	hl
+ 1971/1A64 : 22 10 0F                   		ld	(word_F10), hl
+ 1972/1A67 : 21 2B 00                   		ld	hl, 2Bh	; '+'
+ 1973/1A6A : 19                         		add	hl, de
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 34 - 2/24/2026 13:49:26
+
+
+ 1974/1A6B : 7E                         loc_1A6B:		ld	a, (hl)
+ 1975/1A6C : B7                         		or	a
+ 1976/1A6D : 28 05                      		jr	z, loc_1A74
+ 1977/1A6F : 36 20                      		ld	(hl), 20h ; ' '
+ 1978/1A71 : 23                         		inc	hl
+ 1979/1A72 : 18 F7                      		jr	loc_1A6B
+ 1980/1A74 : 2B                         loc_1A74:		dec	hl
+ 1981/1A75 : CD 8F 14                   		call	sub_148F
+ 1982/1A78 : E5                         		push	hl
+ 1983/1A79 : B7                         		or	a
+ 1984/1A7A : ED 52                      		sbc	hl, de
+ 1985/1A7C : E5                         		push	hl
+ 1986/1A7D : 23                         		inc	hl
+ 1987/1A7E : 38 02                      		jr	c, loc_1A82
+ 1988/1A80 : 23                         		inc	hl
+ 1989/1A81 : 23                         		inc	hl
+ 1990/1A82 : E5                         loc_1A82:		push	hl
+ 1991/1A83 : F5                         		push	af
+ 1992/1A84 : E5                         		push	hl
+ 1993/1A85 : EB                         		ex	de, hl
+ 1994/1A86 : CD 4C 16                   		call	sub_164C
+ 1995/1A89 : CD 4E 14                   		call	sub_144E
+ 1996/1A8C : 30 02                      		jr	nc, loc_1A90
+ 1997/1A8E : 13                         		inc	de
+ 1998/1A8F : 13                         		inc	de
+ 1999/1A90 : D5                         loc_1A90:		push	de
+ 2000/1A91 : CD DE 15                   		call	sub_15DE
+ 2001/1A94 : D1                         		pop	de
+ 2002/1A95 : 30 0B                      		jr	nc, loc_1AA2
+ 2003/1A97 : E5                         		push	hl
+ 2004/1A98 : 23                         		inc	hl
+ 2005/1A99 : CD 4C 16                   		call	sub_164C
+ 2006/1A9C : 30 02                      		jr	nc, loc_1AA0
+ 2007/1A9E : 1B                         		dec	de
+ 2008/1A9F : 1B                         		dec	de
+ 2009/1AA0 : E1                         loc_1AA0:		pop	hl
+ 2010/1AA1 : 37                         		scf
+ 2011/1AA2 : D5                         loc_1AA2:		push	de
+ 2012/1AA3 : 54                         		ld	d, h
+ 2013/1AA4 : 5D                         		ld	e, l
+ 2014/1AA5 : DC 2B 14                   		call	c, sub_142B
+ 2015/1AA8 : C1                         		pop	bc
+ 2016/1AA9 : E3                         		ex	(sp), hl
+ 2017/1AAA : 09                         		add	hl, bc
+ 2018/1AAB : 19                         		add	hl, de
+ 2019/1AAC : E3                         		ex	(sp), hl
+ 2020/1AAD : EB                         		ex	de, hl
+ 2021/1AAE : E3                         		ex	(sp), hl
+ 2022/1AAF : ED 52                      		sbc	hl, de
+ 2023/1AB1 : D5                         		push	de
+ 2024/1AB2 : CD 35 14                   		call	sub_1435
+ 2025/1AB5 : 19                         		add	hl, de
+ 2026/1AB6 : EB                         		ex	de, hl
+ 2027/1AB7 : 2A 02 0F                   		ld	hl, (BUFEND)	; Buffer Ende
+ 2028/1ABA : AF                         		xor	a
+ 2029/1ABB : ED 52                      		sbc	hl, de
+ 2030/1ABD : DA 19 1B                   		jp	c, loc_1B19
+ 2031/1AC0 : 50                         		ld	d, b
+ 2032/1AC1 : 59                         		ld	e, c
+ 2033/1AC2 : CD 59 14                   		call	sub_1459
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 35 - 2/24/2026 13:49:26
+
+
+ 2034/1AC5 : E1                         		pop	hl
+ 2035/1AC6 : D1                         		pop	de
+ 2036/1AC7 : CD C2 13                   		call	sub_13C2
+ 2037/1ACA : F1                         		pop	af
+ 2038/1ACB : 38 27                      		jr	c, loc_1AF4
+ 2039/1ACD : E1                         		pop	hl
+ 2040/1ACE : E5                         		push	hl
+ 2041/1ACF : 19                         		add	hl, de
+ 2042/1AD0 : EB                         		ex	de, hl
+ 2043/1AD1 : CD 42 14                   		call	sub_1442
+ 2044/1AD4 : 03                         		inc	bc
+ 2045/1AD5 : ED B8                      		lddr
+ 2046/1AD7 : AF                         		xor	a
+ 2047/1AD8 : 12                         		ld	(de), a
+ 2048/1AD9 : 1B                         		dec	de
+ 2049/1ADA : E1                         		pop	hl
+ 2050/1ADB : C1                         		pop	bc
+ 2051/1ADC : E3                         		ex	(sp), hl
+ 2052/1ADD : ED B8                      		lddr
+ 2053/1ADF : 21 22 0C                   		ld	hl, 0C22h
+ 2054/1AE2 : ED A8                      		ldd
+ 2055/1AE4 : ED A8                      		ldd
+ 2056/1AE6 : C1                         		pop	bc
+ 2057/1AE7 : 2A 85 0F                   		ld	hl, (word_F85)
+ 2058/1AEA : B7                         		or	a
+ 2059/1AEB : ED 52                      		sbc	hl, de
+ 2060/1AED : 19                         		add	hl, de
+ 2061/1AEE : 38 04                      		jr	c, loc_1AF4
+ 2062/1AF0 : 09                         		add	hl, bc
+ 2063/1AF1 : 22 85 0F                   		ld	(word_F85), hl
+ 2064/1AF4 :                            loc_1AF4:					; sub_1D0F-221j
+ 2065/1AF4 : FD CB 00 66                		bit	4, (iy+0)
+ 2066/1AF8 : 28 0E                      		jr	z, loc_1B08
+ 2067/1AFA : 2A 0C 0C                   		ld	hl, (ARG1)
+ 2068/1AFD : CD 1F 14                   		call	sub_141F
+ 2069/1B00 : 3E 02                      		ld	a, 2
+ 2070/1B02 : DA 19 1B                   		jp	c, loc_1B19
+ 2071/1B05 : 22 87 0F                   		ld	(word_F87), hl
+ 2072/1B08 : C3 CC 1B                   loc_1B08:		jp	loc_1BCC
+ 2073/1B0B :                            ; manual entry of
+ 2074/1B0B :                            ; blocks of source code, namely the "I" editor command ("I" is a
+ 2075/1B0B :                            ; mnemonic for Auto Input)
+ 2076/1B0B : CD 04 14                   kdo_i:		call	sub_1404
+ 2077/1B0E : 22 87 0F                   		ld	(word_F87), hl
+ 2078/1B11 : FD CB 00 E6                		set	4, (iy+0)
+ 2079/1B15 : 18 F1                      		jr	loc_1B08
+ 2080/1B17 : 3E 99                      loc_1B17:		ld	a, 99h ; 'Ö'
+ 2081/1B19 :                            loc_1B19:					; sub_16A7:loc_17ACj ...
+ 2082/1B19 : 2A 78 0F                   		ld	hl, (word_F78)
+ 2083/1B1C : E5                         		push	hl
+ 2084/1B1D : 11 8F 0B                   sub_1B1D:		ld	de, 0B8Fh
+ 2085/1B20 : CD 21 16                   		call	sub_1621
+ 2086/1B23 : 5F                         		ld	e, a
+ 2087/1B24 : EF                         		rst	28h		; Output the string
+ 2088/1B25 : 45 72 72 6F 72 20 00       		db "Error ",0
+ 2089/1B2C : 7B                         loc_1B2C:		ld	a, e
+ 2090/1B2D : DF                         		rst	18h		; call the NAS-SYS routines
+ 2091/1B2E : 68                         		db 68h			; B2HEX	     Output the	value in the A register	in ASCII
+ 2092/1B2F : FD CB 00 FE                		set	7, (iy+0)
+ 2093/1B33 : C3 9C 1C                   		jp	sub_1C9C
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 36 - 2/24/2026 13:49:26
+
+
+ 2094/1B36 :                            
+ 2095/1B36 :                            ;---------------------------------------
+ 2096/1B36 : 2A 00 0F                   cold:		ld	hl, (BUFBEG)	; cold start
+ 2097/1B39 : 22 75 0F                   		ld	(word_F75), hl
+ 2098/1B3C : 11 6F 0F                   		ld	de, unk_F6F
+ 2099/1B3F : 01 06 00                   		ld	bc, 6
+ 2100/1B42 : ED B0                      		ldir
+ 2101/1B44 : 21 06 10                   		ld	hl, word_1006
+ 2102/1B47 : 11 00 0F                   		ld	de, BUFBEG	; edit buffer
+ 2103/1B4A : 01 30 00                   		ld	bc, 30h	; '0'
+ 2104/1B4D : ED B0                      		ldir
+ 2105/1B4F : 3A 0B 0C                   		ld	a, (ARGH)	; Number of values in input line
+ 2106/1B52 : FE 02                      		cp	2
+ 2107/1B54 : 38 0E                      		jr	c, loc_1B64
+ 2108/1B56 : 28 06                      		jr	z, loc_1B5E
+ 2109/1B58 : 2A 10 0C                   		ld	hl, (ARG3)	; Third	value entered.
+ 2110/1B5B : 22 00 0F                   		ld	(BUFBEG), hl	; edit buffer
+ 2111/1B5E : 2A 0E 0C                   loc_1B5E:		ld	hl, (ARG2)	; Second value entered.
+ 2112/1B61 : 22 02 0F                   		ld	(BUFEND), hl	; Buffer Ende
+ 2113/1B64 : 2A 00 0F                   loc_1B64:		ld	hl, (BUFBEG)	; edit buffer
+ 2114/1B67 : 36 06                      		ld	(hl), 6
+ 2115/1B69 : 23                         		inc	hl
+ 2116/1B6A : AF                         		xor	a
+ 2117/1B6B : 77                         		ld	(hl), a
+ 2118/1B6C : 23                         		inc	hl
+ 2119/1B6D : 77                         		ld	(hl), a
+ 2120/1B6E : 23                         		inc	hl
+ 2121/1B6F : 77                         		ld	(hl), a
+ 2122/1B70 : 23                         		inc	hl
+ 2123/1B71 : 77                         		ld	(hl), a
+ 2124/1B72 : 23                         		inc	hl
+ 2125/1B73 : 3D                         		dec	a
+ 2126/1B74 : 77                         		ld	(hl), a
+ 2127/1B75 : 22 85 0F                   		ld	(word_F85), hl
+ 2128/1B78 :                            
+ 2129/1B78 :                            ;---------------------------------------
+ 2130/1B78 : 31 FE 0F                   warm:		ld	sp, byte_FFE	; warm start
+ 2131/1B7B : 11 8A 0B                   		ld	de, 0B8Ah
+ 2132/1B7E : CD 21 16                   		call	sub_1621
+ 2133/1B81 : EF                         		rst	28h
+ 2134/1B82 : 43 6F 70 79 72 69 67 68 74 		db "Copyright (c) Sigma Software Unit",0Dh,0
+      1B8B : 20 28 63 29 20 53 69 67 6D
+      1B94 : 61 20 53 6F 66 74 77 61 72
+      1B9D : 65 20 55 6E 69 74 0D 00   
+ 2135/1BA5 : AF                         loc_1BA5:		xor	a
+ 2136/1BA6 : CD B5 1F                   		call	sub_1FB5
+ 2137/1BA9 : 32 00 0C                   		ld	(PORT0), a	; Copy of current state	of output part 0.
+ 2138/1BAC : 3A 14 0F                   		ld	a, (byte_F14)
+ 2139/1BAF : 32 77 0F                   		ld	(byte_F77), a
+ 2140/1BB2 : FD 21 FE 0F                loc_1BB2:		ld	iy, byte_FFE
+ 2141/1BB6 : FD F9                      		ld	sp, iy
+ 2142/1BB8 : 21 A8 10                   		ld	hl, unk_10A8
+ 2143/1BBB : DF                         		rst	18h
+ 2144/1BBC : 71                         		db 71h
+ 2145/1BBD : 21 F4 1C                   		ld	hl, loc_1CF4
+ 2146/1BC0 : 22 78 0C                   		ld	(SUOUT), hl
+ 2147/1BC3 : 21 A5 1B                   		ld	hl, loc_1BA5
+ 2148/1BC6 : 22 7A 0F                   		ld	(unk_F7A), hl
+ 2149/1BC9 : 22 78 0F                   		ld	(word_F78), hl
+ 2150/1BCC : 3A 07 0F                   loc_1BCC:		ld	a, (byte_F07)
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 37 - 2/24/2026 13:49:26
+
+
+ 2151/1BCF : CD C2 1F                   		call	sub_1FC2
+ 2152/1BD2 : FD F9                      		ld	sp, iy
+ 2153/1BD4 : AF                         		xor	a
+ 2154/1BD5 : 67                         		ld	h, a
+ 2155/1BD6 : 6F                         		ld	l, a
+ 2156/1BD7 : 22 0C 0C                   		ld	(ARG1),	hl
+ 2157/1BDA : 2B                         		dec	hl
+ 2158/1BDB : 22 0E 0C                   		ld	(ARG2),	hl	; Second value entered.
+ 2159/1BDE : 21 76 10                   		ld	hl, aZeap2_0A498Fre ; "ZEAP 2.0/A498  Free=	 End=	   Ent"
+ 2160/1BE1 : 11 CA 0B                   		ld	de, 0BCAh
+ 2161/1BE4 : 01 28 00                   		ld	bc, 28h	; '('
+ 2162/1BE7 : ED B0                      		ldir
+ 2163/1BE9 : 21 88 1C                   loc_1BE9:		ld	hl, loc_1C88
+ 2164/1BEC : 22 78 0C                   		ld	(SUOUT), hl
+ 2165/1BEF : CD 66 14                   		call	sub_1466
+ 2166/1BF2 : 11 DE 0B                   		ld	de, 0BDEh
+ 2167/1BF5 : CD 9B 16                   		call	sub_169B
+ 2168/1BF8 : 2A 0C 0F                   		ld	hl, (word_F0C)
+ 2169/1BFB : 11 E8 0B                   		ld	de, 0BE8h
+ 2170/1BFE : CD 9B 16                   		call	sub_169B
+ 2171/1C01 : 2A 0E 0F                   		ld	hl, (word_F0E)
+ 2172/1C04 : 11 F2 0B                   		ld	de, 0BF2h
+ 2173/1C07 : CD 9B 16                   		call	sub_169B
+ 2174/1C0A : 21 F4 1C                   		ld	hl, loc_1CF4
+ 2175/1C0D : 22 78 0C                   		ld	(SUOUT), hl
+ 2176/1C10 : 11 8A 0B                   		ld	de, 0B8Ah
+ 2177/1C13 : CD 21 16                   		call	sub_1621
+ 2178/1C16 : FD CB 00 66                		bit	4, (iy+0)
+ 2179/1C1A : 28 05                      		jr	z, loc_1C21
+ 2180/1C1C : 2A 87 0F                   		ld	hl, (word_F87)
+ 2181/1C1F : DF                         		rst	18h
+ 2182/1C20 : 66                         		db 66h			; TBCD3	     Output the	value in the HL	register in ASCII, followed
+ 2183/1C21 :                            					;			     by	a space.
+ 2184/1C21 : DF                         loc_1C21:		rst	18h
+ 2185/1C22 : 63                         		db 63h			; INLIN	      Obtain an	input line
+ 2186/1C23 : D5                         		push	de
+ 2187/1C24 : 1A                         		ld	a, (de)
+ 2188/1C25 : 01 2B 0C                   		ld	bc, ARGX	; Last command letter entered.
+ 2189/1C28 : FE 20                      		cp	20h ; ' '
+ 2190/1C2A : 20 06                      		jr	nz, loc_1C32
+ 2191/1C2C : 0A                         		ld	a, (bc)
+ 2192/1C2D : FE 46                      		cp	46h ; 'F'
+ 2193/1C2F : C2 A5 1B                   		jp	nz, loc_1BA5
+ 2194/1C32 : 02                         loc_1C32:		ld	(bc), a
+ 2195/1C33 : 01 0A 0C                   		ld	bc, ARGC	; Command letter or routine number last	processed for command execution	or input/output.
+ 2196/1C36 : 13                         		inc	de
+ 2197/1C37 : 03                         		inc	bc
+ 2198/1C38 : AF                         		xor	a
+ 2199/1C39 : 02                         		ld	(bc), a
+ 2200/1C3A : DF                         loc_1C3A:		rst	18h
+ 2201/1C3B : 64                         		db 64h			;  NUM	     Examine an	input line and convert a hexadecimal value
+ 2202/1C3C :                            					;			     from ASCII	to binary. Set DE to point to the start	of
+ 2203/1C3C :                            					;			     the line. Leading blanks are ignored. The value is
+ 2204/1C3C :                            					;			     ended by a	blank or null (0). DE is returned pointing
+ 2205/1C3C :                            					;			     to	the next position. If the value	is invalid (not
+ 2206/1C3C :                            					;			     0-9, A-F, or >FFFFH), then	the Carry flag is set, and
+ 2207/1C3C :                            					;			     DE	points to the invalid character. The resulting
+ 2208/1C3C :                            					;			     value is placed in	NUMV (0C21-0C22)
+ 2209/1C3C : 7E                         		ld	a, (hl)
+ 2210/1C3D : B7                         		or	a
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 38 - 2/24/2026 13:49:26
+
+
+ 2211/1C3E : 28 11                      		jr	z, loc_1C51
+ 2212/1C40 : 03                         		inc	bc
+ 2213/1C41 : 23                         		inc	hl
+ 2214/1C42 : 7E                         		ld	a, (hl)
+ 2215/1C43 : 02                         		ld	(bc), a
+ 2216/1C44 : 03                         		inc	bc
+ 2217/1C45 : 23                         		inc	hl
+ 2218/1C46 : 7E                         		ld	a, (hl)
+ 2219/1C47 : 02                         		ld	(bc), a
+ 2220/1C48 : 21 0B 0C                   		ld	hl, ARGH	; Number of values in input line
+ 2221/1C4B : 34                         		inc	(hl)
+ 2222/1C4C : 7E                         		ld	a, (hl)
+ 2223/1C4D : FE 03                      		cp	3
+ 2224/1C4F : 20 E9                      		jr	nz, loc_1C3A
+ 2225/1C51 : ED 4B 2B 0C                loc_1C51:		ld	bc, (ARGX)	; Last command letter entered.
+ 2226/1C55 : 2A 15 0F                   		ld	hl, (word_F15)
+ 2227/1C58 : D1                         		pop	de
+ 2228/1C59 : 7E                         loc_1C59:		ld	a, (hl)
+ 2229/1C5A : B7                         		or	a
+ 2230/1C5B : CA 3C 1A                   		jp	z, loc_1A3C
+ 2231/1C5E : 23                         		inc	hl
+ 2232/1C5F : B9                         		cp	c
+ 2233/1C60 : 28 04                      		jr	z, loc_1C66
+ 2234/1C62 : 23                         		inc	hl
+ 2235/1C63 : 23                         		inc	hl
+ 2236/1C64 : 18 F3                      		jr	loc_1C59
+ 2237/1C66 : 11 8A 0B                   loc_1C66:		ld	de, 0B8Ah
+ 2238/1C69 : CD 21 16                   		call	sub_1621
+ 2239/1C6C : 5E                         		ld	e, (hl)
+ 2240/1C6D : 23                         		inc	hl
+ 2241/1C6E : 56                         		ld	d, (hl)
+ 2242/1C6F : 21 A5 1B                   		ld	hl, loc_1BA5
+ 2243/1C72 : E5                         		push	hl
+ 2244/1C73 : D5                         		push	de
+ 2245/1C74 : 2A 29 0C                   		ld	hl, (CURSOR)	; Position of the cursor.
+ 2246/1C77 : 11 C1 FF                   		ld	de, -3Fh
+ 2247/1C7A : 19                         		add	hl, de
+ 2248/1C7B : EB                         		ex	de, hl
+ 2249/1C7C : CD EB 13                   		call	datoh		; DE dez ascii -> hex num HL
+ 2250/1C7F : EB                         		ex	de, hl
+ 2251/1C80 : 2A 0C 0C                   		ld	hl, (ARG1)
+ 2252/1C83 : 3A 0B 0C                   		ld	a, (ARGH)	; Number of values in input line
+ 2253/1C86 : B7                         		or	a
+ 2254/1C87 : C9                         		ret
+ 2255/1C88 : E5                         loc_1C88:		push	hl
+ 2256/1C89 : 2A 29 0C                   		ld	hl, (CURSOR)	; Position of the cursor.
+ 2257/1C8C : 77                         		ld	(hl), a
+ 2258/1C8D : 23                         		inc	hl
+ 2259/1C8E : 22 29 0C                   		ld	(CURSOR), hl	; Position of the cursor.
+ 2260/1C91 : E1                         		pop	hl
+ 2261/1C92 : C9                         		ret
+ 2262/1C93 : CD 0C 16                   sub_1C93:		call	sub_160C
+ 2263/1C96 : C2 A5 1B                   		jp	nz, loc_1BA5
+ 2264/1C99 : CD 00 16                   		call	sub_1600
+ 2265/1C9C : FD CB 00 56                sub_1C9C:		bit	2, (iy+0)
+ 2266/1CA0 : 28 26                      		jr	z, loc_1CC8
+ 2267/1CA2 : EB                         		ex	de, hl
+ 2268/1CA3 : 21 BA 0B                   		ld	hl, 0BBAh
+ 2269/1CA6 : FD CB 00 4E                		bit	1, (iy+0)
+ 2270/1CAA : 28 03                      		jr	z, loc_1CAF
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 39 - 2/24/2026 13:49:26
+
+
+ 2271/1CAC : 21 CF 0B                   		ld	hl, 0BCFh
+ 2272/1CAF : CD 8F 14                   loc_1CAF:		call	sub_148F
+ 2273/1CB2 : EB                         		ex	de, hl
+ 2274/1CB3 : CD 1E 16                   		call	sub_161E
+ 2275/1CB6 : 11 8A 0B                   		ld	de, 0B8Ah
+ 2276/1CB9 : 1A                         		ld	a, (de)
+ 2277/1CBA : CD 19 1D                   loc_1CBA:		call	sub_1D19
+ 2278/1CBD : 13                         		inc	de
+ 2279/1CBE : 1A                         		ld	a, (de)
+ 2280/1CBF : B7                         		or	a
+ 2281/1CC0 : F2 BA 1C                   		jp	p, loc_1CBA
+ 2282/1CC3 : CD 80 14                   		call	sub_1480
+ 2283/1CC6 : 18 1F                      		jr	loc_1CE7
+ 2284/1CC8 : FD 7E 00                   loc_1CC8:		ld	a, (iy+0)
+ 2285/1CCB : E6 03                      		and	3
+ 2286/1CCD : FE 01                      		cp	1
+ 2287/1CCF : 3A 09 0F                   		ld	a, (word_F08+1)
+ 2288/1CD2 : C4 73 14                   		call	nz, sub_1473
+ 2289/1CD5 : 3A 77 0F                   		ld	a, (byte_F77)
+ 2290/1CD8 : D6 01                      		sub	1
+ 2291/1CDA : 38 0B                      		jr	c, loc_1CE7
+ 2292/1CDC : 20 03                      		jr	nz, loc_1CE1
+ 2293/1CDE : 3A 14 0F                   		ld	a, (byte_F14)
+ 2294/1CE1 : 32 77 0F                   loc_1CE1:		ld	(byte_F77), a
+ 2295/1CE4 : CC 0F 1D                   		call	z, sub_1D0F
+ 2296/1CE7 : ED 5B 12 0F                loc_1CE7:		ld	de, (word_F12)
+ 2297/1CEB : ED 53 10 0F                		ld	(word_F10), de
+ 2298/1CEF : CD 08 1D                   		call	sub_1D08
+ 2299/1CF2 : 3E 0D                      		ld	a, 0Dh
+ 2300/1CF4 :                            loc_1CF4:					; sub_1D0F-152o ...
+ 2301/1CF4 : F5                         		push	af
+ 2302/1CF5 : E5                         		push	hl
+ 2303/1CF6 : D5                         		push	de
+ 2304/1CF7 : C5                         		push	bc
+ 2305/1CF8 : FE 1F                      		cp	1Fh
+ 2306/1CFA : 28 02                      		jr	z, loc_1CFE
+ 2307/1CFC : DF                         		rst	18h		; call the NAS-SYS routines
+ 2308/1CFD : 65                         		ld	h, l
+ 2309/1CFE : C1                         loc_1CFE:		pop	bc
+ 2310/1CFF : D1                         		pop	de
+ 2311/1D00 : E1                         		pop	hl
+ 2312/1D01 : FE 1B                      		cp	1Bh
+ 2313/1D03 : CA A5 1B                   		jp	z, loc_1BA5
+ 2314/1D06 : F1                         		pop	af
+ 2315/1D07 : C9                         		ret
+ 2316/1D08 : DF                         sub_1D08:		rst	18h
+ 2317/1D09 : 62                         		ld	h, d
+ 2318/1D0A : D0                         		ret	nc
+ 2319/1D0B : FE 1B                      		cp	1Bh
+ 2320/1D0D : 28 04                      		jr	z, loc_1D13
+ 2321/1D0F :                            sub_1D0F:	; FUNCTION CHUNK AT 1A3C SIZE 000000CF BYTES
+ 2322/1D0F :                            ; FUNCTION CHUNK AT 1B17 SIZE 00000006 BYTES
+ 2323/1D0F :                            ; FUNCTION CHUNK AT 1BA5 SIZE 000000E3 BYTES
+ 2324/1D0F : CF                         		rst	8
+ 2325/1D10 : FE 1B                      		cp	1Bh
+ 2326/1D12 : C0                         		ret	nz
+ 2327/1D13 : 2A 7A 0F                   loc_1D13:		ld	hl, (unk_F7A)
+ 2328/1D16 : E5                         		push	hl
+ 2329/1D17 : 18 CE                      		jr	loc_1CE7
+ 2330/1D19 : CD 04 0F                   sub_1D19:		call	outch
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 40 - 2/24/2026 13:49:26
+
+
+ 2331/1D1C : 18 EA                      		jr	sub_1D08
+ 2332/1D1E : CD BF 13                   sub_1D1E:		call	nas_outch
+ 2333/1D21 : 18 E5                      		jr	sub_1D08
+ 2334/1D23 :                            
+ 2335/1D23 :                            ; "W" The	"W" editor command is identical	in operation to	the "A"	editor
+ 2336/1D23 :                            ; command, except	that only those	lines containing errors	are output in
+ 2337/1D23 :                            ; the assembly listing.
+ 2338/1D23 : FD 7E 01                   kdo_w:		ld	a, (iy+1)
+ 2339/1D26 : E6 24                      		and	24h ; '$'
+ 2340/1D28 : F6 11                      		or	11h
+ 2341/1D2A : FD 77 01                   		ld	(iy+1),	a
+ 2342/1D2D :                            
+ 2343/1D2D :                            ; The assembler is entered from the editor by using the editor command
+ 2344/1D2D :                            ; "A" ("A" is a mnemonic for Assemble).
+ 2345/1D2D : 21 80 1F                   kdo_a:		ld	hl, loc_1F80
+ 2346/1D30 : 22 78 0F                   		ld	(word_F78), hl
+ 2347/1D33 : 21 FF FF                   		ld	hl, 0FFFFh
+ 2348/1D36 : 22 0E 0F                   		ld	(word_F0E), hl
+ 2349/1D39 : E1                         		pop	hl
+ 2350/1D3A : E1                         		pop	hl
+ 2351/1D3B : 2E 01                      		ld	l, 1
+ 2352/1D3D : E5                         		push	hl
+ 2353/1D3E : CD 66 14                   		call	sub_1466
+ 2354/1D41 : 22 0C 0F                   		ld	(word_F0C), hl
+ 2355/1D44 : E5                         		push	hl
+ 2356/1D45 : CD B5 1D                   		call	sub_1DB5
+ 2357/1D48 : E1                         		pop	hl
+ 2358/1D49 : 22 0C 0F                   		ld	(word_F0C), hl
+ 2359/1D4C : E1                         		pop	hl
+ 2360/1D4D : E5                         		push	hl
+ 2361/1D4E : CB 7D                      		bit	7, l
+ 2362/1D50 : 28 04                      		jr	z, loc_1D56
+ 2363/1D52 : CB 64                      		bit	4, h
+ 2364/1D54 : 28 5C                      		jr	z, loc_1DB2
+ 2365/1D56 : CB 5C                      loc_1D56:		bit	3, h
+ 2366/1D58 : C4 6F 14                   		call	nz, sub_146F
+ 2367/1D5B : E1                         		pop	hl
+ 2368/1D5C : 7C                         		ld	a, h
+ 2369/1D5D : E6 05                      		and	5
+ 2370/1D5F : F6 02                      		or	2
+ 2371/1D61 : 6F                         		ld	l, a
+ 2372/1D62 : E5                         		push	hl
+ 2373/1D63 : CD 9C 1C                   		call	sub_1C9C
+ 2374/1D66 : CB 45                      		bit	0, l
+ 2375/1D68 : 20 19                      		jr	nz, loc_1D83
+ 2376/1D6A : CD AA 14                   		call	sub_14AA
+ 2377/1D6D : EF                         		rst	28h		; Output the string
+ 2378/1D6E : 53 6F 75 72 63 65 20 4C 69 		db "Source Listing",0
+      1D77 : 73 74 69 6E 67 00         
+ 2379/1D7D : CD 9C 1C                   		call	sub_1C9C
+ 2380/1D80 : CD 9C 1C                   		call	sub_1C9C
+ 2381/1D83 : 21 09 09                   loc_1D83:		ld	hl, 909h
+ 2382/1D86 : FD CB 01 76                		bit	6, (iy+1)
+ 2383/1D8A : 28 03                      		jr	z, loc_1D8F
+ 2384/1D8C : 21 41 41                   		ld	hl, 4141h
+ 2385/1D8F : 22 7C 0F                   loc_1D8F:		ld	(word_F7C), hl
+ 2386/1D92 : E5                         		push	hl
+ 2387/1D93 : CD B5 1D                   		call	sub_1DB5
+ 2388/1D96 : FD CB 01 7E                		bit	7, (iy+1)
+ 2389/1D9A : C4 67 15                   		call	nz, sub_1567
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 41 - 2/24/2026 13:49:26
+
+
+ 2390/1D9D : 3E 61                      		ld	a, 61h ; 'a'
+ 2391/1D9F : FD CB 00 76                		bit	6, (iy+0)
+ 2392/1DA3 : C4 1D 1B                   		call	nz, sub_1B1D
+ 2393/1DA6 : 3E 50                      		ld	a, 50h ; 'P'
+ 2394/1DA8 : FD CB 00 7E                		bit	7, (iy+0)
+ 2395/1DAC : C4 1D 1B                   		call	nz, sub_1B1D
+ 2396/1DAF : CD 52 18                   		call	sub_1852
+ 2397/1DB2 : C3 A5 1B                   loc_1DB2:		jp	loc_1BA5
+ 2398/1DB5 : CD 35 14                   sub_1DB5:		call	sub_1435
+ 2399/1DB8 : D5                         		push	de
+ 2400/1DB9 : DD E1                      		pop	ix
+ 2401/1DBB : CD DE 15                   		call	sub_15DE
+ 2402/1DBE : 2B                         		dec	hl
+ 2403/1DBF : 22 89 0F                   		ld	(word_F89), hl
+ 2404/1DC2 : 23                         		inc	hl
+ 2405/1DC3 : CD 2B 16                   loc_1DC3:		call	sub_162B
+ 2406/1DC6 : 11 98 0B                   		ld	de, 0B98h
+ 2407/1DC9 : CD 21 16                   		call	sub_1621
+ 2408/1DCC : CD 0C 16                   		call	sub_160C
+ 2409/1DCF : C0                         		ret	nz
+ 2410/1DD0 : F5                         		push	af
+ 2411/1DD1 : 30 0B                      		jr	nc, loc_1DDE
+ 2412/1DD3 : E5                         		push	hl
+ 2413/1DD4 : 2A 0C 0F                   		ld	hl, (word_F0C)
+ 2414/1DD7 : DD 75 00                   		ld	(ix+0),	l
+ 2415/1DDA : DD 74 01                   		ld	(ix+1),	h
+ 2416/1DDD : E1                         		pop	hl
+ 2417/1DDE : FE 3B                      loc_1DDE:		cp	3Bh ; ';'
+ 2418/1DE0 : 28 08                      		jr	z, loc_1DEA
+ 2419/1DE2 : 06 07                      		ld	b, 7
+ 2420/1DE4 : CD 82 16                   		call	sub_1682
+ 2421/1DE7 : CC 7D 16                   		call	z, sub_167D
+ 2422/1DEA : F5                         loc_1DEA:		push	af
+ 2423/1DEB : CD 00 16                   		call	sub_1600
+ 2424/1DEE : F1                         		pop	af
+ 2425/1DEF : D1                         		pop	de
+ 2426/1DF0 : E5                         		push	hl
+ 2427/1DF1 : D5                         		push	de
+ 2428/1DF2 : 08                         		ex	af, af'	;'
+ 2429/1DF3 : F1                         		pop	af
+ 2430/1DF4 : F5                         		push	af
+ 2431/1DF5 : 21 00 00                   		ld	hl, 0
+ 2432/1DF8 : E5                         		push	hl
+ 2433/1DF9 : E5                         		push	hl
+ 2434/1DFA : E5                         		push	hl
+ 2435/1DFB : 08                         		ex	af, af'	;'
+ 2436/1DFC : 3E 10                      		ld	a, 10h
+ 2437/1DFE : C2 19 1B                   		jp	nz, loc_1B19
+ 2438/1E01 : 08                         		ex	af, af'	;'
+ 2439/1E02 : 30 0B                      		jr	nc, loc_1E0F
+ 2440/1E04 : 21 9D 0B                   		ld	hl, 0B9Dh
+ 2441/1E07 : CD C2 14                   		call	sub_14C2
+ 2442/1E0A : 3E 31                      		ld	a, 31h ; '1'
+ 2443/1E0C : D2 19 1B                   		jp	nc, loc_1B19
+ 2444/1E0F : FE 3B                      loc_1E0F:		cp	3Bh ; ';'
+ 2445/1E11 : CA 68 1F                   		jp	z, loc_1F68
+ 2446/1E14 : 11 8A 0B                   		ld	de, 0B8Ah
+ 2447/1E17 : 2A 0C 0F                   		ld	hl, (word_F0C)
+ 2448/1E1A : CD 9B 16                   		call	sub_169B
+ 2449/1E1D : 2A 17 0F                   		ld	hl, (word_F17)
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 42 - 2/24/2026 13:49:26
+
+
+ 2450/1E20 : E5                         		push	hl
+ 2451/1E21 : 16 00                      		ld	d, 0
+ 2452/1E23 : D5                         		push	de
+ 2453/1E24 : 21 A3 0B                   		ld	hl, 0BA3h
+ 2454/1E27 : 18 08                      		jr	loc_1E31
+ 2455/1E29 : CD 06 13                   loc_1E29:		call	sub_1306
+ 2456/1E2C : 3E 20                      loc_1E2C:		ld	a, 20h ; ' '
+ 2457/1E2E : DA 19 1B                   loc_1E2E:		jp	c, loc_1B19
+ 2458/1E31 : CD 4C 16                   loc_1E31:		call	sub_164C
+ 2459/1E34 : 38 F3                      		jr	c, loc_1E29
+ 2460/1E36 : CD 93 16                   		call	sub_1693
+ 2461/1E39 : FD CB EE 7E                		bit	7, (iy-12h)
+ 2462/1E3D : CA FA 1E                   		jp	z, loc_1EFA
+ 2463/1E40 : CD 9F 13                   		call	sub_139F
+ 2464/1E43 : 38 E7                      		jr	c, loc_1E2C
+ 2465/1E45 : F5                         		push	af
+ 2466/1E46 : FE 80                      		cp	80h ; 'Ç'
+ 2467/1E48 : CB 59                      		bit	3, c
+ 2468/1E4A : 3E 40                      		ld	a, 40h ; '@'
+ 2469/1E4C : D2 DB 1E                   		jp	nc, loc_1EDB
+ 2470/1E4F : 20 DD                      		jr	nz, loc_1E2E
+ 2471/1E51 : F1                         		pop	af
+ 2472/1E52 : F5                         		push	af
+ 2473/1E53 : FD CB F6 D6                		set	2, (iy-0Ah)
+ 2474/1E57 : 01 D0 0B                   		ld	bc, 0BD0h
+ 2475/1E5A : FE 03                      		cp	3
+ 2476/1E5C : 28 40                      		jr	z, loc_1E9E
+ 2477/1E5E : 30 55                      		jr	nc, loc_1EB5
+ 2478/1E60 : 06 05                      		ld	b, 5
+ 2479/1E62 : CD A7 16                   		call	sub_16A7
+ 2480/1E65 : 3F                         		ccf
+ 2481/1E66 : 3E 40                      loc_1E66:		ld	a, 40h ; '@'
+ 2482/1E68 : D2 19 1B                   		jp	nc, loc_1B19
+ 2483/1E6B : 62                         		ld	h, d
+ 2484/1E6C : 6B                         		ld	l, e
+ 2485/1E6D : F1                         		pop	af
+ 2486/1E6E : FE 01                      		cp	1
+ 2487/1E70 : 28 07                      		jr	z, loc_1E79
+ 2488/1E72 : 38 0C                      		jr	c, loc_1E80
+ 2489/1E74 : ED 4B 0C 0F                		ld	bc, (word_F0C)
+ 2490/1E78 : 09                         		add	hl, bc
+ 2491/1E79 : 22 0C 0F                   loc_1E79:		ld	(word_F0C), hl
+ 2492/1E7C : FD CB 00 9E                		res	3, (iy+0)
+ 2493/1E80 : FD CB F8 46                loc_1E80:		bit	0, (iy-8)
+ 2494/1E84 : 28 0A                      		jr	z, loc_1E90
+ 2495/1E86 : FE 02                      		cp	2
+ 2496/1E88 : 28 06                      		jr	z, loc_1E90
+ 2497/1E8A : DD 75 00                   		ld	(ix+0),	l
+ 2498/1E8D : DD 74 01                   		ld	(ix+1),	h
+ 2499/1E90 : EB                         loc_1E90:		ex	de, hl
+ 2500/1E91 : FE 01                      		cp	1
+ 2501/1E93 : 11 8A 0B                   		ld	de, 0B8Ah
+ 2502/1E96 : CC 21 16                   		call	z, sub_1621
+ 2503/1E99 : DF                         		rst	18h		; call the NAS-SYS routines
+ 2504/1E9A : 66                         		ld	h, (hl)
+ 2505/1E9B :                            loc_1E9B:					; sub_1DB5+133j ...
+ 2506/1E9B : C3 68 1F                   		jp	loc_1F68
+ 2507/1E9E : 56                         loc_1E9E:		ld	d, (hl)
+ 2508/1E9F : C5                         loc_1E9F:		push	bc
+ 2509/1EA0 : CD 4C 16                   		call	sub_164C
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 43 - 2/24/2026 13:49:26
+
+
+ 2510/1EA3 : C1                         		pop	bc
+ 2511/1EA4 : BA                         		cp	d
+ 2512/1EA5 : 28 24                      		jr	z, loc_1ECB
+ 2513/1EA7 : FE A0                      		cp	0A0h ; 'á'
+ 2514/1EA9 : 28 20                      		jr	z, loc_1ECB
+ 2515/1EAB : 02                         		ld	(bc), a
+ 2516/1EAC : 03                         		inc	bc
+ 2517/1EAD : 18 F0                      		jr	loc_1E9F
+ 2518/1EAF : CD AD 13                   loc_1EAF:		call	sub_13AD
+ 2519/1EB2 : F1                         loc_1EB2:		pop	af
+ 2520/1EB3 : 30 16                      		jr	nc, loc_1ECB
+ 2521/1EB5 : C5                         loc_1EB5:		push	bc
+ 2522/1EB6 : 06 04                      		ld	b, 4
+ 2523/1EB8 : CD A7 16                   		call	sub_16A7
+ 2524/1EBB : C1                         		pop	bc
+ 2525/1EBC : F5                         		push	af
+ 2526/1EBD : 7B                         		ld	a, e
+ 2527/1EBE : 02                         		ld	(bc), a
+ 2528/1EBF : 03                         		inc	bc
+ 2529/1EC0 : FD CB F1 46                		bit	0, (iy-0Fh)
+ 2530/1EC4 : 28 E9                      		jr	z, loc_1EAF
+ 2531/1EC6 : 7A                         		ld	a, d
+ 2532/1EC7 : 02                         		ld	(bc), a
+ 2533/1EC8 : 03                         		inc	bc
+ 2534/1EC9 : 18 E7                      		jr	loc_1EB2
+ 2535/1ECB : 21 D0 0B                   loc_1ECB:		ld	hl, 0BD0h
+ 2536/1ECE : B7                         loc_1ECE:		or	a
+ 2537/1ECF : ED 42                      		sbc	hl, bc
+ 2538/1ED1 : 09                         		add	hl, bc
+ 2539/1ED2 : 30 C7                      		jr	nc, loc_1E9B
+ 2540/1ED4 : 7E                         		ld	a, (hl)
+ 2541/1ED5 : 23                         		inc	hl
+ 2542/1ED6 : CD AF 17                   		call	sub_17AF
+ 2543/1ED9 : 18 F3                      		jr	loc_1ECE
+ 2544/1EDB : 28 89                      loc_1EDB:		jr	z, loc_1E66
+ 2545/1EDD : F1                         		pop	af
+ 2546/1EDE : FE 81                      		cp	81h ; 'ü'
+ 2547/1EE0 : 30 08                      		jr	nc, loc_1EEA
+ 2548/1EE2 : 2A 0C 0F                   		ld	hl, (word_F0C)
+ 2549/1EE5 : 22 0E 0F                   		ld	(word_F0E), hl
+ 2550/1EE8 : 18 B1                      		jr	loc_1E9B
+ 2551/1EEA : CD 2B 16                   loc_1EEA:		call	sub_162B
+ 2552/1EED : 18 AC                      		jr	loc_1E9B
+ 2553/1EEF : CD A5 16                   loc_1EEF:		call	sub_16A5
+ 2554/1EF2 : 78                         		ld	a, b
+ 2555/1EF3 : CD 06 13                   		call	sub_1306
+ 2556/1EF6 : 3E 21                      loc_1EF6:		ld	a, 21h ; '!'
+ 2557/1EF8 : 38 52                      		jr	c, loc_1F4C
+ 2558/1EFA : CB 59                      loc_1EFA:		bit	3, c
+ 2559/1EFC : 28 F1                      		jr	z, loc_1EEF
+ 2560/1EFE : CD 9F 13                   		call	sub_139F
+ 2561/1F01 : 38 F3                      		jr	c, loc_1EF6
+ 2562/1F03 : C1                         		pop	bc
+ 2563/1F04 : E1                         		pop	hl
+ 2564/1F05 : CB 51                      		bit	2, c
+ 2565/1F07 : 28 10                      		jr	z, loc_1F19
+ 2566/1F09 : 2B                         		dec	hl
+ 2567/1F0A : 2B                         		dec	hl
+ 2568/1F0B : FD CB 01 6E                		bit	5, (iy+1)
+ 2569/1F0F : 20 08                      		jr	nz, loc_1F19
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 44 - 2/24/2026 13:49:26
+
+
+ 2570/1F11 : D5                         		push	de
+ 2571/1F12 : ED 5B 0C 0F                		ld	de, (word_F0C)
+ 2572/1F16 : ED 52                      		sbc	hl, de
+ 2573/1F18 : D1                         		pop	de
+ 2574/1F19 :                            loc_1F19:					; sub_1DB5+15Aj
+ 2575/1F19 : EB                         		ex	de, hl
+ 2576/1F1A : 7B                         		ld	a, e
+ 2577/1F1B : CB 51                      		bit	2, c
+ 2578/1F1D : C4 B1 13                   		call	nz, sub_13B1
+ 2579/1F20 : CB 49                      		bit	1, c
+ 2580/1F22 : C4 AD 13                   		call	nz, sub_13AD
+ 2581/1F25 : 79                         		ld	a, c
+ 2582/1F26 : B7                         		or	a
+ 2583/1F27 : 7B                         		ld	a, e
+ 2584/1F28 : 08                         		ex	af, af'	;'
+ 2585/1F29 : 7A                         		ld	a, d
+ 2586/1F2A : CB 41                      		bit	0, c
+ 2587/1F2C : EB                         		ex	de, hl
+ 2588/1F2D : E1                         		pop	hl
+ 2589/1F2E : E5                         		push	hl
+ 2590/1F2F : 37                         		scf
+ 2591/1F30 : F5                         		push	af
+ 2592/1F31 : 3F                         		ccf
+ 2593/1F32 : F5                         		push	af
+ 2594/1F33 : 08                         		ex	af, af'	;'
+ 2595/1F34 : F5                         		push	af
+ 2596/1F35 : 7A                         		ld	a, d
+ 2597/1F36 : B0                         		or	b
+ 2598/1F37 : 0C                         		inc	c
+ 2599/1F38 : F5                         		push	af
+ 2600/1F39 : 3E CB                      		ld	a, 0CBh	; '-'
+ 2601/1F3B : CB 5B                      		bit	3, e
+ 2602/1F3D : 28 01                      		jr	z, loc_1F40
+ 2603/1F3F : F5                         		push	af
+ 2604/1F40 : CB 65                      loc_1F40:		bit	4, l
+ 2605/1F42 : 28 1A                      		jr	z, loc_1F5E
+ 2606/1F44 : 7C                         		ld	a, h
+ 2607/1F45 : CB 73                      		bit	6, e
+ 2608/1F47 : 28 08                      		jr	z, loc_1F51
+ 2609/1F49 : B7                         		or	a
+ 2610/1F4A : 3E 22                      loc_1F4A:		ld	a, 22h ; '"'
+ 2611/1F4C : C2 19 1B                   loc_1F4C:		jp	nz, loc_1B19
+ 2612/1F4F : 18 05                      		jr	loc_1F56
+ 2613/1F51 : C1                         loc_1F51:		pop	bc
+ 2614/1F52 : CB 45                      		bit	0, l
+ 2615/1F54 : F5                         		push	af
+ 2616/1F55 : C5                         		push	bc
+ 2617/1F56 : 3E DD                      loc_1F56:		ld	a, 0DDh	; '¦'
+ 2618/1F58 : B5                         		or	l
+ 2619/1F59 : F5                         		push	af
+ 2620/1F5A : CB 63                      		bit	4, e
+ 2621/1F5C : 20 EC                      		jr	nz, loc_1F4A
+ 2622/1F5E : 3E ED                      loc_1F5E:		ld	a, 0EDh	; 'Ý'
+ 2623/1F60 : CB 63                      		bit	4, e
+ 2624/1F62 : C4 AF 17                   loc_1F62:		call	nz, sub_17AF
+ 2625/1F65 : F1                         		pop	af
+ 2626/1F66 : 30 FA                      		jr	nc, loc_1F62
+ 2627/1F68 :                            loc_1F68:					; sub_1DB5:loc_1E9Bj
+ 2628/1F68 : FD CB 00 46                		bit	0, (iy+0)
+ 2629/1F6C : CC 9C 1C                   		call	z, sub_1C9C
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 45 - 2/24/2026 13:49:26
+
+
+ 2630/1F6F : FD CB F6 5E                		bit	3, (iy-0Ah)
+ 2631/1F73 : 20 0F                      		jr	nz, loc_1F84
+ 2632/1F75 : FD CB F6 76                		bit	6, (iy-0Ah)
+ 2633/1F79 : 3E 23                      		ld	a, 23h ; '#'
+ 2634/1F7B : C4 1D 1B                   		call	nz, sub_1B1D
+ 2635/1F7E : 18 09                      		jr	loc_1F89
+ 2636/1F80 : FD CB F6 5E                loc_1F80:		bit	3, (iy-0Ah)
+ 2637/1F84 : 3E 30                      loc_1F84:		ld	a, 30h ; '0'
+ 2638/1F86 : C4 1D 1B                   		call	nz, sub_1B1D
+ 2639/1F89 : 31 F6 0F                   loc_1F89:		ld	sp, unk_FF6
+ 2640/1F8C : F1                         		pop	af
+ 2641/1F8D : 30 04                      		jr	nc, loc_1F93
+ 2642/1F8F : DD 23                      		inc	ix
+ 2643/1F91 : DD 23                      		inc	ix
+ 2644/1F93 : E1                         loc_1F93:		pop	hl
+ 2645/1F94 : CD 08 1D                   		call	sub_1D08
+ 2646/1F97 : C3 C3 1D                   		jp	loc_1DC3
+ 2647/1F9A : 13                         		db  13h
+ 2648/1F9B : 00                         		db    0
+ 2649/1F9C : 00                         		db    0
+ 2650/1F9D : 00                         		db    0
+ 2651/1F9E : 00                         		db    0
+ 2652/1F9F : 00                         		db    0
+ 2653/1FA0 : 00                         		db    0
+ 2654/1FA1 : 00                         		db    0
+ 2655/1FA2 : 00                         		db    0
+ 2656/1FA3 : 00                         		db    0
+ 2657/1FA4 : 00                         		db    0
+ 2658/1FA5 : 00                         		db    0
+ 2659/1FA6 : 00                         		db    0
+ 2660/1FA7 : 00                         		db    0
+ 2661/1FA8 : 00                         		db    0
+ 2662/1FA9 : 00                         		db    0
+ 2663/1FAA : 00                         		db    0
+ 2664/1FAB : 00                         		db    0
+ 2665/1FAC : 00                         		db    0
+ 2666/1FAD : 00                         		db    0
+ 2667/1FAE : 00                         		db    0
+ 2668/1FAF : 00                         		db    0
+ 2669/1FB0 : 00                         		db    0
+ 2670/1FB1 : 00                         		db    0
+ 2671/1FB2 : 00                         		db    0
+ 2672/1FB3 : 00                         		db    0
+ 2673/1FB4 : 00                         		db    0
+ 2674/1FB5 : 32 FE 0F                   sub_1FB5:		ld	(byte_FFE), a
+ 2675/1FB8 : 21 BA 0B                   		ld	hl, 0BBAh
+ 2676/1FBB : 06 10                      		ld	b, 10h
+ 2677/1FBD : 77                         loc_1FBD:		ld	(hl), a
+ 2678/1FBE : 23                         		inc	hl
+ 2679/1FBF : 10 FC                      		djnz	loc_1FBD
+ 2680/1FC1 : C9                         		ret
+ 2681/1FC2 : 32 FF 0F                   sub_1FC2:		ld	(0FFFh), a
+ 2682/1FC5 : 3A 14 0F                   		ld	a, (byte_F14)
+ 2683/1FC8 : 32 77 0F                   		ld	(byte_F77), a
+ 2684/1FCB : C9                         		ret
+ 2685/1FCC : EF                         kdo_dpoint:		rst	28h		; Output the string
+ 2686/1FCD : 43 6F 6D 6D 61 6E 64 3F 0D 		db "Command?",0Dh,0
+      1FD6 : 00                        
+ 2687/1FD7 : DF                         		rst	18h		; call the NAS-SYS routines
+ 2688/1FD8 : 63                         		db 63h			; INLIN
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 46 - 2/24/2026 13:49:26
+
+
+ 2689/1FD9 :                            					; Obtain an input line.
+ 2690/1FD9 : 01 2B 0C                   		ld	bc, ARGX	; Last command letter entered.
+ 2691/1FDC : 1A                         		ld	a, (de)
+ 2692/1FDD : FE 20                      		cp	20h ; ' '
+ 2693/1FDF : C8                         		ret	z
+ 2694/1FE0 : FE 41                      		cp	41h ; 'A'
+ 2695/1FE2 : 38 0D                      		jr	c, loc_1FF1
+ 2696/1FE4 : FE 5B                      		cp	5Bh ; '['
+ 2697/1FE6 : 30 09                      		jr	nc, loc_1FF1
+ 2698/1FE8 : 02                         		ld	(bc), a
+ 2699/1FE9 : 32 0A 0C                   		ld	(ARGC),	a	; Command letter or routine number last	processed for command execution	or input/output.
+ 2700/1FEC : 13                         		inc	de
+ 2701/1FED : DF                         		rst	18h		; call the NAS-SYS routines
+ 2702/1FEE : 79                         		db 79h			; RLIN
+ 2703/1FEF :                            					; Examine an input line	and convert up to ten hexadecimal values separated by spaces from ASCII	to binary.
+ 2704/1FEF : 30 03                      		jr	nc, loc_1FF4
+ 2705/1FF1 : DF                         loc_1FF1:		rst	18h		; call the NAS-SYS routines
+ 2706/1FF2 : 6B                         		db 6Bh			; ERRM
+ 2707/1FF3 :                            					; Output the message "Error" followed by a CR.
+ 2708/1FF3 : C9                         		ret
+ 2709/1FF4 : DF                         loc_1FF4:		rst	18h		; call the NAS-SYS routines
+ 2710/1FF5 : 60                         		db 60h			; ARGS
+ 2711/1FF6 :                            					; Load the contents of ARGI into HL, ARG2 into DE and ARG3 into	BC. ARGI, 2 and	3 are the first	three values entered after a NAS-SYS command.
+ 2712/1FF6 : DF                         		rst	18h		; call the NAS-SYS routines
+ 2713/1FF7 : 5C                         		db 5Ch			; SCALJ
+ 2714/1FF8 :                            					; CALL the routine number at address ARGC
+ 2715/1FF8 : C9                         		ret
+ 2716/1FF9 : 00                         		db    0
+ 2717/1FFA : 00                         		db    0
+ 2718/1FFB : 00                         		db    0
+ 2719/1FFC : 00                         		db    0
+ 2720/1FFD : 00                         		db    0
+ 2721/1FFE : 00                         		db    0
+ 2722/1FFF : 00                         		db    0
+ 2723/2000 : 00                         		db    0
+ 2724/2001 : 00                         		db    0
+ 2725/2002 : 00                         		db    0
+ 2726/2003 : 00                         		db    0
+ 2727/2004 : 00                         		db    0
+ 2728/2005 : 00                         		db    0
+ 2729/2006 : 00                         		db    0
+ 2730/2007 : 00                         		db    0
+ 2731/2008 :                            ; end of "ROM"
+ 2732/2008 :                            		end
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 47 - 2/24/2026 13:49:26
+
+
+  Symbol Table (* = unused):
+  --------------------------
+
+*ARCHITECTURE :                                        "i386-unknown-win32" - |
+ ARG1 :                        0C0C - |  ARG2 :                        0C0E - |
+ ARG3 :                        0C10 - |  ARGC :                        0C0A - |
+ ARGH :                        0C0B - |  ARGX :                        0C2B - |
+ AZEAP2_0A498FRE :             1076 C |  AZZZZZZ :                     109D C |
+ BUFBEG :                      0F00 - |  BUFEND :                      0F02 - |
+ BYTE_F07 :                    0F07 - |  BYTE_F14 :                    0F14 - |
+ BYTE_F77 :                    0F77 - |  BYTE_F84 :                    0F84 - |
+ BYTE_FFE :                    0FFE - | *CASESENSITIVE :                  0 - |
+ COLD :                        1B36 C | *CONSTPI :        3.141592653589793 - |
+ CURSOR :                      0C29 - | *DATE :                 "2/24/2026" - |
+ DATOH :                       13EB C |  DATOH1 :                      13EE C |
+*FALSE :                          0 - | *FLOATMAX :      1.797693134866E308 - |
+*HAS64 :                          1 - |  KDOTAB :                      1036 C |
+ KDO_A :                       1D2D C |  KDO_DPOINT :                  1FCC C |
+ KDO_F :                       19A2 C |  KDO_G :                       1935 C |
+ KDO_H :                       192C C |  KDO_I :                       1B0B C |
+ KDO_J :                       1951 C |  KDO_K :                       1956 C |
+ KDO_MINUS :                   191D C |  KDO_N :                       1913 C |
+ KDO_O :                       1924 C |  KDO_P :                       195F C |
+ KDO_PLUS :                    1917 C |  KDO_R :                       1978 C |
+ KDO_SLASH :                   199D C |  KDO_U :                       1963 C |
+ KDO_V :                       1970 C |  KDO_W :                       1D23 C |
+ KDO_X :                       1A1E C |  KDO_Y :                       18F3 C |
+ KDO_Z :                       19FA C | *LISTON :                         1 - |
+*LOCRET_14C1 :                 14C1 C |  LOC_1310 :                    1310 C |
+ LOC_133D :                    133D C |  LOC_1340 :                    1340 C |
+ LOC_1345 :                    1345 C |  LOC_134A :                    134A C |
+ LOC_1357 :                    1357 C |  LOC_136D :                    136D C |
+ LOC_137E :                    137E C |  LOC_1381 :                    1381 C |
+ LOC_1387 :                    1387 C |  LOC_1396 :                    1396 C |
+ LOC_1399 :                    1399 C |  LOC_13D4 :                    13D4 C |
+ LOC_13D8 :                    13D8 C |  LOC_1413 :                    1413 C |
+ LOC_142C :                    142C C |  LOC_142D :                    142D C |
+ LOC_1460 :                    1460 C |  LOC_1471 :                    1471 C |
+ LOC_1477 :                    1477 C |  LOC_149A :                    149A C |
+ LOC_14A8 :                    14A8 C |  LOC_14CD :                    14CD C |
+ LOC_14D9 :                    14D9 C |  LOC_14E1 :                    14E1 C |
+*LOC_14EA :                    14EA C |  LOC_14F0 :                    14F0 C |
+ LOC_14FD :                    14FD C |  LOC_1502 :                    1502 C |
+ LOC_1503 :                    1503 C | *LOC_150A :                    150A C |
+ LOC_1515 :                    1515 C |  LOC_1523 :                    1523 C |
+ LOC_152C :                    152C C |  LOC_1545 :                    1545 C |
+ LOC_154E :                    154E C |  LOC_1584 :                    1584 C |
+ LOC_158C :                    158C C |  LOC_15A9 :                    15A9 C |
+*LOC_15C4 :                    15C4 C | *LOC_15C9 :                    15C9 C |
+ LOC_15DB :                    15DB C |  LOC_15E3 :                    15E3 C |
+ LOC_1632 :                    1632 C |  LOC_164D :                    164D C |
+ LOC_1660 :                    1660 C |  LOC_1665 :                    1665 C |
+ LOC_166E :                    166E C |  LOC_166F :                    166F C |
+ LOC_168D :                    168D C |  LOC_1690 :                    1690 C |
+ LOC_16C0 :                    16C0 C |  LOC_16C2 :                    16C2 C |
+ LOC_16DA :                    16DA C |  LOC_16E1 :                    16E1 C |
+ LOC_16E6 :                    16E6 C |  LOC_1701 :                    1701 C |
+ LOC_1715 :                    1715 C |  LOC_171B :                    171B C |
+ LOC_1721 :                    1721 C |  LOC_1723 :                    1723 C |
+ LOC_1726 :                    1726 C |  LOC_1735 :                    1735 C |
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 48 - 2/24/2026 13:49:26
+
+
+ LOC_175C :                    175C C |  LOC_1763 :                    1763 C |
+ LOC_176C :                    176C C |  LOC_176F :                    176F C |
+ LOC_177E :                    177E C |  LOC_1789 :                    1789 C |
+ LOC_178C :                    178C C |  LOC_179E :                    179E C |
+ LOC_17AC :                    17AC C |  LOC_17C8 :                    17C8 C |
+ LOC_17D1 :                    17D1 C |  LOC_17E8 :                    17E8 C |
+ LOC_17F2 :                    17F2 C |  LOC_1827 :                    1827 C |
+ LOC_1849 :                    1849 C |  LOC_184B :                    184B C |
+ LOC_184C :                    184C C |  LOC_1876 :                    1876 C |
+*LOC_187D :                    187D C |  LOC_1890 :                    1890 C |
+ LOC_18AE :                    18AE C |  LOC_18BE :                    18BE C |
+ LOC_18CF :                    18CF C |  LOC_18D5 :                    18D5 C |
+ LOC_18DB :                    18DB C |  LOC_1925 :                    1925 C |
+ LOC_1931 :                    1931 C |  LOC_194C :                    194C C |
+ LOC_1973 :                    1973 C |  LOC_197C :                    197C C |
+ LOC_1982 :                    1982 C |  LOC_19CD :                    19CD C |
+ LOC_19D5 :                    19D5 C |  LOC_19D9 :                    19D9 C |
+ LOC_19EB :                    19EB C |  LOC_1A02 :                    1A02 C |
+ LOC_1A2B :                    1A2B C |  LOC_1A35 :                    1A35 C |
+ LOC_1A3C :                    1A3C C |  LOC_1A6B :                    1A6B C |
+ LOC_1A74 :                    1A74 C |  LOC_1A82 :                    1A82 C |
+ LOC_1A90 :                    1A90 C |  LOC_1AA0 :                    1AA0 C |
+ LOC_1AA2 :                    1AA2 C |  LOC_1AF4 :                    1AF4 C |
+ LOC_1B08 :                    1B08 C |  LOC_1B17 :                    1B17 C |
+ LOC_1B19 :                    1B19 C | *LOC_1B2C :                    1B2C C |
+ LOC_1B5E :                    1B5E C |  LOC_1B64 :                    1B64 C |
+ LOC_1BA5 :                    1BA5 C | *LOC_1BB2 :                    1BB2 C |
+ LOC_1BCC :                    1BCC C | *LOC_1BE9 :                    1BE9 C |
+ LOC_1C21 :                    1C21 C |  LOC_1C32 :                    1C32 C |
+ LOC_1C3A :                    1C3A C |  LOC_1C51 :                    1C51 C |
+ LOC_1C59 :                    1C59 C |  LOC_1C66 :                    1C66 C |
+ LOC_1C88 :                    1C88 C |  LOC_1CAF :                    1CAF C |
+ LOC_1CBA :                    1CBA C |  LOC_1CC8 :                    1CC8 C |
+ LOC_1CE1 :                    1CE1 C |  LOC_1CE7 :                    1CE7 C |
+ LOC_1CF4 :                    1CF4 C |  LOC_1CFE :                    1CFE C |
+ LOC_1D13 :                    1D13 C |  LOC_1D56 :                    1D56 C |
+ LOC_1D83 :                    1D83 C |  LOC_1D8F :                    1D8F C |
+ LOC_1DB2 :                    1DB2 C |  LOC_1DC3 :                    1DC3 C |
+ LOC_1DDE :                    1DDE C |  LOC_1DEA :                    1DEA C |
+ LOC_1E0F :                    1E0F C |  LOC_1E29 :                    1E29 C |
+ LOC_1E2C :                    1E2C C |  LOC_1E2E :                    1E2E C |
+ LOC_1E31 :                    1E31 C |  LOC_1E66 :                    1E66 C |
+ LOC_1E79 :                    1E79 C |  LOC_1E80 :                    1E80 C |
+ LOC_1E90 :                    1E90 C |  LOC_1E9B :                    1E9B C |
+ LOC_1E9E :                    1E9E C |  LOC_1E9F :                    1E9F C |
+ LOC_1EAF :                    1EAF C |  LOC_1EB2 :                    1EB2 C |
+ LOC_1EB5 :                    1EB5 C |  LOC_1ECB :                    1ECB C |
+ LOC_1ECE :                    1ECE C |  LOC_1EDB :                    1EDB C |
+ LOC_1EEA :                    1EEA C |  LOC_1EEF :                    1EEF C |
+ LOC_1EF6 :                    1EF6 C |  LOC_1EFA :                    1EFA C |
+ LOC_1F19 :                    1F19 C |  LOC_1F40 :                    1F40 C |
+ LOC_1F4A :                    1F4A C |  LOC_1F4C :                    1F4C C |
+ LOC_1F51 :                    1F51 C |  LOC_1F56 :                    1F56 C |
+ LOC_1F5E :                    1F5E C |  LOC_1F62 :                    1F62 C |
+ LOC_1F68 :                    1F68 C |  LOC_1F80 :                    1F80 C |
+ LOC_1F84 :                    1F84 C |  LOC_1F89 :                    1F89 C |
+ LOC_1F93 :                    1F93 C |  LOC_1FBD :                    1FBD C |
+ LOC_1FF1 :                    1FF1 C |  LOC_1FF4 :                    1FF4 C |
+*MACEXP :                         7 - |  MC_OFS :                      0F0A - |
+*MOMCPU :                        80 - | *MOMCPUNAME :                 "Z80" - |
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 49 - 2/24/2026 13:49:26
+
+
+ NAS_OUTCH :                   13BF C | *NESTMAX :                      100 - |
+ NUMV :                        0C21 - |  OUTCH :                       0F04 - |
+ PORT0 :                       0C00 - | *PRS :                           28 - |
+ RDEL :                          38 - | *RELAXED :                        0 - |
+*SCAL :                          18 - |  SUB_1306 :                    1306 C |
+ SUB_139F :                    139F C |  SUB_13AD :                    13AD C |
+ SUB_13B1 :                    13B1 C |  SUB_13B5 :                    13B5 C |
+ SUB_13C2 :                    13C2 C |  SUB_1404 :                    1404 C |
+ SUB_141F :                    141F C |  SUB_142B :                    142B C |
+ SUB_1435 :                    1435 C |  SUB_1442 :                    1442 C |
+ SUB_144E :                    144E C |  SUB_1459 :                    1459 C |
+ SUB_1466 :                    1466 C |  SUB_146F :                    146F C |
+ SUB_1473 :                    1473 C |  SUB_1480 :                    1480 C |
+ SUB_148F :                    148F C |  SUB_14AA :                    14AA C |
+ SUB_14C2 :                    14C2 C |  SUB_1526 :                    1526 C |
+ SUB_1555 :                    1555 C |  SUB_1567 :                    1567 C |
+ SUB_15DE :                    15DE C |  SUB_1600 :                    1600 C |
+ SUB_160C :                    160C C |  SUB_161E :                    161E C |
+ SUB_1621 :                    1621 C |  SUB_162B :                    162B C |
+ SUB_1630 :                    1630 C |  SUB_1638 :                    1638 C |
+ SUB_1649 :                    1649 C |  SUB_164C :                    164C C |
+ SUB_167D :                    167D C |  SUB_1682 :                    1682 C |
+ SUB_1693 :                    1693 C |  SUB_169B :                    169B C |
+ SUB_16A5 :                    16A5 C |  SUB_16A7 :                    16A7 C |
+ SUB_17AF :                    17AF C |  SUB_1852 :                    1852 C |
+ SUB_1857 :                    1857 C |  SUB_18DE :                    18DE C |
+ SUB_1B1D :                    1B1D C |  SUB_1C93 :                    1C93 C |
+ SUB_1C9C :                    1C9C C |  SUB_1D08 :                    1D08 C |
+ SUB_1D0F :                    1D0F C |  SUB_1D19 :                    1D19 C |
+ SUB_1D1E :                    1D1E C |  SUB_1DB5 :                    1DB5 C |
+ SUB_1FB5 :                    1FB5 C |  SUB_1FC2 :                    1FC2 C |
+ SUOUT :                       0C78 - | *TIME :                  "13:49:26" - |
+*TRUE :                           1 - |  UNK_10A4 :                    10A4 C |
+ UNK_10A8 :                    10A8 C |  UNK_10AA :                    10AA C |
+ UNK_128F :                    128F C |  UNK_12DC :                    12DC C |
+ UNK_12E4 :                    12E4 C |  UNK_12E8 :                    12E8 C |
+ UNK_12EC :                    12EC C |  UNK_12F0 :                    12F0 C |
+ UNK_12F4 :                    12F4 C |  UNK_188F :                    188F C |
+ UNK_F2D :                     0F2D - |  UNK_F2E :                     0F2E - |
+ UNK_F2F :                     0F2F - |  UNK_F6F :                     0F6F - |
+ UNK_F7A :                     0F7A - |  UNK_FF6 :                     0FF6 - |
+*VERSION :                     142F - |  WARM :                        1B78 C |
+*WARNRELATIVE :                   0 - |  WORD_1006 :                   1006 C |
+ WORD_F08 :                    0F08 - |  WORD_F0C :                    0F0C - |
+ WORD_F0E :                    0F0E - |  WORD_F10 :                    0F10 - |
+ WORD_F12 :                    0F12 - |  WORD_F15 :                    0F15 - |
+ WORD_F17 :                    0F17 - |  WORD_F19 :                    0F19 - |
+ WORD_F1B :                    0F1B - |  WORD_F75 :                    0F75 - |
+ WORD_F78 :                    0F78 - |  WORD_F7C :                    0F7C - |
+ WORD_F7E :                    0F7E - |  WORD_F80 :                    0F80 - |
+ WORD_F82 :                    0F82 - |  WORD_F85 :                    0F85 - |
+ WORD_F87 :                    0F87 - |  WORD_F89 :                    0F89 - |
+ WORD_FF2 :                    0FF2 - |
+
+    338 symbols
+     28 unused symbols
+
+ AS V1.42 Beta [Bld 297] - Source File zeap-as.asm - Page 50 - 2/24/2026 13:49:26
+
+
+  Code Pages:
+  ----------
+
+STANDARD (0 changed characters)
+
+1 code page
+
+0.04 seconds assembly time
+
+   2733 lines source file
+      2 passes
+      0 errors
+      0 warnings

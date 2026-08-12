@@ -1,0 +1,73 @@
+"EDAS*4" - ein Editor/Assembler für den Amateurcomputer "AC1"
+von J. REUL - Y27XO, F. HEYDER - Y21SO
+--------------------------------------------------------------
+
+basiert auf dem ZEAP 2.0 - 4K-Assembler/Editor, NAS
+
+
+EDAS4\		das Original aus dem FA
+
+	EDAS4_4000_544F_4000.bin		das Original
+	EDAS_4 Kaltstart_4000_544F_4000.bin	der gleich Code
+	EDAS_4 Warmstart_4000_544F_4003.bin	der gleich Code, aber Start auf 4003
+	EDAS_4_1   4000 4799 4000.BIN		die Doku Teil 1
+	EDAS_4_1   4000 4799 4000.TXT		als ASCII-Text
+	EDAS_4_2   4000 47AB 4000.BIN		die Doku Teil 2
+	EDAS_4_2   4000 47AB 4000.TXT		als ASCII-Text
+	edas 4.txt				der Text aus dem Funkamateur
+	EDAS 6.3_E000_F52F_0000.bin		Version für oberen RAM, entspricht dem Original + Appendix
+
+
+ZEAP 2.0\	Die Vorlage zum EDAS*4
+
+	ZEAP20_1000.NAS		das Original, RAM-Version
+	Zeap20_d000.nas		das Original, ROM-Version
+	NAS-SYS_3A_ocr.pdf	Anleitung (orig)
+	zeap.pdf		Anleitung (retyped)
+	
+	zeap-as.asm		mein aktueller reassemblierter Quellcode
+	zeap-as.lst
+
+
+EDAS4_plus\	erweiterte Version von R. Weidlich; Version 1.1
+		f. Monitor 11, USB-Unterstützung, Drucken, ...
+
+
+	EDAS4_PL_v1.1.z80	für Adr. 4000, RAM-Version
+	EDASC_PL_v1.1.z80	für Adr. C000, ROM-Version
+	EDAS4_plus.pdf		Anleitung
+
+
+picoEDAS\	erweiterte Version von R. Weidlich, Version 2.0
+		f. picoAC1, SD-Karte
+		
+	Readme.md
+	Arbeitsblatt.pdf
+	picoEDAS.pdf
+	picoEDAS4_V2.0.z80	für Adr. 4000
+	picoEDASC_v2.0.z80	für Adr. C000
+	TEST.E.z80		Beispiel
+
+
+
+
+meine aktueller reassemblierter Quellcode
+
+ac1-acc.asm		include-Datei AC1 ACC (orig FA)
+ac1-monx.asm		include-Datei picoAC1
+
+edas4-as.asm		das Original
+zeap-as.asm		die Vorlage
+picoedas4-as.asm	Version f. PicoAC1
+picoedasC-as.asm	Version f. PicoAC1 (gleicher Quellcode bis auf Startadr, Meldung, chksum)
+
+edas4-as.lst
+zeap-as.lst
+picoedas4-as.lst
+picoedasC-as.lst
+
+
+der Quellcode für zeap 2.0 ist am unvollständigsten; ich werde erst edas4-as.asm komplettieren
+und dann die Resultate auf zeap übernehmen.
+Im Quellcode von ZEAP sind die originalen Prozeduren unverändert und damit teilweise klarer als im EDAS
+
