@@ -22,8 +22,8 @@ ZEAP 2.0\	Die Vorlage zum EDAS*4
 
 	ZEAP20_1000.NAS		das Original, RAM-Version
 	Zeap20_d000.nas		das Original, ROM-Version
-	NAS-SYS_3A_ocr.pdf	Anleitung (orig)
-	zeap.pdf		Anleitung (retyped)
+	NAS-SYS_3A_ocr.pdf	Anleitung NAS-SYS 3
+	zeap.pdf		Anleitung ZEAP 2.0
 	
 	zeap-as.asm		mein aktueller reassemblierter Quellcode
 	zeap-as.lst
@@ -51,7 +51,7 @@ picoEDAS\	erweiterte Version von R. Weidlich, Version 2.0
 
 
 
-meine aktueller reassemblierter Quellcode
+mein aktueller reassemblierter Quellcode
 
 ac1-acc.asm		include-Datei AC1 ACC (orig FA)
 ac1-monx.asm		include-Datei picoAC1
