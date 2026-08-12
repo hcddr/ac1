@@ -12,8 +12,7 @@
 ; 	d.h. Programme wurden wiederholt angezeigt -> bank =ff als Endekennung genutzt.
 ; 27.03.2024 Fehler bei Programmen behoben, bei denen der Header am Ende der Bank liegt
 ;	hier erfolgte die Bankumschaltung zu spät
-; 10.08.2026 Rückbau der letzten Änderung, Korr. Bank-Ende-Kennung auf volle Adr. 0000
-
+; 12.08.2026 Korrektur der letzten Änderung, weiterere Adr.Korrektur; Test Bank-Ende-Kennung jetzt auf volle Adr. 0000
 
 		include	ac1-2010.asm
 		include	packedroms.inc	; wg Nr. minibasic_4000
@@ -726,7 +725,7 @@ rumladend
 decompress:	ld	hl,dzx7_standard
 		ld	de,ramcode2
 		ld	bc,dzx7_standardend-dzx7_standard
-		ldir
+		ldir			; unpacker umladen
 
 		ld	bc,(buffer+8)	; offs
 		ld	hl,(buffer+10)	; de=aadr
@@ -742,7 +741,15 @@ decompress:	ld	hl,dzx7_standard
 		ld	h,a		;hl=adr. im ROM(IX+40h)
 
 ;		call	dzx7_standard
+       	call	umlad4			; falls Pgm auf neuer Bank beginnt
 		ld	a,(bank)
+		
+		; damit die Umlade-Routine in den Bereich <1900 passt,
+		; muss die Initialsierung schon hier erfolgen
+		ld	b,a
+		ld	c,modul1	; für out anstelle out	(modul1),a
+		ld      a, 080h		; init-Wert
+		
 		call	ramcode2
 
 		; aktuelle eadr in buffer übernehmen
@@ -763,10 +770,10 @@ dzx7_standard:
 ; -----------------------------------------------------------------------------
 
 ;;dzx7_standard:
-	out	(modul1),a
-       	call	umlad4			; falls Pgm auf neuer Bank beginnt
+;	out	(modul1),a
+	out	(c),b
 ;
-        ld      a, 080h
+;       ld      a, 080h
 dzx7s_copy_byte_loop:
         ldi                             ; copy literal byte
         				; schreiben in unterliegenden RAM
