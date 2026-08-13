@@ -13,6 +13,7 @@
 ; 27.03.2024 Fehler bei Programmen behoben, bei denen der Header am Ende der Bank liegt
 ;	hier erfolgte die Bankumschaltung zu spät
 ; 12.08.2026 Korrektur der letzten Änderung, weiterere Adr.Korrektur; Test Bank-Ende-Kennung jetzt auf volle Adr. 0000
+; 13.08.2026 Korrektur Autostart. Zum Test auf SCCH muss XROM aktiv sein
 
 		include	ac1-2010.asm
 		include	packedroms.inc	; wg Nr. minibasic_4000
@@ -975,7 +976,11 @@ rstart
 
 		; SCH-Autostart ?
 start2		ld	de,(buffer+10)	; aadr
+		ld	a,XROM
+		out	(modul1),a	; modul an
 		call	tstsch		; Autostart?
+		ld	a,NOROM
+		out	(modul1),a	; modul aus
 		ret	nz		; auch kein Autostart
 		jp	(hl)		; sonst starten
 
